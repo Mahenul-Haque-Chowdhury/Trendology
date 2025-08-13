@@ -12,11 +12,11 @@ export function useCatalog() {
     let cancelled = false
     async function load() {
       if (isSupabaseConfigured()) {
-  console.debug('[catalog] Supabase configured = true; fetching inventory…')
+        console.debug('[catalog] Supabase configured = true; fetching products…')
         const supabase = getSupabaseClient()!
-  const { data, error } = await supabase.from('inventory').select('*')
-  if (error) console.error('[catalog] Supabase inventory error:', error)
-        else console.debug('[catalog] Supabase inventory rows:', data?.length ?? 0)
+        const { data, error } = await supabase.from('products').select('*')
+        if (error) console.error('[catalog] Supabase products error:', error)
+        else console.debug('[catalog] Supabase products rows:', data?.length ?? 0)
         if (!cancelled && data && !error && data.length > 0) {
           setItems(
             data.map((d: any) => ({
@@ -61,10 +61,13 @@ export function useCatalog() {
       if (isSupabaseConfigured()) {
         const supabase = getSupabaseClient()!
         const { data, error } = await supabase
-          .from('inventory')
+          .from('products')
           .insert({ ...p, active: true })
           .select('*')
           .single()
+        if (error) {
+          console.error('[catalog] add(product) failed:', error?.message)
+        }
         if (!error && data) {
           await loadProductsFromSupabase(setItems)
           return data.id as string
@@ -75,10 +78,10 @@ export function useCatalog() {
       save(next)
       return id
     },
-    async update(p: Product) {
+  async update(p: Product) {
       if (isSupabaseConfigured()) {
         const supabase = getSupabaseClient()!
-        await supabase.from('inventory').update({
+    const { error } = await supabase.from('products').update({
           name: p.name,
           description: p.description,
           price: p.price,
@@ -87,17 +90,19 @@ export function useCatalog() {
           category: p.category,
           tags: p.tags,
           active: true,
-        }).eq('id', p.id)
+    }).eq('id', p.id)
+    if (error) console.error('[catalog] update(product) failed:', error?.message)
         await loadProductsFromSupabase(setItems)
         return
       }
       const next = items.map((it) => (it.id === p.id ? p : it))
       save(next)
     },
-    async remove(id: string) {
+  async remove(id: string) {
       if (isSupabaseConfigured()) {
         const supabase = getSupabaseClient()!
-        await supabase.from('inventory').delete().eq('id', id)
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) console.error('[catalog] remove(product) failed:', error?.message)
         await loadProductsFromSupabase(setItems)
         return
       }
@@ -109,7 +114,7 @@ export function useCatalog() {
 
 async function loadProductsFromSupabase(setItems: (p: Product[]) => void) {
   const supabase = getSupabaseClient()!
-  const { data } = await supabase.from('inventory').select('*')
+  const { data } = await supabase.from('products').select('*')
   if (data) {
     setItems(
       data.map((d: any) => ({
