@@ -15,7 +15,7 @@ export default function Footer() {
         </div>
         <div className="sm:justify-self-end">
           <p className="opacity-80">Next.js · TypeScript · Tailwind CSS</p>
-          <p className="mt-2">© {new Date().getFullYear()} AamarDokan</p>
+          <p className="mt-2">© {new Date().getFullYear()} AamarDokan By <a href="https://arnob.life/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">Arnob</a></p>
         </div>
       </div>
     </footer>
