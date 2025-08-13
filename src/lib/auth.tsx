@@ -14,7 +14,7 @@ const SessionKey = 'storefront.session.v1'
 
 type AuthState = {
   user: User | null
-  register: (name: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>
+  register: (name: string, email: string, password: string, phone?: string) => Promise<{ ok: boolean; message?: string }>
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>
   logout: () => void
 }
@@ -80,10 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const api: AuthState = useMemo(() => ({
     user,
-    async register(name, email, password) {
+    async register(name, email, password, phone) {
       if (useSupabase) {
         const supabase = getSupabaseClient()!
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } })
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { name, phone } } })
         if (error) return { ok: false, message: error.message }
         return { ok: true }
       }

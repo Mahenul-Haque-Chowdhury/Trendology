@@ -26,6 +26,7 @@ create table if not exists public.orders (
   user_id uuid references auth.users(id) on delete set null,
   customer_name text,
   email text,
+  phone text,
   address text,
   city text,
   country text,

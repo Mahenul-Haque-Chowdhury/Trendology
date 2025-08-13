@@ -9,6 +9,7 @@ export type Order = {
   customer: {
     fullName: string
     email: string
+  phone: string
     address: string
     city: string
     country: string

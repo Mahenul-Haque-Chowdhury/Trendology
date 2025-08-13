@@ -11,7 +11,7 @@ export default function CheckoutPage() {
   const { items, total, clear } = useCart()
   const router = useRouter()
   const { user } = useAuth()
-  const [prefill, setPrefill] = useState<{ name?: string; email?: string; address?: string; city?: string; country?: string }>({})
+  const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string; address?: string; city?: string; country?: string }>({})
   const [method, setMethod] = useState<'cod' | 'bkash' | 'rocket' | 'nagad'>('cod')
 
   const subtotal = total
@@ -29,13 +29,13 @@ export default function CheckoutPage() {
       try {
         const supa = getSupabaseClient()!
         async function getFrom(table: string) {
-          return await supa.from(table).select('name,email,address,city,country').eq('id', u.id).maybeSingle()
+          return await supa.from(table).select('name,email,phone,address,city,country').eq('id', u.id).maybeSingle()
         }
         let r = await getFrom('user_details')
         if (r.error) r = await getFrom('profiles')
         const data = r.data
-        if (data) setPrefill({ name: data.name || u.name, email: data.email || u.email, address: data.address || '', city: data.city || '', country: data.country || '' })
-        else setPrefill({ name: u.name, email: u.email })
+  if (data) setPrefill({ name: data.name || u.name, email: data.email || u.email, phone: data.phone || '', address: data.address || '', city: data.city || '', country: data.country || '' })
+  else setPrefill({ name: u.name, email: u.email, phone: '' })
       } catch {}
     }
     loadProfile()
@@ -46,7 +46,8 @@ export default function CheckoutPage() {
     if (items.length === 0) return router.push('/')
     const form = new FormData(e.currentTarget)
     const name = String(form.get('fullName') || '')
-    const paymentMethod = String(form.get('paymentMethod') || 'cod') as typeof method
+  const paymentMethod = String(form.get('paymentMethod') || 'cod') as typeof method
+  const phone = String(form.get('phone') || '')
     const txid = String(form.get('txid') || '')
     // Mock order id
     const orderId = 'ORD-' + Date.now().toString(36).toUpperCase()
@@ -55,13 +56,14 @@ export default function CheckoutPage() {
       try {
         const supabase = getSupabaseClient()!
         const orderIdDb = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0')
-        const { error: orderErr } = await supabase
+    const { error: orderErr } = await supabase
           .from('orders')
           .insert({
             id: orderIdDb,
             user_id: user?.id ?? null,
             customer_name: String(form.get('fullName') || ''),
             email: String(form.get('email') || ''),
+      phone,
             address: String(form.get('address') || ''),
             city: String(form.get('city') || ''),
             country: String(form.get('country') || ''),
@@ -97,6 +99,7 @@ export default function CheckoutPage() {
         customer: {
           fullName: String(form.get('fullName') || ''),
           email: String(form.get('email') || ''),
+          phone,
           address: String(form.get('address') || ''),
           city: String(form.get('city') || ''),
           country: String(form.get('country') || ''),
@@ -141,6 +144,10 @@ export default function CheckoutPage() {
             <div className="space-y-1">
               <label className="block text-sm font-medium">Email</label>
               <input name="email" type="email" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.email || ''} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium">Mobile Number</label>
+              <input name="phone" type="tel" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.phone || ''} placeholder="01XXXXXXXXX" />
             </div>
             <div className="space-y-1 sm:col-span-2">
               <label className="block text-sm font-medium">Address</label>

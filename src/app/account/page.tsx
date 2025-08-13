@@ -37,12 +37,13 @@ export default function AccountPage() {
                 }
               }
             }
-            const mapped: Order[] = rows.map((r: any) => ({
+      const mapped: Order[] = rows.map((r: any) => ({
               id: r.id,
               createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
               customer: {
                 fullName: r.customer_name || '',
                 email: r.email || u.email,
+        phone: r.phone || '',
                 address: r.address || '',
                 city: r.city || '',
                 country: r.country || '',
@@ -66,7 +67,7 @@ export default function AccountPage() {
       // Fallback to local demo orders
       try {
         const raw = localStorage.getItem('storefront.orders.v1')
-        const all: Order[] = raw ? JSON.parse(raw) : []
+  const all: Order[] = raw ? JSON.parse(raw) : []
   setOrders(all.filter((o) => o.customer.email.toLowerCase() === u.email.toLowerCase()))
       } catch {}
     }
