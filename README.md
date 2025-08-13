@@ -17,7 +17,7 @@ A minimalist e-commerce UI built with Next.js (App Router), TypeScript, and Tail
 2. Install dependencies:
 
 ```bash
-cd "./storefront"
+cd "./store"
 npm install
 ```
 
@@ -33,3 +33,25 @@ Then open http://localhost:3000
 - Add product detail pages and a cart drawer
 - Hook up a headless CMS or JSON API for products
 - Add filtering/search and checkout mock flow
+
+## Deploy (Vercel)
+
+1) Build locally to verify:
+
+```bash
+npm run build
+```
+
+2) Push to GitHub (this folder is the project root).
+
+3) In Vercel: New Project → Import Repo → Root Directory: `store` → Framework: Next.js.
+
+4) Add Environment Variables:
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- ADMIN_USER (optional, for /admin basic auth)
+- ADMIN_PASS (optional, for /admin basic auth)
+
+5) Deploy, then add a custom domain if desired.
+
+See `.env.local.example` for the required variables.
