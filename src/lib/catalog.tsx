@@ -12,11 +12,35 @@ export function useCatalog() {
     let cancelled = false
     async function load() {
       if (isSupabaseConfigured()) {
-        console.debug('[catalog] Supabase configured = true; fetching products…')
         const supabase = getSupabaseClient()!
-        const { data, error } = await supabase.from('products').select('*')
-        if (error) console.error('[catalog] Supabase products error:', error)
-        else console.debug('[catalog] Supabase products rows:', data?.length ?? 0)
+        console.debug('[catalog] Supabase configured; fetching products…')
+        let tableTried: 'products' | 'inventory' = 'products'
+        let data: any[] | null = null
+        let error: any = null
+        try {
+          const res = await supabase.from('products').select('*')
+          data = res.data
+          error = res.error
+          if (error) throw error
+          if (!data || data.length === 0) {
+            // Back-compat fallback to "inventory" table if "products" is empty
+            tableTried = 'inventory'
+            const res2 = await supabase.from('inventory').select('*')
+            data = res2.data
+            error = res2.error
+          }
+        } catch (e) {
+          console.debug('[catalog] products query failed; trying inventory…')
+          tableTried = 'inventory'
+          const res2 = await supabase.from('inventory').select('*')
+          data = res2.data
+          error = res2.error
+        }
+        if (error) {
+          console.error(`[catalog] Supabase ${tableTried} error:`, error)
+        } else {
+          console.debug(`[catalog] Supabase ${tableTried} rows:`, data?.length ?? 0)
+        }
         if (!cancelled && data && !error && data.length > 0) {
           setItems(
             data.map((d: any) => ({
@@ -114,7 +138,13 @@ export function useCatalog() {
 
 async function loadProductsFromSupabase(setItems: (p: Product[]) => void) {
   const supabase = getSupabaseClient()!
-  const { data } = await supabase.from('products').select('*')
+  let data: any[] | null = null
+  let res = await supabase.from('products').select('*')
+  data = res.data
+  if (!data || data.length === 0 || res.error) {
+    res = await supabase.from('inventory').select('*')
+    data = res.data
+  }
   if (data) {
     setItems(
       data.map((d: any) => ({
