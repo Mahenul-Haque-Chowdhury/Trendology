@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 0.5rem;
+}
+
+html, body {
+  height: 100%;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-gray-900 antialiased;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-white;
+  }
+}
+
+@layer components {
+  .container { @apply max-w-[1200px]; }
+  .card { @apply rounded-xl border border-gray-200 shadow-sm bg-white; }
+  .card-hover { @apply transition shadow-sm hover:shadow-md hover:-translate-y-0.5; }
+  .btn { @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200; }
+  .btn-primary { @apply bg-brand text-white hover:bg-brand-dark; }
+  .btn-accent { @apply bg-accent text-gray-900 hover:bg-accent-dark; }
+  .btn-ghost { @apply text-gray-700 hover:bg-gray-100; }
+  .badge { @apply inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-2 py-0.5 text-xs; }
+  .link { @apply text-brand hover:text-brand-dark underline-offset-4 hover:underline; }
+  .section-title { @apply text-2xl font-semibold mb-6; }
+}
