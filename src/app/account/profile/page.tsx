@@ -115,10 +115,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-4 sm:gap-6">
       <div className="card p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Profile</h1>
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold">My Profile</h1>
           <button className="btn" type="button" onClick={() => setEditing((v) => !v)}>{editing ? 'Close' : 'Edit Profile'}</button>
         </div>
       {msg && <p className="text-sm text-green-700">{msg}</p>}
@@ -150,11 +150,13 @@ export default function ProfilePage() {
             <input name="country" defaultValue={profile?.country || ''} className="border rounded-md px-3 py-2 w-full" />
           </div>
         </div>
-        <button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save Profile'}</button>
+        <div className="flex gap-2 items-center justify-end sm:justify-start sticky bottom-3 sm:static bg-white/70 sm:bg-transparent backdrop-blur sm:backdrop-blur-0 p-2 sm:p-0 rounded-md">
+          <button className="btn btn-primary w-full sm:w-auto" disabled={busy}>{busy ? 'Saving…' : 'Save Profile'}</button>
+        </div>
       </form>
       </div>
-      {/* Side summary card */}
-      <aside className="card p-6 space-y-3 h-max">
+      {/* Side summary card (moves below form on mobile) */}
+      <aside className="card p-6 space-y-3 h-max order-first lg:order-none">
         <h2 className="text-lg font-semibold">Account Info</h2>
         <div>
           <div className="text-sm text-gray-500">Name</div>
