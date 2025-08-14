@@ -34,6 +34,8 @@ export default function ProfilePage() {
         return
       }
       const client = supa!
+      const tableMissing = (m?: string | null) =>
+        !!m && (m.includes("schema cache") || m.toLowerCase().includes("not find the table") || m.toLowerCase().includes("relation") && m.toLowerCase().includes("does not exist"))
       async function loadFrom(table: string) {
         return await client
           .from(table)
@@ -49,7 +51,16 @@ export default function ProfilePage() {
         res = await loadFrom('profiles')
       }
       data = res.data; error = res.error
-      if (error && !data) { setErr(error.message); return }
+      if (error && !data) {
+        if (tableMissing(error.message)) {
+          // Soft fallback: DB not set up yet. Use session data and inform the user.
+          setMsg('Database tables not found. Run the Supabase setup SQL to enable profile storage. Using session data for now.')
+          setProfile({ id: u.id, email: u.email, name: u.name, phone: '', address: '', city: '', country: '' })
+          return
+        }
+        setErr(error.message)
+        return
+      }
       // Merge with auth session defaults so form is prefilled after signup
       setProfile({
         id: u.id,
@@ -106,7 +117,14 @@ export default function ProfilePage() {
         const alt = await saveTo('profiles')
         error = alt.error
       }
-      if (error) throw error
+      if (error) {
+        if (error.message && (error.message.includes('schema cache') || error.message.toLowerCase().includes('not find the table'))) {
+          setMsg('Profile saved locally. To persist, run the Supabase SQL in SUPABASE_SQL_FOR_YOUR_TABLES.sql (creates profiles & user_details).')
+          setProfile(payload)
+          return
+        }
+        throw error
+      }
       setMsg('Profile updated')
       setProfile(payload)
     } catch (e: any) {
