@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import CartButton from './CartButton'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { products } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -10,12 +10,14 @@ import { useCatalog } from '@/lib/catalog'
 export default function Header() {
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [userOpen, setUserOpen] = useState(false)
   const { products: items } = useCatalog()
   const categories = useMemo(() => Array.from(new Set(items.map((p) => p.category))).sort(), [items])
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
   const [q, setQ] = useState('')
+  const userMenuRef = useRef<HTMLDivElement | null>(null)
 
   // Initialize from URL once
   useEffect(() => {
@@ -32,6 +34,19 @@ export default function Header() {
     const next = `/?${params.toString()}#products`
     router.push(next)
   }
+
+  // Close user menu on outside click or Escape
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!userOpen) return
+      const el = userMenuRef.current
+      if (el && e.target instanceof Node && !el.contains(e.target)) setUserOpen(false)
+    }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setUserOpen(false) }
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDocClick); document.removeEventListener('keydown', onKey) }
+  }, [userOpen])
 
   return (
     <header className="sticky top-0 z-40">
@@ -85,7 +100,31 @@ export default function Header() {
                 </div>
               )}
             </div>
-            <Link href="/account" className="hover:text-brand-dark">{user ? `Hi, ${user.name.split(' ')[0]}` : 'Account'}</Link>
+            {user ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  className="hover:text-brand-dark"
+                  onClick={() => setUserOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={userOpen}
+                  aria-controls="user-menu"
+                >
+                  {`Hi, ${user.name.split(' ')[0]}`} ▾
+                </button>
+                {userOpen && (
+                  <div id="user-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
+                    <Link href="/account/profile" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
+                      Manage your Profile
+                    </Link>
+                    <Link href="/" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
+                      Home
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/account" className="hover:text-brand-dark">Account</Link>
+            )}
             <CartButton />
             {/* Mobile hamburger */}
             <button
