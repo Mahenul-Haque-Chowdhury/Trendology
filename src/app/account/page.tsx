@@ -92,7 +92,7 @@ export default function AccountPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Welcome, {user.name}</h1>
         <div className="flex gap-2">
-          <Link href="/account/profile" className="btn">Profile</Link>
+          <Link href="/account/profile" className="btn">Edit Profile</Link>
           <button className="btn" onClick={logout}>Sign Out</button>
         </div>
       </div>

@@ -44,7 +44,7 @@ export default function ProductGrid({ products, showTags = true }: { products: P
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="flex-1 flex flex-col sm:flex-row gap-3">
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center">
             <span className="inline-flex items-center border border-brand rounded-md bg-brand text-white font-semibold text-sm px-3 py-2">Price Range</span>
             <input
               type="number"
@@ -53,7 +53,7 @@ export default function ProductGrid({ products, showTags = true }: { products: P
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder={`Min ${prices.min}`}
-              className="w-28 border rounded-md px-2 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
+              className="w-24 sm:w-28 border rounded-md px-2 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
             />
             <span className="text-gray-500">-</span>
             <input
@@ -63,7 +63,7 @@ export default function ProductGrid({ products, showTags = true }: { products: P
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder={`Max ${prices.max}`}
-              className="w-28 border rounded-md px-2 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
+              className="w-24 sm:w-28 border rounded-md px-2 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
             />
           </div>
         </div>
