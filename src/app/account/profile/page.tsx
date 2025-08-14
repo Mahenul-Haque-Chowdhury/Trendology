@@ -15,7 +15,7 @@ type Profile = {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, updateDisplayName } = useAuth()
   const supa = isSupabaseConfigured() ? getSupabaseClient() : null
   const [profile, setProfile] = useState<Profile | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
@@ -61,8 +61,8 @@ export default function ProfilePage() {
         setErr(error.message)
         return
       }
-      // Merge with auth session defaults so form is prefilled after signup
-      setProfile({
+  // Merge with auth session defaults so form is prefilled after signup
+  const merged = {
         id: u.id,
         email: data?.email ?? u.email,
         name: data?.name ?? u.name,
@@ -70,7 +70,10 @@ export default function ProfilePage() {
         address: data?.address ?? '',
         city: data?.city ?? '',
         country: data?.country ?? '',
-      })
+  }
+  setProfile(merged)
+  // cache for checkout fallback
+  try { if (typeof window !== 'undefined') localStorage.setItem(`storefront.user_details.${u.id}`, JSON.stringify(merged)) } catch {}
     }
     load()
   }, [user, supa])
@@ -125,8 +128,12 @@ export default function ProfilePage() {
         }
         throw error
       }
-      setMsg('Profile updated')
-      setProfile(payload)
+  setMsg('Profile updated')
+  setProfile(payload)
+  // reflect change in header immediately
+  if (payload.name) updateDisplayName(payload.name)
+  // update local cache for checkout prefill
+  try { if (typeof window !== 'undefined') localStorage.setItem(`storefront.user_details.${user!.id}`, JSON.stringify(payload)) } catch {}
     } catch (e: any) {
       setErr(e?.message || 'Failed to save profile')
     } finally { setBusy(false) }

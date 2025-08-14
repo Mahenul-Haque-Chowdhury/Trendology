@@ -23,6 +23,15 @@ export default function CheckoutPage() {
       if (!user) return
       const u = user
       if (!isSupabaseConfigured()) {
+        // try local cache first
+        try {
+          const raw = typeof window !== 'undefined' ? localStorage.getItem(`storefront.user_details.${u.id}`) : null
+          if (raw) {
+            const cached = JSON.parse(raw)
+            setPrefill({ name: cached.name || u.name, email: cached.email || u.email, phone: cached.phone || '', address: cached.address || '', city: cached.city || '', country: cached.country || '' })
+            return
+          }
+        } catch {}
         setPrefill({ name: u.name, email: u.email })
         return
       }
@@ -33,7 +42,7 @@ export default function CheckoutPage() {
         }
         let r = await getFrom('user_details')
         if (r.error) r = await getFrom('profiles')
-        const data = r.data
+    const data = r.data
   if (data) setPrefill({ name: data.name || u.name, email: data.email || u.email, phone: data.phone || '', address: data.address || '', city: data.city || '', country: data.country || '' })
   else setPrefill({ name: u.name, email: u.email, phone: '' })
       } catch {}

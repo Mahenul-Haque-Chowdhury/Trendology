@@ -17,6 +17,7 @@ type AuthState = {
   register: (name: string, email: string, password: string, phone?: string) => Promise<{ ok: boolean; message?: string }>
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>
   logout: () => void
+  updateDisplayName: (name: string) => Promise<void>
 }
 
 const AuthCtx = createContext<AuthState | null>(null)
@@ -118,6 +119,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       saveSession(null)
       setUser(null)
+    },
+    async updateDisplayName(name: string) {
+      // Update auth metadata (if using Supabase) and sync local header state
+      if (useSupabase) {
+        try {
+          const supabase = getSupabaseClient()!
+          await supabase.auth.updateUser({ data: { name } })
+        } catch (e) {
+          console.debug('[auth] updateDisplayName skipped/failed:', e)
+        }
+      }
+      setUser((prev) => (prev ? { ...prev, name } : prev))
     },
   }), [user, useSupabase])
 
