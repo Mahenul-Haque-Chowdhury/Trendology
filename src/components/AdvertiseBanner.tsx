@@ -58,7 +58,7 @@ export default function AdvertiseBanner() {
     >
       {/* Floating container */}
       <div
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]"
+        className="relative overflow-hidden rounded-2xl bg-transparent text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -67,7 +67,7 @@ export default function AdvertiseBanner() {
           {slides.map((s, i) => (
             <div
               key={i}
-              className={`absolute inset-0 transition-opacity duration-700 ${i === index ? 'opacity-100' : 'opacity-0'} bg-gradient-to-br ${(s.gradientFrom ?? 'from-brand')} ${(s.gradientTo ?? 'to-brand-dark')}`}
+              className={`absolute inset-0 transition-opacity duration-700 ${i === index ? 'opacity-100' : 'opacity-0'} bg-gradient-to-br ${(s.gradientFrom ?? 'from-brand')} ${(s.gradientTo ?? 'to-brand-dark')} bg-cover bg-no-repeat`}
               aria-hidden={i !== index}
             >
               {/* Decorative blob */}
@@ -97,7 +97,10 @@ export default function AdvertiseBanner() {
           </div>
         </div>
 
-        {/* Controls */}
+  {/* Bottom gradient to blend with page background */}
+  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-white/80"></div>
+
+  {/* Controls */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 sm:bottom-5 flex items-center justify-center gap-2">
           {slides.map((_, i) => (
             <button
