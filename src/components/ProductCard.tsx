@@ -10,7 +10,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const wishlist = useWishlist()
   return (
     <article className="card card-hover overflow-hidden">
-      <div className="relative aspect-[4/3] sm:aspect-[5/4] bg-gray-50">
+  <div className="relative aspect-[3/2] sm:aspect-[5/4] bg-gray-50">
         <Image
           src={product.image}
           alt={product.name}
