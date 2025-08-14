@@ -70,7 +70,7 @@ export default function AdvertiseBanner() {
     >
       {/* Floating container */}
       <div
-        className="relative overflow-hidden rounded-2xl bg-brand-dark text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]"
+        className={`relative overflow-hidden rounded-2xl ${overlayBgClass(slides[index]?.gradientTo)} text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]`}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
