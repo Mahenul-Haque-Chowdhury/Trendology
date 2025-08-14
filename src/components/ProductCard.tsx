@@ -15,7 +15,7 @@ export default function ProductCard({ product }: { product: Product }) {
           src={product.image}
           alt={product.name}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover"
           priority
         />
@@ -38,14 +38,15 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="ml-1 text-xs text-gray-500">({Math.max(12, product.tags.length * 23)})</span>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-        <div className="mt-4 flex items-end justify-between">
-          <div className="leading-none">
-            <div className="text-2xl font-extrabold tracking-tight">${product.price.toFixed(2)}</div>
-            <div className="text-xs text-gray-500 mt-1">Incl. VAT</div>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="mt-4 sm:flex sm:items-end sm:justify-between">
+          {/* Price + mobile wishlist on same row */}
+          <div className="flex items-center justify-between sm:block w-full sm:w-auto">
+            <div className="leading-none">
+              <div className="text-xl sm:text-2xl font-extrabold tracking-tight">${product.price.toFixed(2)}</div>
+              <div className="text-xs text-gray-500 mt-1">Incl. VAT</div>
+            </div>
             <button
-              className={`rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
+              className={`ml-3 rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'} sm:hidden`}
               aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               onClick={async () => {
                 try {
@@ -61,7 +62,28 @@ export default function ProductCard({ product }: { product: Product }) {
               {/* Heart icon */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
             </button>
-            <button className="btn btn-primary" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
+          </div>
+
+          {/* Actions: desktop shows wishlist + button inline; mobile shows full-width button */}
+          <div className="mt-3 sm:mt-0 flex items-center gap-2 w-full sm:w-auto">
+            <button
+              className={`hidden sm:inline-flex rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
+              aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              onClick={async () => {
+                try {
+                  await wishlist.toggle(product)
+                } catch (e: any) {
+                  if (String(e.message) === 'LOGIN_REQUIRED') {
+                    alert('Please sign in to use wishlist.')
+                  }
+                }
+              }}
+              title={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              {/* Heart icon */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
+            </button>
+            <button className="btn btn-primary flex-1 sm:flex-none w-full sm:w-auto" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
               Add to cart
             </button>
           </div>
