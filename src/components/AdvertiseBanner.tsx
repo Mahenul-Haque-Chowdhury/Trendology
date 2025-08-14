@@ -36,9 +36,21 @@ export default function AdvertiseBanner() {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const timer = useRef<NodeJS.Timeout | null>(null)
+  // Map slide gradient end color to a solid background color class (Tailwind-safe)
+  const overlayBgClass = (to?: string) => {
+    switch (to) {
+      case 'to-emerald-700':
+        return 'bg-emerald-700'
+      case 'to-indigo-700':
+        return 'bg-indigo-700'
+      case 'to-brand-dark':
+        return 'bg-brand-dark'
+      default:
+        return 'bg-brand-dark'
+    }
+  }
 
   useEffect(() => {
-    if (paused) return
     timer.current && clearInterval(timer.current)
     timer.current = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length)
@@ -58,7 +70,7 @@ export default function AdvertiseBanner() {
     >
       {/* Floating container */}
       <div
-        className="relative overflow-hidden rounded-2xl bg-transparent text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]"
+        className="relative overflow-hidden rounded-2xl bg-brand-dark text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -70,8 +82,8 @@ export default function AdvertiseBanner() {
               className={`absolute inset-0 transition-opacity duration-700 ${i === index ? 'opacity-100' : 'opacity-0'} bg-gradient-to-br ${(s.gradientFrom ?? 'from-brand')} ${(s.gradientTo ?? 'to-brand-dark')} bg-cover bg-no-repeat`}
               aria-hidden={i !== index}
             >
-              {/* Decorative blob */}
-              <div className="absolute inset-0 opacity-20" aria-hidden>
+              {/* Decorative blob (hidden on mobile to avoid white band) */}
+              <div className="absolute inset-0 opacity-20 hidden sm:block" aria-hidden>
                 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
                   <path fill="#fff" d="M35.7,-52.6C47.8,-44.1,59.6,-35,64.3,-23.5C69,-12.1,66.6,1.8,60.6,14.5C54.6,27.1,45.1,38.5,33.7,46.7C22.3,54.8,9.1,59.7,-3.2,64C-15.5,68.2,-31.1,71.8,-44.1,66.8C-57.1,61.8,-67.5,48.2,-72.7,33.1C-77.9,18,-77.9,1.4,-72.9,-13.2C-67.8,-27.8,-57.6,-40.3,-45.6,-49.2C-33.6,-58,-19.8,-63.3,-6,-60.9C7.9,-58.5,15.7,-48.4,35.7,-52.6Z" transform="translate(100 100)" />
                 </svg>
@@ -95,12 +107,12 @@ export default function AdvertiseBanner() {
           <div className="invisible px-4 sm:px-10 py-10 sm:py-16 md:py-24 pb-16 sm:pb-24 md:pb-32">
             <span className="text-2xl sm:text-4xl md:text-5xl font-extrabold">.</span>
           </div>
-    </div>
+        </div>
 
-  {/* Bottom gradient to blend with page background */}
-  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-white/80"></div>
+        {/* Bottom solid strip matching the current slide color (no gradient) */}
+        <div className={`pointer-events-none absolute inset-x-0 bottom-0 h-12 ${overlayBgClass(slides[index]?.gradientTo)}`}></div>
 
-  {/* Controls */}
+        {/* Controls */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 sm:bottom-5 flex items-center justify-center gap-2">
           {slides.map((_, i) => (
             <button
