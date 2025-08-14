@@ -101,18 +101,34 @@ export default function Header() {
                 </div>
               )}
             </div>
-            {user ? (
-              <div className="relative hidden sm:block" ref={userMenuRef}>
-                <button
-                  className="hover:text-brand-dark"
-                  onClick={() => setUserOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={userOpen}
-                  aria-controls="user-menu"
-                >
-                  {`Hi, ${user.name.split(' ')[0]}`} ▾
-                </button>
-                {userOpen && (
+            <div className="flex items-center gap-1">
+              {/* Combined profile icon + greeting */}
+              <div className="relative" ref={userMenuRef}>
+                {user ? (
+                  <button
+                    className="rounded-md border px-2 sm:px-3 py-1 hover:bg-gray-50 inline-flex items-center gap-1.5"
+                    onClick={() => setUserOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={userOpen}
+                    aria-controls="user-menu"
+                    title="Account"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span className="hidden sm:inline">{`Hi, ${user.name.split(' ')[0]}`}</span>
+                    <span className="hidden sm:inline" aria-hidden>▾</span>
+                  </button>
+                ) : (
+                  <button
+                    className="rounded-md border px-2 sm:px-3 py-1 hover:bg-gray-50 inline-flex items-center gap-1.5"
+                    onClick={() => router.push('/account')}
+                    aria-label="Account"
+                    title="Account"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span className="hidden sm:inline">Account</span>
+                  </button>
+                )}
+                {user && userOpen && (
                   <div id="user-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
                     <Link href="/account/profile" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
                       Manage your Profile
@@ -123,22 +139,11 @@ export default function Header() {
                   </div>
                 )}
               </div>
-            ) : (
-              <Link href="/account" className="hover:text-brand-dark hidden sm:inline">Account</Link>
-            )}
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              {/* Profile icon button */}
-              <button
-                className="rounded-md border px-2 py-1 hover:bg-gray-50"
-                aria-label={user ? 'Account' : 'Sign in'}
-                onClick={() => router.push('/account')}
-                title={user ? 'Account' : 'Sign in'}
-              >
-                {/* User icon */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </button>
-              <WishlistButton />
-              <CartButton />
+              {/* Tight wishlist + cart spacing */}
+              <div className="flex items-center gap-1">
+                <WishlistButton />
+                <CartButton />
+              </div>
             </div>
             {/* Mobile hamburger */}
             <button
