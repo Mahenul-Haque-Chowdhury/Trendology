@@ -97,8 +97,7 @@ export default function AdvertiseBanner() {
           </div>
         </div>
 
-  {/* Bottom gradient to blend with page background */}
-  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-white/80"></div>
+  {/* Removed bottom white blend to keep cards fully colored */}
 
   {/* Controls */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 sm:bottom-5 flex items-center justify-center gap-2">
