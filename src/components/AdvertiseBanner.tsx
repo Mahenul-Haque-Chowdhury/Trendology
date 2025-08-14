@@ -70,7 +70,7 @@ export default function AdvertiseBanner() {
     >
       {/* Floating container */}
       <div
-        className={`relative overflow-hidden rounded-2xl ${overlayBgClass(slides[index]?.gradientTo)} text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[260px] sm:min-h-[320px]`}
+        className={`relative overflow-hidden rounded-2xl ${overlayBgClass(slides[index]?.gradientTo)} text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[240px] sm:min-h-[320px]`}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -88,7 +88,7 @@ export default function AdvertiseBanner() {
                   <path fill="#fff" d="M35.7,-52.6C47.8,-44.1,59.6,-35,64.3,-23.5C69,-12.1,66.6,1.8,60.6,14.5C54.6,27.1,45.1,38.5,33.7,46.7C22.3,54.8,9.1,59.7,-3.2,64C-15.5,68.2,-31.1,71.8,-44.1,66.8C-57.1,61.8,-67.5,48.2,-72.7,33.1C-77.9,18,-77.9,1.4,-72.9,-13.2C-67.8,-27.8,-57.6,-40.3,-45.6,-49.2C-33.6,-58,-19.8,-63.3,-6,-60.9C7.9,-58.5,15.7,-48.4,35.7,-52.6Z" transform="translate(100 100)" />
                 </svg>
               </div>
-              <div className="relative px-4 sm:px-10 py-10 sm:py-16 md:py-24 pb-16 sm:pb-24 md:pb-32 text-center">
+              <div className="relative px-4 sm:px-10 py-8 sm:py-16 md:py-24 pb-12 sm:pb-24 md:pb-32 text-center">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-2 sm:mb-3">{s.title}</h2>
                 {s.subtitle && (
                   <p className="opacity-90 max-w-2xl mx-auto text-sm sm:text-base">{s.subtitle}</p>
@@ -104,16 +104,16 @@ export default function AdvertiseBanner() {
             </div>
           ))}
           {/* Maintain height for absolute slides */}
-          <div className="invisible px-4 sm:px-10 py-10 sm:py-16 md:py-24 pb-16 sm:pb-24 md:pb-32">
+          <div className="invisible px-4 sm:px-10 py-8 sm:py-16 md:py-24 pb-12 sm:pb-24 md:pb-32">
             <span className="text-2xl sm:text-4xl md:text-5xl font-extrabold">.</span>
           </div>
         </div>
 
         {/* Bottom solid strip matching the current slide color (no gradient) */}
-        <div className={`pointer-events-none absolute inset-x-0 bottom-0 h-12 ${overlayBgClass(slides[index]?.gradientTo)}`}></div>
+        <div className={`pointer-events-none absolute inset-x-0 bottom-0 h-10 ${overlayBgClass(slides[index]?.gradientTo)}`}></div>
 
         {/* Controls */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 sm:bottom-5 flex items-center justify-center gap-2">
+        <div className="pointer-events-none absolute inset-x-0 bottom-3 sm:bottom-5 flex items-center justify-center gap-2">
           {slides.map((_, i) => (
             <button
               key={i}
