@@ -156,3 +156,37 @@ drop policy if exists "User upsert own details" on public.user_details;
 create policy "User upsert own details" on public.user_details for all
   using (auth.uid() = id)
   with check (auth.uid() = id);
+
+-- Wishlists: store per-user saved products
+create table if not exists public.wishlists (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id text not null,
+  product jsonb not null,
+  created_at timestamp with time zone default now(),
+  primary key (user_id, product_id)
+);
+
+alter table public.wishlists enable row level security;
+
+drop policy if exists "Owner can manage wishlists" on public.wishlists;
+create policy "Owner can manage wishlists" on public.wishlists
+for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Optional Address Book table
+create table if not exists public.user_addresses (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  label text,
+  recipient text,
+  phone text,
+  address_line text,
+  city text,
+  country text,
+  is_default boolean default false,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.user_addresses enable row level security;
+drop policy if exists "Owner manage addresses" on public.user_addresses;
+create policy "Owner manage addresses" on public.user_addresses
+for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

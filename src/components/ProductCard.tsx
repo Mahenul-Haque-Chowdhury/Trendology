@@ -3,9 +3,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Product } from '@/lib/products'
 import { useCart } from '@/lib/cart'
+import { useWishlist } from '@/lib/wishlist'
 
 export default function ProductCard({ product }: { product: Product }) {
   const { add } = useCart()
+  const wishlist = useWishlist()
   return (
     <article className="card card-hover overflow-hidden">
       <div className="relative aspect-[4/3] sm:aspect-[5/4] bg-gray-50">
@@ -41,9 +43,28 @@ export default function ProductCard({ product }: { product: Product }) {
             <div className="text-2xl font-extrabold tracking-tight">${product.price.toFixed(2)}</div>
             <div className="text-xs text-gray-500 mt-1">Incl. VAT</div>
           </div>
-          <button className="btn btn-primary" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
-            Add to cart
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className={`rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
+              aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              onClick={async () => {
+                try {
+                  await wishlist.toggle(product)
+                } catch (e: any) {
+                  if (String(e.message) === 'LOGIN_REQUIRED') {
+                    alert('Please sign in to use wishlist.')
+                  }
+                }
+              }}
+              title={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              {/* Heart icon */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
+            </button>
+            <button className="btn btn-primary" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
+              Add to cart
+            </button>
+          </div>
         </div>
       </div>
     </article>
