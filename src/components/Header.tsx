@@ -101,7 +101,7 @@ export default function Header() {
               )}
             </div>
             {user ? (
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative hidden sm:block" ref={userMenuRef}>
                 <button
                   className="hover:text-brand-dark"
                   onClick={() => setUserOpen((v) => !v)}
@@ -123,7 +123,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link href="/account" className="hover:text-brand-dark">Account</Link>
+              <Link href="/account" className="hover:text-brand-dark hidden sm:inline">Account</Link>
             )}
             <CartButton />
             {/* Mobile hamburger */}
@@ -172,6 +172,12 @@ export default function Header() {
             <button className="text-gray-600 hover:text-black" aria-label="Close menu" onClick={() => setMobileOpen(false)}>✕</button>
           </header>
           <nav className="p-4 space-y-2 text-sm">
+            {user && (
+              <>
+                <div className="px-2 py-2 text-gray-600">Hi, {user.name.split(' ')[0]}</div>
+                <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Manage your Profile</Link>
+              </>
+            )}
             <Link href="/" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Home</Link>
             <a href="#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Products</a>
             <details className="px-2 py-2">
@@ -184,7 +190,9 @@ export default function Header() {
                 ))}
               </div>
             </details>
-            <Link href="/account" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>{user ? `Hi, ${user.name.split(' ')[0]}` : 'Account'}</Link>
+            {!user && (
+              <Link href="/account" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Account</Link>
+            )}
           </nav>
         </aside>
       </div>
