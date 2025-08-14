@@ -11,6 +11,8 @@ export default function Footer() {
             <li><a className="hover:text-gray-900" href="/">Home</a></li>
             <li><a className="hover:text-gray-900" href="#products">Products</a></li>
             <li><a className="hover:text-gray-900" href="/account">Account</a></li>
+            <li><a className="hover:text-gray-900" href="/privacy-policy">Privacy Policy</a></li>
+            <li><a className="hover:text-gray-900" href="/terms">Terms &amp; Conditions</a></li>
           </ul>
         </div>
         <div className="sm:justify-self-end">
