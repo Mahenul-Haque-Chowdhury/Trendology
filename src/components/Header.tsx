@@ -126,8 +126,20 @@ export default function Header() {
             ) : (
               <Link href="/account" className="hover:text-brand-dark hidden sm:inline">Account</Link>
             )}
-            <WishlistButton />
-            <CartButton />
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              {/* Profile icon button */}
+              <button
+                className="rounded-md border px-2 py-1 hover:bg-gray-50"
+                aria-label={user ? 'Account' : 'Sign in'}
+                onClick={() => router.push('/account')}
+                title={user ? 'Account' : 'Sign in'}
+              >
+                {/* User icon */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </button>
+              <WishlistButton />
+              <CartButton />
+            </div>
             {/* Mobile hamburger */}
             <button
               className="sm:hidden ml-1 rounded-md border px-2 py-1 hover:bg-gray-50"
