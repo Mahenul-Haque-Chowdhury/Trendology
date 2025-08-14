@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -49,7 +50,16 @@ export default function ProfilePage() {
       }
       data = res.data; error = res.error
       if (error && !data) { setErr(error.message); return }
-      setProfile(data || { id: u.id, email: u.email, name: u.name })
+      // Merge with auth session defaults so form is prefilled after signup
+      setProfile({
+        id: u.id,
+        email: data?.email ?? u.email,
+        name: data?.name ?? u.name,
+        phone: data?.phone ?? (u as any)?.phone ?? (u as any)?.user_metadata?.phone ?? '',
+        address: data?.address ?? '',
+        city: data?.city ?? '',
+        country: data?.country ?? '',
+      })
     }
     load()
   }, [user, supa])
@@ -105,19 +115,23 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto card p-6 space-y-4">
-      <h1 className="text-2xl font-bold">My Profile</h1>
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">My Profile</h1>
+          <button className="btn" type="button" onClick={() => setEditing((v) => !v)}>{editing ? 'Close' : 'Edit Profile'}</button>
+        </div>
       {msg && <p className="text-sm text-green-700">{msg}</p>}
       {err && <p className="text-sm text-red-600">{err}</p>}
       <form className="space-y-4" onSubmit={onSubmit}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Full Name</label>
-            <input name="name" defaultValue={profile?.name || ''} className="border rounded-md px-3 py-2 w-full" />
+            <input name="name" defaultValue={profile?.name || user?.name || ''} className="border rounded-md px-3 py-2 w-full" />
           </div>
           <div>
             <label className="block text-sm font-medium">Email</label>
-            <input name="email" type="email" defaultValue={profile?.email || ''} className="border rounded-md px-3 py-2 w-full" />
+            <input name="email" type="email" defaultValue={profile?.email || user?.email || ''} className="border rounded-md px-3 py-2 w-full" />
           </div>
           <div>
             <label className="block text-sm font-medium">Phone</label>
@@ -138,6 +152,24 @@ export default function ProfilePage() {
         </div>
         <button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save Profile'}</button>
       </form>
+      </div>
+      {/* Side summary card */}
+      <aside className="card p-6 space-y-3 h-max">
+        <h2 className="text-lg font-semibold">Account Info</h2>
+        <div>
+          <div className="text-sm text-gray-500">Name</div>
+          <div className="font-medium">{profile?.name || user?.name}</div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">Email</div>
+          <div className="font-medium break-all">{profile?.email || user?.email}</div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">Phone</div>
+          <div className="font-medium">{profile?.phone || '-'}</div>
+        </div>
+        <div className="text-sm text-gray-500">Use the Edit Profile button to update your details.</div>
+      </aside>
     </div>
   )
 }

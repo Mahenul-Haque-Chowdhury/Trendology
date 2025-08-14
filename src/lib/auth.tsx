@@ -43,12 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const supabase = getSupabaseClient()!
 
-    async function ensureProfile(u: import('@supabase/supabase-js').User) {
+  async function ensureProfile(u: import('@supabase/supabase-js').User) {
       try {
         const payload = {
           id: u.id,
           email: u.email,
-          name: (u.user_metadata?.name as string) || u.email,
+      name: (u.user_metadata?.name as string) || u.email,
+      phone: (u.user_metadata?.phone as string) || null,
         }
         // Upsert profile so the "user data" table is populated even for existing users
         await supabase.from('profiles').upsert(payload, { onConflict: 'id', ignoreDuplicates: false })
