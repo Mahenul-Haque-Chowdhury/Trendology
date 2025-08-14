@@ -140,7 +140,7 @@ export default function Header() {
                 )}
               </div>
               {/* Tight wishlist + cart spacing */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 <WishlistButton />
                 <CartButton />
               </div>
