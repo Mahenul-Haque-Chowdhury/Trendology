@@ -4,7 +4,7 @@ import ProductCard from './ProductCard'
 import type { Product } from '@/lib/products'
 import { useSearchParams } from 'next/navigation'
 
-export default function ProductGrid({ products }: { products: Product[] }) {
+export default function ProductGrid({ products, showTags = true }: { products: Product[]; showTags?: boolean }) {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState('')
   // Initialize from global q param and update when it changes
@@ -78,7 +78,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         </select>
       </div>
 
-      {tags.length > 0 && (
+  {showTags && tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {tags.map((t) => {
             const checked = selectedTags.includes(t)
@@ -92,14 +92,14 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                     setSelectedTags((prev) => (e.target.checked ? [...prev, t] : prev.filter((x) => x !== t)))
                   }
                 />
-                #{t}
+        {t}
               </label>
             )
           })}
         </div>
       )}
 
-  <div className="text-sm text-gray-600">{filtered.length} result{filtered.length === 1 ? '' : 's'}</div>
+  <div className="text-sm text-gray-600">{filtered.length} product{filtered.length === 1 ? '' : 's'}</div>
 
   {filtered.length === 0 ? (
         <p className="text-gray-600">No products match your search.</p>
