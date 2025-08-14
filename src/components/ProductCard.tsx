@@ -8,12 +8,12 @@ export default function ProductCard({ product }: { product: Product }) {
   const { add } = useCart()
   return (
     <article className="card card-hover overflow-hidden">
-      <div className="relative aspect-[4/3] bg-gray-50">
+      <div className="relative aspect-[4/3] sm:aspect-[5/4] bg-gray-50">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 33vw"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover"
           priority
         />
