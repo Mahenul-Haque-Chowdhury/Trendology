@@ -1,6 +1,7 @@
 "use client"
 import Link from 'next/link'
 import CartButton from './CartButton'
+import WishlistButton from './WishlistButton'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { products } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
@@ -125,6 +126,7 @@ export default function Header() {
             ) : (
               <Link href="/account" className="hover:text-brand-dark hidden sm:inline">Account</Link>
             )}
+            <WishlistButton />
             <CartButton />
             {/* Mobile hamburger */}
             <button
