@@ -86,7 +86,7 @@ export default function Header() {
           </div>
 
           {/* Right-side actions */}
-          <nav className="flex items-center gap-4 sm:gap-6 text-sm relative">
+          <nav className="flex items-center gap-3 sm:gap-4 text-sm relative">
             <Link href="/" className="hover:text-brand-dark hidden sm:inline">Home</Link>
             <Link href="#products" className="hover:text-brand-dark hidden sm:inline">Products</Link>
             <div className="relative hidden sm:block">
