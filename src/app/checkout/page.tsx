@@ -5,6 +5,7 @@ import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { useCart } from '@/lib/cart'
 import { useRouter } from 'next/navigation'
+import { useAddresses } from '@/lib/addresses'
 import Link from 'next/link'
 
 export default function CheckoutPage() {
@@ -12,6 +13,9 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string; address?: string; city?: string; country?: string }>({})
+  const [form, setForm] = useState<{ fullName: string; email: string; phone: string; address: string; city: string; country: string }>({ fullName: '', email: '', phone: '', address: '', city: '', country: '' })
+  const { addresses, defaultAddress } = useAddresses(user?.id)
+  const [selectedAddrId, setSelectedAddrId] = useState<string | undefined>(undefined)
   const [method, setMethod] = useState<'cod' | 'bkash' | 'rocket' | 'nagad'>('cod')
 
   const subtotal = total
@@ -50,14 +54,46 @@ export default function CheckoutPage() {
     loadProfile()
   }, [user])
 
+  // Initialize form fields when prefill data arrives
+  useEffect(() => {
+    setForm({
+      fullName: prefill.name || '',
+      email: prefill.email || '',
+      phone: prefill.phone || '',
+      address: prefill.address || '',
+      city: prefill.city || '',
+      country: prefill.country || '',
+    })
+  }, [prefill])
+
+  // Select a default address automatically
+  useEffect(() => {
+    if (!selectedAddrId && defaultAddress?.id) setSelectedAddrId(defaultAddress.id)
+  }, [defaultAddress, selectedAddrId])
+
+  // When an address is selected, copy its fields into the form
+  useEffect(() => {
+    if (!selectedAddrId) return
+    const a = addresses.find(it => it.id === selectedAddrId)
+    if (!a) return
+    setForm(prev => ({
+      ...prev,
+      fullName: prev.fullName || a.recipient || prev.fullName,
+      phone: a.phone || prev.phone,
+      address: a.address_line || prev.address,
+      city: a.city || prev.city,
+      country: a.country || prev.country,
+    }))
+  }, [selectedAddrId, addresses])
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (items.length === 0) return router.push('/')
-    const form = new FormData(e.currentTarget)
-    const name = String(form.get('fullName') || '')
-  const paymentMethod = String(form.get('paymentMethod') || 'cod') as typeof method
-  const phone = String(form.get('phone') || '')
-    const txid = String(form.get('txid') || '')
+    const formData = new FormData(e.currentTarget)
+    const name = String(formData.get('fullName') || '')
+  const paymentMethod = String(formData.get('paymentMethod') || 'cod') as typeof method
+  const phone = String(formData.get('phone') || '')
+    const txid = String(formData.get('txid') || '')
     // Mock order id
     const orderId = 'ORD-' + Date.now().toString(36).toUpperCase()
     // If Supabase is configured, save order in DB (authenticated user recommended)
@@ -70,12 +106,12 @@ export default function CheckoutPage() {
           .insert({
             id: orderIdDb,
             user_id: user?.id ?? null,
-            customer_name: String(form.get('fullName') || ''),
-            email: String(form.get('email') || ''),
+            customer_name: String(formData.get('fullName') || ''),
+            email: String(formData.get('email') || ''),
       phone,
-            address: String(form.get('address') || ''),
-            city: String(form.get('city') || ''),
-            country: String(form.get('country') || ''),
+            address: String(formData.get('address') || ''),
+            city: String(formData.get('city') || ''),
+            country: String(formData.get('country') || ''),
             subtotal,
             shipping,
             total: subtotal + shipping,
@@ -106,12 +142,12 @@ export default function CheckoutPage() {
         id: orderId,
         createdAt: Date.now(),
         customer: {
-          fullName: String(form.get('fullName') || ''),
-          email: String(form.get('email') || ''),
+          fullName: String(formData.get('fullName') || ''),
+          email: String(formData.get('email') || ''),
           phone,
-          address: String(form.get('address') || ''),
-          city: String(form.get('city') || ''),
-          country: String(form.get('country') || ''),
+          address: String(formData.get('address') || ''),
+          city: String(formData.get('city') || ''),
+          country: String(formData.get('country') || ''),
         },
         items: items.map((it) => ({ product: it.product, qty: it.qty })),
         subtotal,
@@ -145,30 +181,45 @@ export default function CheckoutPage() {
       <section className="lg:col-span-2 space-y-4">
         <h1 className="text-3xl font-bold">Checkout</h1>
         <form className="space-y-6" onSubmit={onSubmit}>
+          {addresses.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium">Select a saved address</label>
+                <Link href="/account/address" className="text-sm text-brand hover:underline">Manage</Link>
+              </div>
+              <select className="border rounded-md px-3 py-2 w-full" value={selectedAddrId || ''} onChange={(e) => setSelectedAddrId(e.target.value || undefined)}>
+                {addresses.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {(a.label || 'Address') + (a.city ? ` · ${a.city}` : '')}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="block text-sm font-medium">Full Name</label>
-              <input name="fullName" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.name || ''} />
+              <input name="fullName" required className="border rounded-md px-3 py-2 w-full" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium">Email</label>
-              <input name="email" type="email" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.email || ''} />
+              <input name="email" type="email" required className="border rounded-md px-3 py-2 w-full" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium">Mobile Number</label>
-              <input name="phone" type="tel" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.phone || ''} placeholder="01XXXXXXXXX" />
+              <input name="phone" type="tel" required className="border rounded-md px-3 py-2 w-full" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" />
             </div>
             <div className="space-y-1 sm:col-span-2">
               <label className="block text-sm font-medium">Address</label>
-              <input name="address" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.address || ''} />
+              <input name="address" required className="border rounded-md px-3 py-2 w-full" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium">City</label>
-              <input name="city" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.city || ''} />
+              <input name="city" required className="border rounded-md px-3 py-2 w-full" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium">Country</label>
-              <input name="country" required className="border rounded-md px-3 py-2 w-full" defaultValue={prefill.country || ''} />
+              <input name="country" required className="border rounded-md px-3 py-2 w-full" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
             </div>
           </div>
 
