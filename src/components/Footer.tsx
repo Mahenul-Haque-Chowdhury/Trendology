@@ -8,7 +8,6 @@ export default function Footer() {
         </div>
         <div className="sm:justify-self-center">
           <ul className="space-y-2">
-            <li><a className="hover:text-gray-900" href="/">Home</a></li>
             <li><a className="hover:text-gray-900" href="#products">Products</a></li>
             <li><a className="hover:text-gray-900" href="/account">Account</a></li>
             <li><a className="hover:text-gray-900" href="/privacy-policy">Privacy Policy</a></li>

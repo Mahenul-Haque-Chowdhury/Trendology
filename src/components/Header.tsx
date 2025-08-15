@@ -162,7 +162,6 @@ export default function Header() {
 
           {/* Right-side actions */}
           <nav className="flex items-center gap-3 sm:gap-4 text-sm relative">
-            <Link href="/" className="hover:text-brand-dark hidden sm:inline">Home</Link>
             <Link href="#products" className="hover:text-brand-dark hidden sm:inline">Products</Link>
             <div className="relative hidden sm:block">
               <button className="hover:text-brand-dark" onClick={() => setOpen((s) => !s)} aria-haspopup="menu" aria-expanded={open} aria-controls="category-menu">Categories ▾</button>
@@ -207,9 +206,6 @@ export default function Header() {
                   <div id="user-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
                     <Link href="/account/profile" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
                       Manage your Profile
-                    </Link>
-                    <Link href="/" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
-                      Home
                     </Link>
                     <button
                       role="menuitem"
@@ -288,7 +284,6 @@ export default function Header() {
         <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Manage your Profile</Link>
               </>
             )}
-      <Link href="/" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Home</Link>
       <a href="#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Products</a>
             <details className="px-2 py-2">
               <summary className="cursor-pointer select-none">Categories</summary>
