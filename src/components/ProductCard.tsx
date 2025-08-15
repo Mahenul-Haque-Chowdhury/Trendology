@@ -38,15 +38,15 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="ml-1 text-xs text-gray-500">({Math.max(12, product.tags.length * 23)})</span>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-        <div className="mt-4 sm:flex sm:items-end sm:justify-between">
+    <div className="mt-4 sm:flex sm:items-end sm:justify-between">
           {/* Price + mobile wishlist on same row */}
           <div className="flex items-center justify-between sm:block w-full sm:w-auto">
             <div className="leading-none">
-              <div className="text-xl sm:text-2xl font-extrabold tracking-tight">${product.price.toFixed(2)}</div>
-              <div className="text-xs text-gray-500 mt-1">Incl. VAT</div>
+      <div className="text-lg sm:text-xl font-extrabold tracking-tight">${product.price.toFixed(2)}</div>
+      <div className="text-[11px] text-gray-500 mt-1">Incl. VAT</div>
             </div>
             <button
-              className={`ml-3 rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'} sm:hidden`}
+      className={`ml-2 rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'} sm:hidden`}
               aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               onClick={async () => {
                 try {
@@ -65,7 +65,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
 
           {/* Actions: desktop shows wishlist + button inline; mobile shows full-width button */}
-          <div className="mt-3 sm:mt-0 flex items-center gap-2 w-full sm:w-auto">
+          <div className="mt-3 sm:mt-0 flex items-center gap-2 w-full sm:w-auto sm:flex-nowrap">
             <button
               className={`hidden sm:inline-flex rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
               aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
