@@ -1,11 +1,10 @@
 "use client"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
 
   const sections = useMemo(() => ([
     { group: 'Manage My Account', items: [
@@ -26,16 +25,21 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const flat = useMemo(() => sections.flatMap((g) => g.items), [sections])
   const current = useMemo(() => flat.find((i) => i.href === pathname)?.label || 'Account', [flat, pathname])
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setMobileOpen(false) }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [])
-
   const link = (href: string, label: string) => (
     <Link
       href={href}
       className={`block rounded-md px-3 py-2 text-sm ${pathname === href ? 'bg-brand text-white' : 'hover:bg-gray-100'}`}
+    >
+      {label}
+    </Link>
+  )
+
+  const pill = (href: string, label: string) => (
+    <Link
+      key={href}
+      href={href}
+      aria-current={pathname === href ? 'page' : undefined}
+      className={`shrink-0 rounded-full px-3 py-1.5 text-sm border ${pathname === href ? 'bg-brand border-brand text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
     >
       {label}
     </Link>
@@ -65,46 +69,22 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
       {/* Content area */}
       <section>
-        {/* Mobile compact header */}
+        {/* Mobile: sticky, horizontally scrollable pill nav with all account links */}
         <div className="lg:hidden sticky top-2 z-10">
-          <div className="card px-3 py-2 flex items-center justify-between">
-            <div className="font-medium truncate">{current}</div>
-            <button className="btn btn-sm" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-expanded={mobileOpen}>
-              Menu
-            </button>
+          <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 rounded-md border px-2 py-2 overflow-x-auto">
+            <nav className="flex gap-2 min-w-0">
+              {pill('/account/profile', 'Profile')}
+              {pill('/account/address', 'Address')}
+              {pill('/account/wallet', 'Wallet')}
+              {pill('/account/orders', 'Orders')}
+              {pill('/account/returns', 'Returns')}
+              {pill('/account/cancellations', 'Cancellations')}
+              {pill('/account/wishlist', 'Wishlist')}
+            </nav>
           </div>
         </div>
-        <div className="mt-2 lg:mt-0">{children}</div>
+        <div className="mt-3 lg:mt-0">{children}</div>
       </section>
-
-      {/* Mobile bottom-sheet menu */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 right-0 bottom-0 bg-white rounded-t-xl shadow-xl p-4 max-h-[80vh] overflow-y-auto">
-            {sections.map((group) => (
-              <div key={group.group} className="mb-4">
-                <div className="text-sm font-semibold text-gray-700 mb-2">{group.group}</div>
-                <nav className="space-y-1">
-                  {group.items.map((it) => (
-                    <Link
-                      key={it.href}
-                      href={it.href}
-                      className={`block rounded-md px-3 py-2 text-sm ${pathname === it.href ? 'bg-brand text-white' : 'hover:bg-gray-100'}`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {it.label}
-                    </Link>
-                  ))}
-                </nav>
-              </div>
-            ))}
-            <div className="pt-2">
-              <button className="btn w-full" onClick={() => setMobileOpen(false)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
