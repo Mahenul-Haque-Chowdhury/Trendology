@@ -81,9 +81,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               {pill('/account/profile', 'Profile')}
               {pill('/account/address', 'Address')}
               {pill('/account/orders', 'Orders')}
+              {pill('/account/wishlist', 'Wishlist')}
               {pill('/account/returns', 'Returns')}
               {pill('/account/cancellations', 'Cancellations')}
-              {pill('/account/wishlist', 'Wishlist')}
               {pill('/account/wallet', 'Wallet')}
             </nav>
           </div>
