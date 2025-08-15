@@ -10,7 +10,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     { group: 'Manage My Account', items: [
       { href: '/account/profile', label: 'My Profile' },
       { href: '/account/address', label: 'Address Book' },
-      { href: '/account/wallet', label: 'AamarWallet' },
     ]},
     { group: 'Orders', items: [
       { href: '/account/orders', label: 'My Orders' },
@@ -19,6 +18,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     ]},
     { group: 'Lists', items: [
       { href: '/account/wishlist', label: 'My Wishlist' },
+    ]},
+    { group: 'Wallet', items: [
+      { href: '/account/wallet', label: 'AamarWallet' },
     ]},
   ]), [])
 
@@ -53,7 +55,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         <nav className="space-y-1">
           {link('/account/profile', 'My Profile')}
           {link('/account/address', 'Address Book')}
-          {link('/account/wallet', 'AamarWallet')}
         </nav>
         <h2 className="text-lg font-semibold my-3">Orders</h2>
         <nav className="space-y-1">
@@ -65,6 +66,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         <nav className="space-y-1">
           {link('/account/wishlist', 'My Wishlist')}
         </nav>
+        <h2 className="text-lg font-semibold my-3">Wallet</h2>
+        <nav className="space-y-1">
+          {link('/account/wallet', 'AamarWallet')}
+        </nav>
       </aside>
 
       {/* Content area */}
@@ -75,11 +80,11 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             <nav className="flex gap-2 min-w-0">
               {pill('/account/profile', 'Profile')}
               {pill('/account/address', 'Address')}
-              {pill('/account/wallet', 'Wallet')}
               {pill('/account/orders', 'Orders')}
               {pill('/account/returns', 'Returns')}
               {pill('/account/cancellations', 'Cancellations')}
               {pill('/account/wishlist', 'Wishlist')}
+              {pill('/account/wallet', 'Wallet')}
             </nav>
           </div>
         </div>
