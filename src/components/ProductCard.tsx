@@ -43,7 +43,6 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="flex items-center justify-between sm:block w-full sm:w-auto">
             <div className="leading-none h-10 sm:h-12 flex flex-col justify-end">
               <div className="text-lg sm:text-xl font-extrabold tracking-tight whitespace-nowrap">${product.price.toFixed(2)}</div>
-              <div className="text-[11px] text-gray-500 mt-1">Incl. VAT</div>
             </div>
             <button
       className={`ml-2 rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'} sm:hidden`}
