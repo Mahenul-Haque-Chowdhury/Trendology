@@ -186,7 +186,7 @@ export default function AdminPage() {
                 {orders.map((o) => (
                   <tr key={o.id} className="border-b align-top">
                     <td className="p-2">
-                      <div className="font-medium">#{o.id}</div>
+                      <div className="font-medium"><Link href={`/admin/orders/${encodeURIComponent(o.id)}`} className="text-brand hover:underline">#{o.id}</Link></div>
                       <div className="text-xs text-gray-500">{new Date(o.createdAt).toLocaleString()}</div>
                     </td>
                     <td className="p-2">

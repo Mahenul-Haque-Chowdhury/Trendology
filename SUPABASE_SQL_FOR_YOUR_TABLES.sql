@@ -23,6 +23,8 @@ alter table public.orders
   add column if not exists user_id uuid references auth.users(id) on delete set null,
   -- Human-friendly short order code (e.g., ORD-ABC123) for display
   add column if not exists code text unique,
+  add column if not exists created_at timestamp with time zone default now(),
+  add column if not exists updated_at timestamp with time zone default now(),
   add column if not exists customer_name text,
   add column if not exists email text,
   add column if not exists address text,
@@ -33,7 +35,26 @@ alter table public.orders
   add column if not exists total numeric(10,2) default 0 not null,
   add column if not exists payment_method text,
   add column if not exists txid text,
-  add column if not exists status text default 'pending' not null;
+  add column if not exists status text default 'pending' not null,
+  add column if not exists tracking_number text,
+  add column if not exists courier text,
+  add column if not exists admin_notes text,
+  add column if not exists paid_at timestamp with time zone,
+  add column if not exists shipped_at timestamp with time zone;
+
+-- Keep orders.updated_at fresh
+create or replace function public.set_orders_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists set_orders_updated_at on public.orders;
+create trigger set_orders_updated_at
+before update on public.orders
+for each row execute procedure public.set_orders_updated_at();
 
 -- Create order_items if not exists
 create table if not exists public.order_items (
@@ -65,6 +86,15 @@ for insert with check (true);
 drop policy if exists "Owner can read orders" on public.orders;
 create policy "Owner can read orders" on public.orders
 for select using (auth.uid() = user_id or auth.role() = 'service_role');
+
+-- Demo: allow updates/deletes to orders (consider restricting in production)
+drop policy if exists "Anyone update orders" on public.orders;
+create policy "Anyone update orders" on public.orders
+for update using (true) with check (true);
+
+drop policy if exists "Anyone delete orders" on public.orders;
+create policy "Anyone delete orders" on public.orders
+for delete using (true);
 
 drop policy if exists "Insert order items" on public.order_items;
 create policy "Insert order items" on public.order_items
