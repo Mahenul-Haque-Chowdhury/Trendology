@@ -51,11 +51,10 @@ export default function Header() {
     if (prev) setTimeout(() => prev.focus(), 0)
   }, [])
 
-  const confirmSignOut = useCallback(() => {
+  const confirmSignOut = useCallback(async () => {
     setShowSignOutModal(false)
-    logout()
-    router.push('/')
-  }, [logout, router])
+    await logout()
+  }, [logout])
 
   // Focus management and keyboard handling for modal
   useEffect(() => {

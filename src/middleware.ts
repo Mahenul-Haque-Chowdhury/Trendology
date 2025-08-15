@@ -5,8 +5,9 @@ export function middleware(req: NextRequest) {
 	const { pathname } = req.nextUrl
 	if (!pathname.startsWith('/admin')) return NextResponse.next()
 
-	const user = process.env.ADMIN_USER || 'admin'
-	const pass = process.env.ADMIN_PASS || 'admin'
+	// Use server env vars; set in Vercel Project Settings → Environment Variables
+	const user = process.env.ADMIN_USER || process.env.NEXT_PUBLIC_ADMIN_USER || 'admin'
+	const pass = process.env.ADMIN_PASS || process.env.NEXT_PUBLIC_ADMIN_PASS || 'admin'
 
 	const authHeader = req.headers.get('authorization') || ''
 	if (!authHeader.startsWith('Basic ')) {

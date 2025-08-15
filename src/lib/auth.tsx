@@ -16,7 +16,7 @@ type AuthState = {
   user: User | null
   register: (name: string, email: string, password: string, phone?: string) => Promise<{ ok: boolean; message?: string }>
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>
-  logout: () => void
+  logout: () => Promise<void>
   updateDisplayName: (name: string) => Promise<void>
 }
 
@@ -112,13 +112,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(u)
       return { ok: true }
     },
-    logout() {
-      if (useSupabase) {
-        const supabase = getSupabaseClient()!
-        supabase.auth.signOut()
+    async logout() {
+      try {
+        if (useSupabase) {
+          const supabase = getSupabaseClient()!
+          // Best-effort local sign-out
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+          // Hard-clear any persisted auth in case of edge cases
+          try {
+            localStorage.removeItem('aamardokan.auth')
+          } catch {}
+        }
+      } finally {
+        // Always clear fallback session
+        saveSession(null)
+        setUser(null)
+        // Force a hard reload to ensure all client state is reset
+        if (typeof window !== 'undefined') {
+          setTimeout(() => { window.location.replace('/') }, 10)
+        }
       }
-      saveSession(null)
-      setUser(null)
     },
     async updateDisplayName(name: string) {
       // Update auth metadata (if using Supabase) and sync local header state
