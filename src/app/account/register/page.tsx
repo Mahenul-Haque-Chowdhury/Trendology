@@ -14,9 +14,9 @@ export default function RegisterPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const res = await register(name, email, password, phone)
-    if (!res.ok) return setError(res.message || 'Registration failed')
-    router.push('/account')
+  const res = await register(name, email, password, phone)
+  if (!res.ok) return setError(res.message || 'Registration failed')
+  router.push('/account/orders')
   }
 
   return (

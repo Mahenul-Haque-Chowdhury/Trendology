@@ -12,9 +12,9 @@ export default function LoginPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const res = await login(email, password)
-    if (!res.ok) return setError(res.message || 'Login failed')
-    router.push('/account')
+  const res = await login(email, password)
+  if (!res.ok) return setError(res.message || 'Login failed')
+  router.push('/account/orders')
   }
 
   return (
