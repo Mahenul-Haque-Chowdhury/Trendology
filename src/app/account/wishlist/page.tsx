@@ -68,6 +68,7 @@ export default function WishlistPage() {
         <div className="text-gray-600 text-sm">Your wishlist is empty. Browse products and tap the heart to save them.</div>
       ) : (
         <div className="space-y-3">
+          <p className="text-sm text-gray-600">Select products to check out.</p>
           {/* Bulk controls */}
           <div className="flex items-center justify-between">
             <label className="inline-flex items-center gap-2 select-none">
