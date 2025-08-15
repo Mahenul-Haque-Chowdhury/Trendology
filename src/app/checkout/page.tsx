@@ -14,7 +14,8 @@ export default function CheckoutPage() {
   const { user } = useAuth()
   const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string; address?: string; city?: string; country?: string }>({})
   const [form, setForm] = useState<{ fullName: string; email: string; phone: string; address: string; city: string; country: string }>({ fullName: '', email: '', phone: '', address: '', city: '', country: '' })
-  const { addresses, defaultAddress } = useAddresses(user?.id)
+  // Avoid instantiating the hook with undefined and let it bootstrap once user is present
+  const { addresses, defaultAddress } = useAddresses(user?.id || undefined)
   const [selectedAddrId, setSelectedAddrId] = useState<string | undefined>(undefined)
   const [method, setMethod] = useState<'cod' | 'bkash' | 'rocket' | 'nagad'>('cod')
 
@@ -69,7 +70,7 @@ export default function CheckoutPage() {
   // Select a default address automatically
   useEffect(() => {
     if (!selectedAddrId && defaultAddress?.id) setSelectedAddrId(defaultAddress.id)
-  }, [defaultAddress, selectedAddrId])
+  }, [defaultAddress?.id, selectedAddrId])
 
   // When an address is selected, copy its fields into the form
   useEffect(() => {

@@ -17,37 +17,60 @@ export type Address = {
 
 const Key = 'storefront.addresses.v1'
 
+// Module-level cache to dedupe fetches across Strict Mode double-invocation and multiple consumers.
+const addressCache = new Map<string, Address[]>()
+const inFlight = new Map<string, Promise<Address[]>>()
+
 export function useAddresses(userId?: string) {
   const [items, setItems] = useState<Address[]>([])
   const supabase = isSupabaseConfigured() ? getSupabaseClient() : null
 
   useEffect(() => {
     let cancelled = false
-    async function load() {
+    async function loadOnce() {
       if (!userId) { setItems([]); return }
-      if (supabase) {
-        const { data, error } = await supabase
-          .from('user_addresses')
-          .select('*')
-          .eq('user_id', userId)
-          .order('is_default', { ascending: false })
-          .order('created_at', { ascending: false })
-        if (!cancelled) setItems(error ? [] : (data as Address[]) || [])
+      // Serve from cache if available
+      const cached = addressCache.get(userId)
+      if (cached) { setItems(cached); return }
+      // Deduplicate concurrent loads
+      if (inFlight.has(userId)) {
+        try {
+          const data = await inFlight.get(userId)!
+          if (!cancelled) setItems(data)
+        } catch {}
         return
       }
-      try {
-        const raw = localStorage.getItem(`${Key}:${userId}`)
-        const parsed = raw ? (JSON.parse(raw) as Address[]) : []
-        if (!cancelled) setItems(parsed)
-      } catch {}
+      const p = (async () => {
+        if (isSupabaseConfigured()) {
+          const client = getSupabaseClient()!
+          const { data, error } = await client
+            .from('user_addresses')
+            .select('*')
+            .eq('user_id', userId)
+            .order('is_default', { ascending: false })
+            .order('created_at', { ascending: false })
+          if (error) return [] as Address[]
+          return (data as Address[]) || []
+        }
+        try {
+          const raw = localStorage.getItem(`${Key}:${userId}`)
+          return raw ? (JSON.parse(raw) as Address[]) : []
+        } catch { return [] as Address[] }
+      })()
+      inFlight.set(userId, p)
+      const data = await p
+      inFlight.delete(userId)
+      addressCache.set(userId, data)
+      if (!cancelled) setItems(data)
     }
-    load()
+    loadOnce()
     return () => { cancelled = true }
-  }, [userId, supabase])
+  }, [userId])
 
   function saveLocal(next: Address[]) {
     setItems(next)
     if (!userId) return
+    addressCache.set(userId, next)
     try { localStorage.setItem(`${Key}:${userId}`, JSON.stringify(next)) } catch {}
   }
 
@@ -74,7 +97,10 @@ export function useAddresses(userId?: string) {
           .eq('user_id', userId)
           .order('is_default', { ascending: false })
           .order('created_at', { ascending: false })
-        if (res.data) setItems(res.data as Address[])
+        if (res.data) {
+          setItems(res.data as Address[])
+          addressCache.set(userId, res.data as Address[])
+        }
         return
       }
       const next = items.map((a) => (a.id === id ? { ...a, ...patch } : a))
@@ -96,7 +122,10 @@ export function useAddresses(userId?: string) {
         }
         // reload
         const res = await supabase.from('user_addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }).order('created_at', { ascending: false })
-        if (res.data) setItems(res.data as Address[])
+        if (res.data) {
+          setItems(res.data as Address[])
+          addressCache.set(userId, res.data as Address[])
+        }
         // Persist a checkout prefill hint
         try {
           const preferred = res.data?.find((a: any) => a.is_default) || data
@@ -119,7 +148,10 @@ export function useAddresses(userId?: string) {
       if (supabase) {
         await supabase.from('user_addresses').delete().eq('user_id', userId).eq('id', id)
         const res = await supabase.from('user_addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }).order('created_at', { ascending: false })
-        if (res.data) setItems(res.data as Address[])
+        if (res.data) {
+          setItems(res.data as Address[])
+          addressCache.set(userId, res.data as Address[])
+        }
         return
       }
       saveLocal(items.filter(a => a.id !== id))
@@ -130,7 +162,10 @@ export function useAddresses(userId?: string) {
         await supabase.from('user_addresses').update({ is_default: true }).eq('user_id', userId).eq('id', id)
         await supabase.from('user_addresses').update({ is_default: false }).eq('user_id', userId).neq('id', id)
         const res = await supabase.from('user_addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }).order('created_at', { ascending: false })
-        if (res.data) setItems(res.data as Address[])
+        if (res.data) {
+          setItems(res.data as Address[])
+          addressCache.set(userId, res.data as Address[])
+        }
         return
       }
       saveLocal(items.map(a => ({ ...a, is_default: a.id === id })))
