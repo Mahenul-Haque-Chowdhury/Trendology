@@ -19,6 +19,11 @@ export default function RegisterPage() {
     setError(null)
     const res = await register(name, email, password, phone)
     if (!res.ok) return setError(res.message || 'Registration failed')
+    // Save a minimal local cache for immediate prefill on Profile/Checkout
+    try {
+      const key = `storefront.user_details.pending`
+      localStorage.setItem(key, JSON.stringify({ email, name, phone }))
+    } catch {}
     // Do not auto-redirect; prompt user to verify email
     setSuccessEmail(email)
   }

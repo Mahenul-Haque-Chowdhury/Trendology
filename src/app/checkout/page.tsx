@@ -86,6 +86,28 @@ export default function CheckoutPage() {
     }))
   }, [selectedAddrId, addresses])
 
+  // If user just added an address, prefill from the checkout prefill cache
+  useEffect(() => {
+    if (!user?.id) return
+    try {
+      const key = `storefront.checkout.prefill.${user.id}`
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null
+      if (!raw) return
+      const a = JSON.parse(raw)
+      setForm(prev => ({
+        ...prev,
+        fullName: prev.fullName || a.recipient || prev.fullName,
+        phone: a.phone || prev.phone,
+        address: a.address_line || prev.address,
+        city: a.city || prev.city,
+        country: a.country || prev.country,
+      }))
+      // Also try to select it in the dropdown when it exists
+      const found = addresses.find(it => it.id === a.id)
+      if (found?.id) setSelectedAddrId(found.id)
+    } catch {}
+  }, [user?.id, addresses])
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (items.length === 0) return router.push('/')

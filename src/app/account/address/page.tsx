@@ -2,7 +2,7 @@
 import { useAuth } from '@/lib/auth'
 import Link from 'next/link'
 import { useAddresses, type Address } from '@/lib/addresses'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function AddressBookPage() {
   const { user } = useAuth()
@@ -22,11 +22,31 @@ export default function AddressBookPage() {
 }
 
 function AddressManager({ userId }: { userId: string }) {
+  const { user } = useAuth()
   const { addresses, add, remove, setDefault } = useAddresses(userId)
   const [form, setForm] = useState<Omit<Address, 'id' | 'user_id' | 'created_at'>>({
     label: 'Home', recipient: '', phone: '', address_line: '', city: '', country: 'Bangladesh', is_default: false,
   })
   const [busy, setBusy] = useState(false)
+
+  // Prefill recipient/phone from cached profile or auth metadata
+  useEffect(() => {
+    try {
+      let cached: any = null
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem(`storefront.user_details.${userId}`)
+        cached = raw ? JSON.parse(raw) : null
+      }
+      const recipient = cached?.name || user?.name || ''
+      const phone = cached?.phone || (user as any)?.user_metadata?.phone || ''
+      setForm((prev) => ({ ...prev, recipient: prev.recipient || recipient, phone: prev.phone || phone }))
+    } catch {}
+  }, [userId, user])
+
+  // If no addresses exist yet, default the new one to is_default
+  useEffect(() => {
+    if (addresses.length === 0) setForm((prev) => ({ ...prev, is_default: true }))
+  }, [addresses.length])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -44,10 +44,9 @@ export default function ProfilePage() {
           .maybeSingle()
       }
       let data: any = null; let error: any = null
-      // try user_details first
+      // try user_details first, then profiles
       let res = await loadFrom('user_details')
-      if (res.error) {
-        // fallback to profiles
+      if (res.error || !res.data) {
         res = await loadFrom('profiles')
       }
       data = res.data; error = res.error
@@ -62,18 +61,26 @@ export default function ProfilePage() {
         return
       }
   // Merge with auth session defaults so form is prefilled after signup
+  let pendingLocal: any = null
+  try { if (typeof window !== 'undefined') { const raw = localStorage.getItem('storefront.user_details.pending'); pendingLocal = raw ? JSON.parse(raw) : null } } catch {}
   const merged = {
         id: u.id,
         email: data?.email ?? u.email,
         name: data?.name ?? u.name,
-        phone: data?.phone ?? (u as any)?.phone ?? (u as any)?.user_metadata?.phone ?? '',
+        phone: data?.phone ?? pendingLocal?.phone ?? (u as any)?.user_metadata?.phone ?? (u as any)?.phone ?? '',
         address: data?.address ?? '',
         city: data?.city ?? '',
         country: data?.country ?? '',
   }
   setProfile(merged)
   // cache for checkout fallback
-  try { if (typeof window !== 'undefined') localStorage.setItem(`storefront.user_details.${u.id}`, JSON.stringify(merged)) } catch {}
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`storefront.user_details.${u.id}`, JSON.stringify(merged))
+      // Clear pending cache after first read
+      localStorage.removeItem('storefront.user_details.pending')
+    }
+  } catch {}
     }
     load()
   }, [user, supa])

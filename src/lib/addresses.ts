@@ -71,6 +71,11 @@ export function useAddresses(userId?: string) {
         // reload
         const res = await supabase.from('user_addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }).order('created_at', { ascending: false })
         if (res.data) setItems(res.data as Address[])
+        // Persist a checkout prefill hint
+        try {
+          const preferred = res.data?.find((a: any) => a.is_default) || data
+          if (preferred) localStorage.setItem(`storefront.checkout.prefill.${userId}`, JSON.stringify(preferred))
+        } catch {}
         return data?.id as string
       }
       const id = 'ADDR-' + Date.now().toString(36)
@@ -79,6 +84,8 @@ export function useAddresses(userId?: string) {
       if (addr.is_default) next.forEach(a => a.is_default = false)
       next.unshift(newAddr)
       saveLocal(next)
+      // Persist a checkout prefill hint
+      try { localStorage.setItem(`storefront.checkout.prefill.${userId}`, JSON.stringify(newAddr)) } catch {}
       return id
     },
     async remove(id: string) {

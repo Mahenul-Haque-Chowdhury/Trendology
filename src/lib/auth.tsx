@@ -54,6 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         // Upsert profile so the "user data" table is populated even for existing users
         await supabase.from('profiles').upsert(payload, { onConflict: 'id', ignoreDuplicates: false })
+        // Also try to persist into user_details if available (ignore if table missing)
+        try {
+          await supabase.from('user_details').upsert(payload as any, { onConflict: 'id', ignoreDuplicates: false })
+        } catch {}
       } catch (e) {
         console.debug('[auth] ensureProfile skipped/failed:', e)
       }
