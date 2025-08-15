@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import CartButton from './CartButton'
 import WishlistButton from './WishlistButton'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { products } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -20,6 +20,73 @@ export default function Header() {
   const [q, setQ] = useState('')
   const userMenuRef = useRef<HTMLDivElement | null>(null)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
+  const modalRef = useRef<HTMLDivElement | null>(null)
+  const cancelBtnRef = useRef<HTMLButtonElement | null>(null)
+  const confirmBtnRef = useRef<HTMLButtonElement | null>(null)
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+
+  const closeSignOutModal = useCallback(() => {
+    setShowSignOutModal(false)
+    // restore focus to the previously focused element
+    const prev = previouslyFocusedRef.current
+    if (prev) setTimeout(() => prev.focus(), 0)
+  }, [])
+
+  const confirmSignOut = useCallback(() => {
+    setShowSignOutModal(false)
+    logout()
+    router.push('/')
+  }, [logout, router])
+
+  // Focus management and keyboard handling for modal
+  useEffect(() => {
+    if (!showSignOutModal) return
+    // Save previously focused element
+    previouslyFocusedRef.current = (document.activeElement as HTMLElement) || null
+    // Prevent body scroll while modal open
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    // Focus the cancel button initially
+    setTimeout(() => cancelBtnRef.current?.focus(), 0)
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (!modalRef.current) return
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        closeSignOutModal()
+        return
+      }
+      if (e.key === 'Enter') {
+        // Confirm with Enter
+        e.preventDefault()
+        confirmSignOut()
+        return
+      }
+      if (e.key === 'Tab') {
+        // Trap focus within modal
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const list = Array.from(focusables).filter((el) => !el.hasAttribute('disabled'))
+        if (list.length === 0) return
+        const first = list[0]
+        const last = list[list.length - 1]
+        const active = document.activeElement as HTMLElement
+        if (!e.shiftKey && active === last) {
+          e.preventDefault()
+          first.focus()
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [showSignOutModal, closeSignOutModal, confirmSignOut])
 
   // Initialize from URL once
   useEffect(() => {
@@ -231,16 +298,24 @@ export default function Header() {
       </div>
       {/* Sign out confirmation modal */}
       {showSignOutModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowSignOutModal(false)} />
-          <div className="relative bg-white rounded-lg shadow-xl w-[90vw] max-w-sm mx-auto p-5">
-            <h2 className="text-lg font-semibold mb-1">Sign out</h2>
-            <p className="text-sm text-gray-600 mb-4">Are you sure you want to sign out?</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center" aria-hidden={!showSignOutModal}>
+          <div className="absolute inset-0 bg-black/40" onClick={closeSignOutModal} />
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="signout-title"
+            aria-describedby="signout-desc"
+            className="relative bg-white rounded-lg shadow-xl w-[90vw] max-w-sm mx-auto p-5"
+          >
+            <h2 id="signout-title" className="text-lg font-semibold mb-1">Sign out</h2>
+            <p id="signout-desc" className="text-sm text-gray-600 mb-4">Are you sure you want to sign out?</p>
             <div className="flex items-center justify-end gap-2">
-              <button className="btn btn-sm" onClick={() => setShowSignOutModal(false)}>Cancel</button>
+              <button ref={cancelBtnRef} className="btn btn-sm" onClick={closeSignOutModal}>Cancel</button>
               <button
+                ref={confirmBtnRef}
                 className="btn btn-sm btn-primary bg-red-600 hover:bg-red-700 border-red-600"
-                onClick={() => { setShowSignOutModal(false); logout(); router.push('/') }}
+                onClick={confirmSignOut}
               >
                 Sign out
               </button>
