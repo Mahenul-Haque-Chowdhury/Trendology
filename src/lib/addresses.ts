@@ -55,6 +55,32 @@ export function useAddresses(userId?: string) {
     addresses: items,
     hasAny: items.length > 0,
     defaultAddress: useMemo(() => items.find(a => a.is_default) || items[0], [items]),
+    async update(id: string, patch: Partial<Omit<Address, 'id' | 'user_id' | 'created_at'>>) {
+      if (!userId) throw new Error('LOGIN_REQUIRED')
+      if (supabase) {
+        const { error } = await supabase
+          .from('user_addresses')
+          .update(patch)
+          .eq('user_id', userId)
+          .eq('id', id)
+        if (error) throw error
+        // If turning this one default, unset others
+        if (patch.is_default) {
+          await supabase.from('user_addresses').update({ is_default: false }).eq('user_id', userId).neq('id', id)
+        }
+        const res = await supabase
+          .from('user_addresses')
+          .select('*')
+          .eq('user_id', userId)
+          .order('is_default', { ascending: false })
+          .order('created_at', { ascending: false })
+        if (res.data) setItems(res.data as Address[])
+        return
+      }
+      const next = items.map((a) => (a.id === id ? { ...a, ...patch } : a))
+      if (patch.is_default) next.forEach((a) => { if (a.id !== id) a.is_default = false })
+      saveLocal(next)
+    },
     async add(addr: Omit<Address, 'id' | 'user_id' | 'created_at'>) {
       if (!userId) throw new Error('LOGIN_REQUIRED')
       if (supabase) {

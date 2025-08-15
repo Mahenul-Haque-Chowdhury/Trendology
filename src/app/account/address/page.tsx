@@ -23,11 +23,13 @@ export default function AddressBookPage() {
 
 function AddressManager({ userId }: { userId: string }) {
   const { user } = useAuth()
-  const { addresses, add, remove, setDefault } = useAddresses(userId)
+  const { addresses, add, update, remove, setDefault } = useAddresses(userId)
   const [form, setForm] = useState<Omit<Address, 'id' | 'user_id' | 'created_at'>>({
     label: 'Home', recipient: '', phone: '', address_line: '', city: '', country: 'Bangladesh', is_default: false,
   })
   const [busy, setBusy] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; label?: string } | null>(null)
 
   // Prefill recipient/phone from cached profile or auth metadata
   useEffect(() => {
@@ -56,6 +58,7 @@ function AddressManager({ userId }: { userId: string }) {
   }
 
   return (
+    <>
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="card p-6">
         <h1 className="text-2xl font-bold mb-4">Address Book</h1>
@@ -64,18 +67,23 @@ function AddressManager({ userId }: { userId: string }) {
         ) : (
           <ul className="divide-y">
             {addresses.map((a) => (
-              <li key={a.id} className="py-3 flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-medium">
-                    {a.label || 'Address'} {a.is_default && <span className="ml-2 text-xs rounded px-2 py-0.5 bg-green-100 text-green-700">Default</span>}
-                  </div>
-                  <div className="text-sm text-gray-700">{a.recipient} {a.phone ? `· ${a.phone}` : ''}</div>
-                  <div className="text-sm text-gray-500">{a.address_line}, {a.city}, {a.country}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {!a.is_default && <button className="btn btn-sm" onClick={() => setDefault(a.id!)}>Make Default</button>}
-                  <button className="btn btn-sm btn-outline" onClick={() => remove(a.id!)}>Delete</button>
-                </div>
+              <li key={a.id} className="py-3">
+                {editingId === a.id ? (
+                  <EditableAddressCard
+                    address={a}
+                    onCancel={() => setEditingId(null)}
+                    onSave={async (patch) => { await update(a.id!, patch); setEditingId(null) }}
+                    onDelete={() => setConfirmDelete({ id: a.id!, label: a.label })}
+                    onMakeDefault={() => setDefault(a.id!)}
+                  />
+                ) : (
+                  <ReadOnlyAddressCard
+                    address={a}
+                    onEdit={() => setEditingId(a.id!)}
+                    onDelete={() => setConfirmDelete({ id: a.id!, label: a.label })}
+                    onMakeDefault={() => setDefault(a.id!)}
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -101,6 +109,90 @@ function AddressManager({ userId }: { userId: string }) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+    {confirmDelete && (
+      <ConfirmDialog
+        title="Delete address?"
+        description={`Are you sure you want to delete "${confirmDelete.label || 'this address'}"?`}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={async () => { await remove(confirmDelete.id); setConfirmDelete(null) }}
+      />
+    )}
+    </>
+  )
+}
+
+function ReadOnlyAddressCard({ address, onEdit, onDelete, onMakeDefault }: {
+  address: Address
+  onEdit: () => void
+  onDelete: () => void
+  onMakeDefault: () => void
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <div className="font-medium">
+          {address.label || 'Address'} {address.is_default && <span className="ml-2 text-xs rounded px-2 py-0.5 bg-green-100 text-green-700">Default</span>}
+        </div>
+        <div className="text-sm text-gray-700">{address.recipient} {address.phone ? `· ${address.phone}` : ''}</div>
+        <div className="text-sm text-gray-500">{address.address_line}, {address.city}, {address.country}</div>
+      </div>
+      <div className="flex items-center gap-2">
+        {!address.is_default && <button className="btn btn-sm" onClick={onMakeDefault}>Make Default</button>}
+        <button className="btn btn-sm" onClick={onEdit}>Edit</button>
+        <button className="btn btn-sm btn-outline" onClick={onDelete}>Delete</button>
+      </div>
+    </div>
+  )
+}
+
+function EditableAddressCard({ address, onCancel, onSave, onDelete, onMakeDefault }: {
+  address: Address
+  onCancel: () => void
+  onSave: (patch: Partial<Omit<Address, 'id' | 'user_id' | 'created_at'>>) => void | Promise<void>
+  onDelete: () => void
+  onMakeDefault: () => void
+}) {
+  const [draft, setDraft] = useState<Partial<Address>>({ ...address })
+  return (
+    <form
+      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+      onSubmit={(e) => { e.preventDefault(); onSave({
+        label: draft.label,
+        recipient: draft.recipient,
+        phone: draft.phone,
+        address_line: draft.address_line,
+        city: draft.city,
+        country: draft.country,
+      }) }}
+    >
+      <input className="input" placeholder="Label (Home/Office)" value={draft.label || ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} />
+      <input className="input" placeholder="Recipient" value={draft.recipient || ''} onChange={(e) => setDraft({ ...draft, recipient: e.target.value })} required />
+      <input className="input" placeholder="Phone" value={draft.phone || ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} required />
+      <input className="input sm:col-span-2" placeholder="Address Line" value={draft.address_line || ''} onChange={(e) => setDraft({ ...draft, address_line: e.target.value })} required />
+      <input className="input" placeholder="City" value={draft.city || ''} onChange={(e) => setDraft({ ...draft, city: e.target.value })} required />
+      <input className="input" placeholder="Country" value={draft.country || ''} onChange={(e) => setDraft({ ...draft, country: e.target.value })} required />
+      <div className="sm:col-span-2 flex items-center gap-2">
+        {!address.is_default && <button className="btn btn-sm" type="button" onClick={onMakeDefault}>Make Default</button>}
+        <button className="btn btn-sm btn-primary" type="submit">Save</button>
+        <button className="btn btn-sm" type="button" onClick={onCancel}>Cancel</button>
+        <button className="btn btn-sm btn-outline ml-auto" type="button" onClick={onDelete}>Delete</button>
+      </div>
+    </form>
+  )
+}
+
+function ConfirmDialog({ title, description, onCancel, onConfirm }: { title: string; description?: string; onCancel: () => void; onConfirm: () => void | Promise<void> }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-5 space-y-3">
+        <div className="text-lg font-semibold">{title}</div>
+        {description && <div className="text-sm text-gray-600">{description}</div>}
+        <div className="flex justify-end gap-3 pt-2">
+          <button className="btn" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-primary" onClick={onConfirm}>Yes, Delete</button>
+        </div>
       </div>
     </div>
   )
