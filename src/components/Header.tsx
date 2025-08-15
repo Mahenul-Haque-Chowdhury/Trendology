@@ -24,6 +24,7 @@ export default function Header() {
   const cancelBtnRef = useRef<HTMLButtonElement | null>(null)
   const confirmBtnRef = useRef<HTMLButtonElement | null>(null)
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+  const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const closeSignOutModal = useCallback(() => {
     setShowSignOutModal(false)
@@ -93,6 +94,12 @@ export default function Header() {
     const initial = searchParams.get('q') ?? ''
     setQ(initial)
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Close mobile drawer and restore focus to its toggle before hiding, to avoid aria-hidden focus issues
+  const closeMobileMenu = useCallback(() => {
+    mobileMenuButtonRef.current?.focus()
+    setMobileOpen(false)
   }, [])
 
   function submitSearch(e?: React.FormEvent) {
@@ -225,6 +232,7 @@ export default function Header() {
               className="sm:hidden ml-1 rounded-md border px-2 py-1 hover:bg-gray-50"
               aria-label="Open menu"
               onClick={() => setMobileOpen(true)}
+              ref={mobileMenuButtonRef}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
@@ -252,10 +260,10 @@ export default function Header() {
       </div>
 
       {/* Mobile drawer */}
-      <div className={`fixed inset-0 z-50 sm:hidden ${mobileOpen ? '' : 'pointer-events-none'}`} aria-hidden={!mobileOpen}>
+    <div className={`fixed inset-0 z-50 sm:hidden ${mobileOpen ? '' : 'pointer-events-none'}`} aria-hidden={!mobileOpen}>
         <div
           className={`absolute inset-0 bg-black/40 transition-opacity ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setMobileOpen(false)}
+      onClick={closeMobileMenu}
         />
         <aside
           className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
@@ -263,7 +271,7 @@ export default function Header() {
         >
           <header className="p-4 border-b flex items-center justify-between">
             <span className="font-semibold">Menu</span>
-            <button className="text-gray-600 hover:text-black" aria-label="Close menu" onClick={() => setMobileOpen(false)}>✕</button>
+      <button className="text-gray-600 hover:text-black" aria-label="Close menu" onClick={closeMobileMenu}>✕</button>
           </header>
           <nav className="p-4 space-y-2 text-sm">
             {user && (
@@ -272,28 +280,28 @@ export default function Header() {
                   <span className="text-gray-600">Hi, {user.name.split(' ')[0]}</span>
                   <button
                     className="text-red-600 font-medium hover:underline"
-                    onClick={() => { setMobileOpen(false); setShowSignOutModal(true) }}
+          onClick={() => { closeMobileMenu(); setShowSignOutModal(true) }}
                   >
                     Sign out
                   </button>
                 </div>
-                <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Manage your Profile</Link>
+        <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Manage your Profile</Link>
               </>
             )}
-            <Link href="/" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Home</Link>
-            <a href="#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Products</a>
+      <Link href="/" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Home</Link>
+      <a href="#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Products</a>
             <details className="px-2 py-2">
               <summary className="cursor-pointer select-none">Categories</summary>
               <div className="mt-2 ml-3 space-y-1 max-h-60 overflow-auto pr-2">
                 {categories.map((c) => (
-                  <Link key={c} href={`/category/${c}`} className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+          <Link key={c} href={`/category/${c}`} className="block px-2 py-1 rounded hover:bg-gray-50" onClick={closeMobileMenu}>
                     {c.charAt(0).toUpperCase() + c.slice(1)}
                   </Link>
                 ))}
               </div>
             </details>
             {!user && (
-              <Link href="/account" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Account</Link>
+        <Link href="/account" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Account</Link>
             )}
           </nav>
         </aside>
