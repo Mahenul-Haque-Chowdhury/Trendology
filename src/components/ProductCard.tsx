@@ -25,7 +25,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-lg">
+        <h3 className="font-semibold text-lg leading-snug line-clamp-2">
           <Link href={`/products/${product.id}`} className="hover:underline">
             {product.name}
           </Link>
@@ -38,12 +38,12 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="ml-1 text-xs text-gray-500">({Math.max(12, product.tags.length * 23)})</span>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-    <div className="mt-4 sm:flex sm:items-end sm:justify-between">
+        <div className="mt-4 sm:flex sm:items-end sm:justify-between">
           {/* Price + mobile wishlist on same row */}
           <div className="flex items-center justify-between sm:block w-full sm:w-auto">
-            <div className="leading-none">
-      <div className="text-lg sm:text-xl font-extrabold tracking-tight">${product.price.toFixed(2)}</div>
-      <div className="text-[11px] text-gray-500 mt-1">Incl. VAT</div>
+            <div className="leading-none h-10 sm:h-12 flex flex-col justify-end">
+              <div className="text-lg sm:text-xl font-extrabold tracking-tight whitespace-nowrap">${product.price.toFixed(2)}</div>
+              <div className="text-[11px] text-gray-500 mt-1">Incl. VAT</div>
             </div>
             <button
       className={`ml-2 rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'} sm:hidden`}
@@ -83,7 +83,7 @@ export default function ProductCard({ product }: { product: Product }) {
               {/* Heart icon */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
             </button>
-            <button className="btn btn-primary flex-1 sm:flex-none w-full sm:w-auto" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
+            <button className="btn btn-primary flex-1 sm:flex-none w-full sm:w-auto h-10" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
               Add to cart
             </button>
           </div>
