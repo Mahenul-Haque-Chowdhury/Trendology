@@ -87,6 +87,18 @@ drop policy if exists "Owner can read orders" on public.orders;
 create policy "Owner can read orders" on public.orders
 for select using (auth.uid() = user_id or auth.role() = 'service_role');
 
+-- Demo/admin: allow any authenticated user to read all orders
+drop policy if exists "Authenticated read all orders (demo)" on public.orders;
+create policy "Authenticated read all orders (demo)" on public.orders
+for select using (auth.role() = 'authenticated' or auth.role() = 'service_role');
+
+-- Users can read orders that match their email (if user_id is null)
+drop policy if exists "User read orders by email" on public.orders;
+create policy "User read orders by email" on public.orders
+for select using (
+  coalesce(lower(email), '') = coalesce(lower((auth.jwt() ->> 'email')), '')
+);
+
 -- Demo: allow updates/deletes to orders (consider restricting in production)
 drop policy if exists "Anyone update orders" on public.orders;
 create policy "Anyone update orders" on public.orders
@@ -108,6 +120,22 @@ for select using (
     select 1 from public.orders o
     where o.id = order_items.order_id
       and (auth.uid() = o.user_id or auth.role() = 'service_role')
+  )
+);
+
+-- Demo/admin: allow any authenticated user to read order items
+drop policy if exists "Authenticated read order items (demo)" on public.order_items;
+create policy "Authenticated read order items (demo)" on public.order_items
+for select using (auth.role() = 'authenticated' or auth.role() = 'service_role');
+
+-- Users can read order_items if their email matches the parent order
+drop policy if exists "User read order items by order email" on public.order_items;
+create policy "User read order items by order email" on public.order_items
+for select using (
+  exists (
+    select 1 from public.orders o
+    where o.id = order_items.order_id
+      and coalesce(lower(o.email), '') = coalesce(lower((auth.jwt() ->> 'email')), '')
   )
 );
 

@@ -100,12 +100,18 @@ export default function CheckoutPage() {
     if (isSupabaseConfigured()) {
       try {
         const supabase = getSupabaseClient()!
+        // Ensure we capture the authenticated user id directly from Supabase
+        let supaUserId: string | null = null
+        try {
+          const { data } = await supabase.auth.getUser()
+          supaUserId = data.user?.id ?? null
+        } catch {}
     const orderIdDb = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0')
     const { error: orderErr } = await supabase
           .from('orders')
           .insert({
             id: orderIdDb,
-            user_id: user?.id ?? null,
+            user_id: supaUserId ?? user?.id ?? null,
       code: orderCode,
             customer_name: String(formData.get('fullName') || ''),
             email: String(formData.get('email') || ''),
