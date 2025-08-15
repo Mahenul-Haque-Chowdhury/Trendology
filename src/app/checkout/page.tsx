@@ -94,46 +94,92 @@ export default function CheckoutPage() {
   const paymentMethod = String(formData.get('paymentMethod') || 'cod') as typeof method
   const phone = String(formData.get('phone') || '')
     const txid = String(formData.get('txid') || '')
-  // Human-friendly short order code
-  const orderCode = 'ORD-' + Math.random().toString(36).slice(2, 8).toUpperCase()
-    // If Supabase is configured, save order in DB (authenticated user recommended)
-    if (isSupabaseConfigured()) {
+    // Human-friendly short order code (fallback if server doesn't return one)
+    let orderCode = 'ORD-' + Math.random().toString(36).slice(2, 8).toUpperCase()
+    // Prefer server API with service role to guarantee insert under strict RLS
+    let serverOk = false
+    try {
+      // We still try to include a user_id if available from Supabase client
+      let supaUserId: string | null = null
+      if (isSupabaseConfigured()) {
+        try {
+          const supabase = getSupabaseClient()!
+          const { data } = await supabase.auth.getUser()
+          supaUserId = data.user?.id ?? null
+        } catch {}
+      }
+      const isUuid = (s: string) => /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(s)
+      const payload = {
+        user_id: supaUserId ?? user?.id ?? null,
+        code: orderCode,
+        customer_name: String(formData.get('fullName') || ''),
+        email: user?.email || String(formData.get('email') || ''),
+        phone,
+        address: String(formData.get('address') || ''),
+        city: String(formData.get('city') || ''),
+        country: String(formData.get('country') || ''),
+        subtotal,
+        shipping,
+        total: subtotal + shipping,
+        payment_method: paymentMethod,
+        txid: txid || null,
+        status: paymentMethod === 'cod' ? 'pending' : 'paid',
+        items: items.map((it) => ({
+          product_id: isUuid(String(it.product.id)) ? String(it.product.id) : null,
+          qty: it.qty,
+          unit_price: it.product.price,
+        })),
+      }
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => null as any)
+      if (res.ok && data?.ok) {
+        serverOk = true
+        if (data.code) orderCode = data.code
+      } else {
+        console.error('[checkout] Server order create failed:', data?.error || res.statusText)
+      }
+    } catch (err) {
+      console.error('[checkout] Server API error:', err)
+    }
+    // Fallback: try client Supabase insert if server failed but Supabase is configured
+    if (!serverOk && isSupabaseConfigured()) {
       try {
         const supabase = getSupabaseClient()!
-        // Ensure we capture the authenticated user id directly from Supabase
         let supaUserId: string | null = null
         try {
           const { data } = await supabase.auth.getUser()
           supaUserId = data.user?.id ?? null
         } catch {}
-    const orderIdDb = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0')
-    const { error: orderErr } = await supabase
-          .from('orders')
-          .insert({
-            id: orderIdDb,
-            user_id: supaUserId ?? user?.id ?? null,
-      code: orderCode,
-            customer_name: String(formData.get('fullName') || ''),
-            email: String(formData.get('email') || ''),
-      phone,
-            address: String(formData.get('address') || ''),
-            city: String(formData.get('city') || ''),
-            country: String(formData.get('country') || ''),
-            subtotal,
-            shipping,
-            total: subtotal + shipping,
-            payment_method: paymentMethod,
-            txid: txid || null,
-            status: paymentMethod === 'cod' ? 'pending' : 'paid',
-          })
+        const orderIdDb = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+          ? (crypto as any).randomUUID()
+          : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0')
+        const { error: orderErr } = await supabase.from('orders').insert({
+          id: orderIdDb,
+          user_id: supaUserId ?? user?.id ?? null,
+          code: orderCode,
+          customer_name: String(formData.get('fullName') || ''),
+          email: user?.email || String(formData.get('email') || ''),
+          address: String(formData.get('address') || ''),
+          city: String(formData.get('city') || ''),
+          country: String(formData.get('country') || ''),
+          subtotal,
+          shipping,
+          total: subtotal + shipping,
+          payment_method: paymentMethod,
+          txid: txid || null,
+          status: paymentMethod === 'cod' ? 'pending' : 'paid',
+        })
         if (orderErr) {
           console.error('[checkout] Supabase order insert error:', orderErr)
         } else {
-          console.debug('[checkout] Supabase order created:', orderIdDb)
           const isUuid = (s: string) => /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(s)
           const itemsPayload = items.map((it) => ({
             order_id: orderIdDb,
-            product_id: isUuid(it.product.id) ? it.product.id : null,
+            product_id: isUuid(String(it.product.id)) ? String(it.product.id) : null,
             qty: it.qty,
             unit_price: it.product.price,
           }))
@@ -144,7 +190,7 @@ export default function CheckoutPage() {
         console.error('[checkout] Supabase error:', err)
       }
     }
-    try {
+  try {
       const order: Order = {
         id: orderCode,
         createdAt: Date.now(),
@@ -157,8 +203,8 @@ export default function CheckoutPage() {
           country: String(formData.get('country') || ''),
         },
         items: items.map((it) => ({ product: it.product, qty: it.qty })),
-        subtotal,
-        shipping,
+    subtotal,
+    shipping,
         total: subtotal + shipping,
         payment: { method: paymentMethod, txid: txid || undefined },
         status: paymentMethod === 'cod' ? 'pending' : 'paid',
@@ -169,7 +215,8 @@ export default function CheckoutPage() {
       if (typeof window !== 'undefined') localStorage.setItem('storefront.orders.v1', JSON.stringify(orders))
     } catch {}
     clear()
-  const params = new URLSearchParams({ orderId: orderCode, name, method: paymentMethod, txid })
+  const source = serverOk ? 'server' : (isSupabaseConfigured() ? 'client' : 'local')
+  const params = new URLSearchParams({ orderId: orderCode, name, method: paymentMethod, txid, src: source })
     router.push(`/checkout/success?${params.toString()}`)
   }
 

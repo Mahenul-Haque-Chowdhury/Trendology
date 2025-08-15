@@ -49,9 +49,24 @@ npm run build
 4) Add Environment Variables:
 - NEXT_PUBLIC_SUPABASE_URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY (server-only; required for orders to insert)
 - ADMIN_USER (optional, for /admin basic auth)
 - ADMIN_PASS (optional, for /admin basic auth)
 
 5) Deploy, then add a custom domain if desired.
 
 See `.env.local.example` for the required variables.
+
+## Local env
+
+Create a file named `.env.local` in the `store` folder with:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ADMIN_USER=
+ADMIN_PASS=
+```
+
+Important: Never commit `.env.local`. The Service Role key is sensitive and must never be exposed client-side (don’t prefix it with `NEXT_PUBLIC_`).

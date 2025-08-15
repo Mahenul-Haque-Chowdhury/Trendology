@@ -13,6 +13,7 @@ export default function DbCheckPage() {
   const [error, setError] = useState<string | null>(null)
   const [envInfo, setEnvInfo] = useState<{ configured: boolean; url?: string; keyHint?: string } | null>(null)
   const [ordersProbe, setOrdersProbe] = useState<Check | null>(null)
+  const [serverHealth, setServerHealth] = useState<any | null>(null)
 
   useEffect(() => {
     async function run() {
@@ -53,6 +54,12 @@ export default function DbCheckPage() {
       } catch (e: any) {
         setOrdersProbe({ name: 'orders probe', ok: false, details: String(e?.message || e) })
       }
+
+      // Fetch server health for service key visibility
+      try {
+        const r = await fetch('/api/health/supabase').then((x) => x.json())
+        setServerHealth(r)
+      } catch {}
     }
     run()
   }, [])
@@ -93,6 +100,19 @@ export default function DbCheckPage() {
               <span className={`text-xs px-2 py-1 rounded ${ordersProbe.ok ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800'}`}>
                 {ordersProbe.ok ? 'OK' : 'Check'}
               </span>
+            </div>
+          )}
+          {serverHealth && (
+            <div className="border rounded-md p-3">
+              <div className="font-medium mb-1">Server Health</div>
+              <div className="text-xs text-gray-600 space-y-0.5">
+                <div>URL present: <strong>{serverHealth.urlPresent ? 'Yes' : 'No'}</strong></div>
+                <div>Anon key present: <strong>{serverHealth.anonKeyPresent ? 'Yes' : 'No'}</strong></div>
+                <div>Service key present: <strong>{serverHealth.serviceKeyPresent ? 'Yes' : 'No'}</strong></div>
+                <div>Orders selectable from server: <strong>{serverHealth.canSelectOrders ? 'Yes' : 'No'}</strong></div>
+                {serverHealth.selectError && <div className="text-red-600">Select error: {serverHealth.selectError}</div>}
+                {serverHealth.error && <div className="text-red-600">Error: {serverHealth.error}</div>}
+              </div>
             </div>
           )}
         </div>
