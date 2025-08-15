@@ -7,6 +7,7 @@ import { products } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useCatalog } from '@/lib/catalog'
+import Image from 'next/image'
 
 export default function Header() {
   const [open, setOpen] = useState(false)
@@ -18,6 +19,8 @@ export default function Header() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [q, setQ] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const userMenuRef = useRef<HTMLDivElement | null>(null)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const modalRef = useRef<HTMLDivElement | null>(null)
@@ -25,6 +28,21 @@ export default function Header() {
   const confirmBtnRef = useRef<HTMLButtonElement | null>(null)
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null)
+  const desktopInputRef = useRef<HTMLInputElement | null>(null)
+  const mobileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const suggestions = useMemo(() => {
+    const term = q.trim().toLowerCase()
+    if (term.length < 2) return [] as typeof items
+    return items
+      .filter((p) =>
+        (p.name && p.name.toLowerCase().includes(term)) ||
+        (p.category && p.category.toLowerCase().includes(term)) ||
+        (Array.isArray(p.tags) && p.tags.some((t) => t.toLowerCase().includes(term))) ||
+        (p.description && p.description.toLowerCase().includes(term))
+      )
+      .slice(0, 8)
+  }, [q, items])
 
   const closeSignOutModal = useCallback(() => {
     setShowSignOutModal(false)
@@ -109,6 +127,7 @@ export default function Header() {
     else params.delete('q')
     const next = `/?${params.toString()}#products`
     router.push(next)
+  setShowSuggestions(false)
   }
 
   // Close user menu on outside click or Escape
@@ -145,8 +164,31 @@ export default function Header() {
             <form onSubmit={submitSearch} className="hidden md:flex items-center gap-2 flex-1 min-w-0">
               <div className="relative flex-1 min-w-0">
                 <input
+                  ref={desktopInputRef}
                   value={q}
-                  onChange={(e) => setQ(e.target.value)}
+                  onChange={(e) => { setQ(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                  onKeyDown={(e) => {
+                    if (!suggestions.length) return
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault()
+                      setShowSuggestions(true)
+                      setActiveIndex((i) => (i + 1) % suggestions.length)
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault()
+                      setShowSuggestions(true)
+                      setActiveIndex((i) => (i - 1 + suggestions.length) % suggestions.length)
+                    } else if (e.key === 'Enter') {
+                      if (activeIndex >= 0 && suggestions[activeIndex]) {
+                        e.preventDefault()
+                        router.push(`/products/${suggestions[activeIndex].id}`)
+                        setShowSuggestions(false)
+                      }
+                    } else if (e.key === 'Escape') {
+                      setShowSuggestions(false)
+                    }
+                  }}
                   aria-label="Search products"
                   placeholder="Search for products, categories, tags"
                   className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
@@ -155,6 +197,38 @@ export default function Header() {
                   {/* Search icon */}
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </span>
+                {showSuggestions && suggestions.length > 0 && (
+                  <div
+                    className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg overflow-hidden"
+                    role="listbox"
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    <ul className="max-h-80 overflow-auto divide-y">
+                      {suggestions.map((p, idx) => (
+                        <li key={p.id} role="option" aria-selected={idx === activeIndex}>
+                          <Link
+                            href={`/products/${p.id}`}
+                            className={`flex items-center gap-3 px-3 py-2 hover:bg-gray-50 ${idx === activeIndex ? 'bg-gray-50' : ''}`}
+                            onClick={() => setShowSuggestions(false)}
+                          >
+                            {/* Optional thumbnail; fallback to text-only if no image */}
+                            {p.image ? (
+                              <div className="relative w-10 h-10 shrink-0 rounded overflow-hidden bg-gray-100">
+                                <Image src={p.image} alt={p.name} fill className="object-cover" sizes="40px" />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 shrink-0 rounded bg-gray-100" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium truncate">{p.name}</div>
+                              <div className="text-xs text-gray-500 truncate">{p.category} • ${p.price.toFixed(2)}</div>
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               <button type="submit" className="btn btn-primary shrink-0">Search</button>
             </form>
@@ -240,8 +314,31 @@ export default function Header() {
           <form onSubmit={submitSearch} className="flex items-center gap-2">
             <div className="relative flex-1">
               <input
+                ref={mobileInputRef}
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => { setQ(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                onKeyDown={(e) => {
+                  if (!suggestions.length) return
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    setShowSuggestions(true)
+                    setActiveIndex((i) => (i + 1) % suggestions.length)
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    setShowSuggestions(true)
+                    setActiveIndex((i) => (i - 1 + suggestions.length) % suggestions.length)
+                  } else if (e.key === 'Enter') {
+                    if (activeIndex >= 0 && suggestions[activeIndex]) {
+                      e.preventDefault()
+                      router.push(`/products/${suggestions[activeIndex].id}`)
+                      setShowSuggestions(false)
+                    }
+                  } else if (e.key === 'Escape') {
+                    setShowSuggestions(false)
+                  }
+                }}
                 aria-label="Search products"
                 placeholder="Search products"
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
@@ -249,6 +346,37 @@ export default function Header() {
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </span>
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg overflow-hidden"
+                  role="listbox"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <ul className="max-h-80 overflow-auto divide-y">
+                    {suggestions.map((p, idx) => (
+                      <li key={p.id} role="option" aria-selected={idx === activeIndex}>
+                        <Link
+                          href={`/products/${p.id}`}
+                          className={`flex items-center gap-3 px-3 py-2 hover:bg-gray-50 ${idx === activeIndex ? 'bg-gray-50' : ''}`}
+                          onClick={() => setShowSuggestions(false)}
+                        >
+                          {p.image ? (
+                            <div className="relative w-10 h-10 shrink-0 rounded overflow-hidden bg-gray-100">
+                              <Image src={p.image} alt={p.name} fill className="object-cover" sizes="40px" />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 shrink-0 rounded bg-gray-100" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium truncate">{p.name}</div>
+                            <div className="text-xs text-gray-500 truncate">{p.category} • ${p.price.toFixed(2)}</div>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             <button type="submit" className="btn btn-primary">Search</button>
           </form>
