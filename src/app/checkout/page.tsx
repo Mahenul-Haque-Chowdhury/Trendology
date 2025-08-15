@@ -12,12 +12,13 @@ export default function CheckoutPage() {
   const { items, total, clear } = useCart()
   const router = useRouter()
   const { user } = useAuth()
-  const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string; address?: string; city?: string; country?: string }>({})
+  const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string }>({})
   const [form, setForm] = useState<{ fullName: string; email: string; phone: string; address: string; city: string; country: string }>({ fullName: '', email: '', phone: '', address: '', city: '', country: '' })
   // Avoid instantiating the hook with undefined and let it bootstrap once user is present
   const { addresses, defaultAddress } = useAddresses(user?.id || undefined)
   const [selectedAddrId, setSelectedAddrId] = useState<string | undefined>(undefined)
   const [method, setMethod] = useState<'cod' | 'bkash' | 'rocket' | 'nagad'>('cod')
+  const [addressPrefilled, setAddressPrefilled] = useState(false)
 
   const subtotal = total
   const shipping = useMemo(() => (subtotal > 250 ? 0 : 12), [subtotal])
@@ -33,7 +34,7 @@ export default function CheckoutPage() {
           const raw = typeof window !== 'undefined' ? localStorage.getItem(`storefront.user_details.${u.id}`) : null
           if (raw) {
             const cached = JSON.parse(raw)
-            setPrefill({ name: cached.name || u.name, email: cached.email || u.email, phone: cached.phone || '', address: cached.address || '', city: cached.city || '', country: cached.country || '' })
+            setPrefill({ name: cached.name || u.name, email: cached.email || u.email, phone: cached.phone || '' })
             return
           }
         } catch {}
@@ -43,13 +44,13 @@ export default function CheckoutPage() {
       try {
         const supa = getSupabaseClient()!
         async function getFrom(table: string) {
-          return await supa.from(table).select('name,email,phone,address,city,country').eq('id', u.id).maybeSingle()
+          return await supa.from(table).select('name,email,phone').eq('id', u.id).maybeSingle()
         }
         let r = await getFrom('user_details')
         if (r.error) r = await getFrom('profiles')
-    const data = r.data
-  if (data) setPrefill({ name: data.name || u.name, email: data.email || u.email, phone: data.phone || '', address: data.address || '', city: data.city || '', country: data.country || '' })
-  else setPrefill({ name: u.name, email: u.email, phone: '' })
+        const data = r.data
+        if (data) setPrefill({ name: data.name || u.name, email: data.email || u.email, phone: data.phone || '' })
+        else setPrefill({ name: u.name, email: u.email, phone: '' })
       } catch {}
     }
     loadProfile()
@@ -57,14 +58,12 @@ export default function CheckoutPage() {
 
   // Initialize form fields when prefill data arrives
   useEffect(() => {
-    setForm({
-      fullName: prefill.name || '',
-      email: prefill.email || '',
-      phone: prefill.phone || '',
-      address: prefill.address || '',
-      city: prefill.city || '',
-      country: prefill.country || '',
-    })
+    setForm((prev) => ({
+      ...prev,
+      fullName: prefill.name ?? prev.fullName,
+      email: prefill.email ?? prev.email,
+      phone: prefill.phone ?? prev.phone,
+    }))
   }, [prefill])
 
   // Select a default address automatically
@@ -87,9 +86,28 @@ export default function CheckoutPage() {
     }))
   }, [selectedAddrId, addresses])
 
-  // If user just added an address, prefill from the checkout prefill cache
+  // Prefill from Supabase addresses on first load (default first)
+  useEffect(() => {
+    if (addressPrefilled) return
+    if (!addresses.length) return
+    const a = defaultAddress || addresses[0]
+    if (!a) return
+    setSelectedAddrId(a.id)
+    setForm(prev => ({
+      ...prev,
+      fullName: prev.fullName || a.recipient || prev.fullName,
+      phone: a.phone || prev.phone,
+      address: a.address_line || prev.address,
+      city: a.city || prev.city,
+      country: a.country || prev.country,
+    }))
+    setAddressPrefilled(true)
+  }, [addresses, defaultAddress, addressPrefilled])
+
+  // If user just added an address, prefill from the checkout prefill cache (demo/local only)
   useEffect(() => {
     if (!user?.id) return
+    if (isSupabaseConfigured()) return
     try {
       const key = `storefront.checkout.prefill.${user.id}`
       const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null
