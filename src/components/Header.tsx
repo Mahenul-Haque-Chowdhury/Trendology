@@ -268,14 +268,16 @@ export default function Header() {
           <nav className="p-4 space-y-2 text-sm">
             {user && (
               <>
-                <div className="px-2 py-2 text-gray-600">Hi, {user.name.split(' ')[0]}</div>
+                <div className="px-2 py-2 flex items-center justify-between">
+                  <span className="text-gray-600">Hi, {user.name.split(' ')[0]}</span>
+                  <button
+                    className="text-red-600 font-medium hover:underline"
+                    onClick={() => { setMobileOpen(false); setShowSignOutModal(true) }}
+                  >
+                    Sign out
+                  </button>
+                </div>
                 <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Manage your Profile</Link>
-                <button
-                  className="block w-full text-left px-2 py-2 rounded hover:bg-gray-50 text-red-600"
-                  onClick={() => { setMobileOpen(false); setShowSignOutModal(true) }}
-                >
-                  Sign out
-                </button>
               </>
             )}
             <Link href="/" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Home</Link>
