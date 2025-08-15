@@ -18,19 +18,15 @@ export default function OrdersPage() {
       if (isSupabaseConfigured()) {
         try {
           const supabase = getSupabaseClient()!
-          // Try by user_id first
-          let rows: any[] | null = null
-          let error: any = null
-          let res = await supabase.from('orders').select('*').eq('user_id', u.id).order('created_at', { ascending: false })
-          rows = res.data
-          error = res.error
-          if (error || (rows && rows.length === 0)) {
-            // Fallback by email (RLS policy allows this)
-            const res2 = await supabase.from('orders').select('*').eq('email', u.email).order('created_at', { ascending: false })
-            rows = res2.data
-            error = res2.error
-          }
-          if (!error && rows) {
+          // Fetch by user_id OR case-insensitive email in one query
+          const res = await supabase
+            .from('orders')
+            .select('*')
+            .or(`user_id.eq.${u.id},email.ilike.${u.email}`)
+            .order('created_at', { ascending: false })
+          const rows: any[] | null = res.data
+          const error: any = res.error
+          if (!error && rows && rows.length > 0) {
             // Fetch order items for these orders
             const orderIds = rows.map((r: any) => r.id)
             const { data: itemsRows } = await supabase
