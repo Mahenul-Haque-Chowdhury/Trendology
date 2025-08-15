@@ -93,29 +93,29 @@ function AddressManager({ userId }: { userId: string }) {
       <div className="card p-6">
         <h2 className="text-lg font-semibold mb-3">Add New Address</h2>
     <form className="grid grid-cols-1 sm:grid-cols-2 gap-2" onSubmit={onSubmit}>
-          <div className="field">
-      <div className="text-xs text-gray-600 mb-0.5">Label</div>
-            <input className="input" placeholder="Home / Office" value={form.label || ''} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+          <div>
+            <label className="block text-sm font-medium">Label</label>
+            <input className="border rounded-md px-3 py-2 w-full" placeholder="Home / Office" value={form.label || ''} onChange={(e) => setForm({ ...form, label: e.target.value })} />
           </div>
-          <div className="field">
-      <div className="text-xs text-gray-600 mb-0.5">Recipient</div>
-            <input className="input" placeholder="Full name" value={form.recipient || ''} onChange={(e) => setForm({ ...form, recipient: e.target.value })} required />
+          <div>
+            <label className="block text-sm font-medium">Recipient</label>
+            <input className="border rounded-md px-3 py-2 w-full" placeholder="Full name" value={form.recipient || ''} onChange={(e) => setForm({ ...form, recipient: e.target.value })} required />
           </div>
-          <div className="field">
-      <div className="text-xs text-gray-600 mb-0.5">Phone</div>
-            <input className="input" placeholder="e.g. 01XXXXXXXXX" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+          <div>
+            <label className="block text-sm font-medium">Phone</label>
+            <input className="border rounded-md px-3 py-2 w-full" placeholder="e.g. 01XXXXXXXXX" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
           </div>
-          <div className="field sm:col-span-2">
-      <div className="text-xs text-gray-600 mb-0.5">Address Line</div>
-            <input className="input" placeholder="Street, area, house no." value={form.address_line || ''} onChange={(e) => setForm({ ...form, address_line: e.target.value })} required />
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium">Address Line</label>
+            <input className="border rounded-md px-3 py-2 w-full" placeholder="Street, area, house no." value={form.address_line || ''} onChange={(e) => setForm({ ...form, address_line: e.target.value })} required />
           </div>
-          <div className="field">
-      <div className="text-xs text-gray-600 mb-0.5">City</div>
-            <input className="input" placeholder="City" value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
+          <div>
+            <label className="block text-sm font-medium">City</label>
+            <input className="border rounded-md px-3 py-2 w-full" placeholder="City" value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
           </div>
-          <div className="field">
-      <div className="text-xs text-gray-600 mb-0.5">Country</div>
-            <input className="input" placeholder="Country" value={form.country || ''} onChange={(e) => setForm({ ...form, country: e.target.value })} required />
+          <div>
+            <label className="block text-sm font-medium">Country</label>
+            <input className="border rounded-md px-3 py-2 w-full" placeholder="Country" value={form.country || ''} onChange={(e) => setForm({ ...form, country: e.target.value })} required />
           </div>
           <div className="sm:col-span-2">
             <label className="inline-flex items-center gap-2 text-sm">
@@ -187,29 +187,29 @@ function EditableAddressCard({ address, onCancel, onSave, onDelete, onMakeDefaul
         country: draft.country,
       }) }}
     >
-      <div className="field">
-        <div className="text-xs text-gray-600 mb-0.5">Label</div>
-        <input className="input" placeholder="Home / Office" value={draft.label || ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} />
+      <div>
+        <label className="block text-sm font-medium">Label</label>
+        <input className="border rounded-md px-3 py-2 w-full" placeholder="Home / Office" value={draft.label || ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} />
       </div>
-      <div className="field">
-        <div className="text-xs text-gray-600 mb-0.5">Recipient</div>
-        <input className="input" placeholder="Full name" value={draft.recipient || ''} onChange={(e) => setDraft({ ...draft, recipient: e.target.value })} required />
+      <div>
+        <label className="block text-sm font-medium">Recipient</label>
+        <input className="border rounded-md px-3 py-2 w-full" placeholder="Full name" value={draft.recipient || ''} onChange={(e) => setDraft({ ...draft, recipient: e.target.value })} required />
       </div>
-      <div className="field">
-        <div className="text-xs text-gray-600 mb-0.5">Phone</div>
-        <input className="input" placeholder="e.g. 01XXXXXXXXX" value={draft.phone || ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} required />
+      <div>
+        <label className="block text-sm font-medium">Phone</label>
+        <input className="border rounded-md px-3 py-2 w-full" placeholder="e.g. 01XXXXXXXXX" value={draft.phone || ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} required />
       </div>
-      <div className="field sm:col-span-2">
-        <div className="text-xs text-gray-600 mb-0.5">Address Line</div>
-        <input className="input" placeholder="Street, area, house no." value={draft.address_line || ''} onChange={(e) => setDraft({ ...draft, address_line: e.target.value })} required />
+      <div className="sm:col-span-2">
+        <label className="block text-sm font-medium">Address Line</label>
+        <input className="border rounded-md px-3 py-2 w-full" placeholder="Street, area, house no." value={draft.address_line || ''} onChange={(e) => setDraft({ ...draft, address_line: e.target.value })} required />
       </div>
-      <div className="field">
-        <div className="text-xs text-gray-600 mb-0.5">City</div>
-        <input className="input" placeholder="City" value={draft.city || ''} onChange={(e) => setDraft({ ...draft, city: e.target.value })} required />
+      <div>
+        <label className="block text-sm font-medium">City</label>
+        <input className="border rounded-md px-3 py-2 w-full" placeholder="City" value={draft.city || ''} onChange={(e) => setDraft({ ...draft, city: e.target.value })} required />
       </div>
-      <div className="field">
-        <div className="text-xs text-gray-600 mb-0.5">Country</div>
-        <input className="input" placeholder="Country" value={draft.country || ''} onChange={(e) => setDraft({ ...draft, country: e.target.value })} required />
+      <div>
+        <label className="block text-sm font-medium">Country</label>
+        <input className="border rounded-md px-3 py-2 w-full" placeholder="Country" value={draft.country || ''} onChange={(e) => setDraft({ ...draft, country: e.target.value })} required />
       </div>
       <div className="sm:col-span-2 flex items-center gap-2">
         {!address.is_default && <button className="btn btn-sm" type="button" onClick={onMakeDefault}>Make Default</button>}
