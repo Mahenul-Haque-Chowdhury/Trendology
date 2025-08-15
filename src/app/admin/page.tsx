@@ -125,30 +125,12 @@ function useOrders(products: ReturnType<typeof useCatalog>['products']) {
 }
 
 export default function AdminPage() {
-  const [authed, setAuthed] = useState(false)
-  const [pass, setPass] = useState('')
-  const expected = process.env.NEXT_PUBLIC_ADMIN_PASS || 'admin'
   const { products } = useCatalog()
   const { orders, setStatus, remove, clearAll } = useOrders(products)
 
   const totalSales = useMemo(() => orders.reduce((acc, o) => acc + o.total, 0), [orders])
 
-  if (!authed) {
-    return (
-      <div className="max-w-sm mx-auto card p-6 space-y-4">
-        <h1 className="text-2xl font-bold">Admin Login</h1>
-        <input
-          type="password"
-          value={pass}
-          onChange={(e) => setPass(e.target.value)}
-          placeholder="Enter password (default: admin)"
-          className="border rounded-md px-3 py-2 w-full"
-        />
-        <button className="btn btn-primary w-full" onClick={() => setAuthed(pass === expected)}>Sign In</button>
-        <p className="text-xs text-gray-600">For demo only. Set NEXT_PUBLIC_ADMIN_PASS to change.</p>
-      </div>
-    )
-  }
+  // Basic Auth via middleware protects this page and API; no client-side gate needed.
 
   return (
     <div className="space-y-6">

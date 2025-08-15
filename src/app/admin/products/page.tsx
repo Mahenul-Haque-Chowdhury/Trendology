@@ -115,7 +115,18 @@ export default function AdminProductsPage() {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <div key={p.id} className="border rounded-md p-3 space-y-2">
-              <div className="font-medium truncate">{p.name}</div>
+              <div className="flex items-center gap-3">
+                {p.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded" />
+                ) : (
+                  <div className="w-14 h-14 rounded bg-gray-100" />
+                )}
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{p.name}</div>
+                  <div className="text-xs text-gray-500 truncate">ID: {p.id}</div>
+                </div>
+              </div>
               <div className="text-sm text-gray-600 truncate">{p.category} · ${p.price.toFixed(2)} · {p.active === false ? 'Hidden' : 'Active'}</div>
               <div className="flex items-center gap-2 text-sm">
                 <label className="inline-flex items-center gap-2">

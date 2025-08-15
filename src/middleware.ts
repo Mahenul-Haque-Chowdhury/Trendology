@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Basic Auth for /admin routes
+// Basic Auth for /admin routes (and /api/admin)
 export function middleware(req: NextRequest) {
 	const { pathname } = req.nextUrl
 	if (!pathname.startsWith('/admin')) return NextResponse.next()
