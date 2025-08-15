@@ -19,6 +19,7 @@ export default function Header() {
   const router = useRouter()
   const [q, setQ] = useState('')
   const userMenuRef = useRef<HTMLDivElement | null>(null)
+  const [showSignOutModal, setShowSignOutModal] = useState(false)
 
   // Initialize from URL once
   useEffect(() => {
@@ -139,7 +140,7 @@ export default function Header() {
                     <button
                       role="menuitem"
                       className="block w-full text-left px-2 py-1 rounded hover:bg-gray-50 text-red-600"
-                      onClick={() => { setUserOpen(false); logout(); router.push('/') }}
+                      onClick={() => { setUserOpen(false); setShowSignOutModal(true) }}
                     >
                       Sign out
                     </button>
@@ -204,7 +205,7 @@ export default function Header() {
                 <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Manage your Profile</Link>
                 <button
                   className="block w-full text-left px-2 py-2 rounded hover:bg-gray-50 text-red-600"
-                  onClick={() => { setMobileOpen(false); logout(); router.push('/') }}
+                  onClick={() => { setMobileOpen(false); setShowSignOutModal(true) }}
                 >
                   Sign out
                 </button>
@@ -228,6 +229,26 @@ export default function Header() {
           </nav>
         </aside>
       </div>
+      {/* Sign out confirmation modal */}
+      {showSignOutModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowSignOutModal(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl w-[90vw] max-w-sm mx-auto p-5">
+            <h2 className="text-lg font-semibold mb-1">Sign out</h2>
+            <p className="text-sm text-gray-600 mb-4">Are you sure you want to sign out?</p>
+            <div className="flex items-center justify-end gap-2">
+              <button className="btn btn-sm" onClick={() => setShowSignOutModal(false)}>Cancel</button>
+              <button
+                className="btn btn-sm btn-primary bg-red-600 hover:bg-red-700 border-red-600"
+                onClick={() => { setShowSignOutModal(false); logout(); router.push('/') }}
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
+
