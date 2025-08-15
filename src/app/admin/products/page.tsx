@@ -1,11 +1,28 @@
 "use client"
 import { useCatalog } from '@/lib/catalog'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/lib/products'
 
 export default function AdminProductsPage() {
   const { products, add, update, remove, categories } = useCatalog()
   const [editing, setEditing] = useState<Product | null>(null)
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState<string | 'all'>('all')
+  const [onlyActive, setOnlyActive] = useState(false)
+  const [count, setCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let ignore = false
+    async function fetchCount() {
+      try {
+        const res = await fetch('/api/admin/products')
+        const json = await res.json()
+        if (!ignore && json?.ok) setCount(Array.isArray(json.items) ? json.items.length : null)
+      } catch {}
+    }
+    fetchCount()
+    return () => { ignore = true }
+  }, [])
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -40,6 +57,15 @@ export default function AdminProductsPage() {
     setEditing(p)
   }
 
+  const filtered = useMemo(() => {
+    let list = products
+    const q = query.trim().toLowerCase()
+    if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
+    if (category !== 'all') list = list.filter((p) => p.category === category)
+    if (onlyActive) list = list.filter((p) => p.active !== false)
+    return list
+  }, [products, query, category, onlyActive])
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Product Admin</h1>
@@ -69,12 +95,33 @@ export default function AdminProductsPage() {
       </section>
 
       <section className="card p-4">
-        <h2 className="text-lg font-semibold mb-3">All Products ({products.length})</h2>
+        <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
+          <div>
+            <h2 className="text-lg font-semibold">All Products ({filtered.length})</h2>
+            {count !== null && <p className="text-xs text-gray-500">DB count: {count}</p>}
+          </div>
+          <div className="flex gap-2">
+            <input className="border rounded-md px-3 py-2" placeholder="Search…" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <select className="border rounded-md px-3 py-2" value={category} onChange={(e) => setCategory(e.target.value as any)}>
+              <option value="all">All categories</option>
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} />
+              Only active
+            </label>
+          </div>
+        </div>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => (
+          {filtered.map((p) => (
             <div key={p.id} className="border rounded-md p-3 space-y-2">
               <div className="font-medium truncate">{p.name}</div>
-              <div className="text-sm text-gray-600 truncate">{p.category} · ${p.price.toFixed(2)}</div>
+              <div className="text-sm text-gray-600 truncate">{p.category} · ${p.price.toFixed(2)} · {p.active === false ? 'Hidden' : 'Active'}</div>
+              <div className="flex items-center gap-2 text-sm">
+                <label className="inline-flex items-center gap-2">
+                  <input type="checkbox" checked={p.active !== false} onChange={(e) => update({ ...p, active: e.target.checked })} /> Active
+                </label>
+              </div>
               <div className="flex gap-2">
                 <button className="btn" onClick={() => startEdit(p)}>Edit</button>
                 <button className="btn" onClick={() => remove(p.id)}>Delete</button>

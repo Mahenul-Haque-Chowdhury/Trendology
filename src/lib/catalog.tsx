@@ -13,26 +13,26 @@ export function useCatalog() {
     async function load() {
       if (isSupabaseConfigured()) {
         const supabase = getSupabaseClient()!
-        console.debug('[catalog] Supabase configured; fetching products…')
-        let tableTried: 'products' | 'inventory' = 'products'
+        console.debug('[catalog] Supabase configured; fetching inventory/products…')
+        let tableTried: 'products' | 'inventory' = 'inventory'
         let data: any[] | null = null
         let error: any = null
         try {
-          const res = await supabase.from('products').select('*')
+          const res = await supabase.from('inventory').select('*')
           data = res.data
           error = res.error
           if (error) throw error
           if (!data || data.length === 0) {
-            // Back-compat fallback to "inventory" table if "products" is empty
-            tableTried = 'inventory'
-            const res2 = await supabase.from('inventory').select('*')
+            // Back-compat fallback to "products" table if "inventory" is empty
+            tableTried = 'products'
+            const res2 = await supabase.from('products').select('*')
             data = res2.data
             error = res2.error
           }
         } catch (e) {
-          console.debug('[catalog] products query failed; trying inventory…')
-          tableTried = 'inventory'
-          const res2 = await supabase.from('inventory').select('*')
+          console.debug('[catalog] inventory query failed; trying products…')
+          tableTried = 'products'
+          const res2 = await supabase.from('products').select('*')
           data = res2.data
           error = res2.error
         }
@@ -44,7 +44,7 @@ export function useCatalog() {
         if (!cancelled && data && !error && data.length > 0) {
           setItems(
             data.map((d: any) => ({
-              id: d.id,
+              id: String(d.id),
               name: d.name,
               description: d.description ?? '',
               price: Number(d.price ?? 0),
@@ -52,6 +52,7 @@ export function useCatalog() {
               images: Array.isArray(d.images) ? d.images : [],
               category: d.category ?? 'misc',
               tags: Array.isArray(d.tags) ? d.tags : [],
+              active: typeof d.active === 'boolean' ? d.active : true,
             }))
           )
           return
@@ -83,18 +84,21 @@ export function useCatalog() {
     categories: useMemo(() => Array.from(new Set(items.map((p) => p.category))).sort(), [items]),
     async add(p: Omit<Product, 'id'>) {
       if (isSupabaseConfigured()) {
-        const supabase = getSupabaseClient()!
-        const { data, error } = await supabase
-          .from('products')
-          .insert({ ...p, active: true })
-          .select('*')
-          .single()
-        if (error) {
-          console.error('[catalog] add(product) failed:', error?.message)
-        }
-        if (!error && data) {
-          await loadProductsFromSupabase(setItems)
-          return data.id as string
+        try {
+          const res = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...p, active: true }) })
+          const json = await res.json()
+          if (json?.ok && json.item) {
+            await loadProductsFromSupabase(setItems)
+            return String(json.item.id)
+          }
+        } catch (e) {
+          console.error('[catalog] add via API failed, falling back to direct table', e)
+          const supabase = getSupabaseClient()!
+          const { data } = await supabase.from('inventory').insert({ ...p, active: true }).select('*').single()
+          if (data) {
+            await loadProductsFromSupabase(setItems)
+            return String(data.id)
+          }
         }
       }
       const id = 'P-' + Date.now().toString(36)
@@ -104,18 +108,32 @@ export function useCatalog() {
     },
   async update(p: Product) {
       if (isSupabaseConfigured()) {
-        const supabase = getSupabaseClient()!
-    const { error } = await supabase.from('products').update({
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          image: p.image,
-          images: p.images,
-          category: p.category,
-          tags: p.tags,
-          active: true,
-    }).eq('id', p.id)
-    if (error) console.error('[catalog] update(product) failed:', error?.message)
+        try {
+          await fetch(`/api/admin/products/${encodeURIComponent(p.id)}`,
+            { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+              name: p.name,
+              description: p.description,
+              price: p.price,
+              image: p.image,
+              images: p.images,
+              category: p.category,
+              tags: p.tags,
+              active: p.active !== false,
+            }) })
+        } catch (e) {
+          console.error('[catalog] update via API failed, falling back', e)
+          const supabase = getSupabaseClient()!
+          await supabase.from('inventory').update({
+            name: p.name,
+            description: p.description,
+            price: p.price,
+            image: p.image,
+            images: p.images,
+            category: p.category,
+            tags: p.tags,
+            active: p.active !== false,
+          }).eq('id', p.id)
+        }
         await loadProductsFromSupabase(setItems)
         return
       }
@@ -124,9 +142,13 @@ export function useCatalog() {
     },
   async remove(id: string) {
       if (isSupabaseConfigured()) {
-        const supabase = getSupabaseClient()!
-    const { error } = await supabase.from('products').delete().eq('id', id)
-    if (error) console.error('[catalog] remove(product) failed:', error?.message)
+        try {
+          await fetch(`/api/admin/products/${encodeURIComponent(id)}`, { method: 'DELETE' })
+        } catch (e) {
+          console.error('[catalog] delete via API failed, falling back', e)
+          const supabase = getSupabaseClient()!
+          await supabase.from('inventory').delete().eq('id', id)
+        }
         await loadProductsFromSupabase(setItems)
         return
       }
@@ -139,16 +161,16 @@ export function useCatalog() {
 async function loadProductsFromSupabase(setItems: (p: Product[]) => void) {
   const supabase = getSupabaseClient()!
   let data: any[] | null = null
-  let res = await supabase.from('products').select('*')
+  let res = await supabase.from('inventory').select('*')
   data = res.data
   if (!data || data.length === 0 || res.error) {
-    res = await supabase.from('inventory').select('*')
+    res = await supabase.from('products').select('*')
     data = res.data
   }
   if (data) {
     setItems(
       data.map((d: any) => ({
-        id: d.id,
+        id: String(d.id),
         name: d.name,
         description: d.description ?? '',
         price: Number(d.price ?? 0),
@@ -156,6 +178,7 @@ async function loadProductsFromSupabase(setItems: (p: Product[]) => void) {
         images: Array.isArray(d.images) ? d.images : [],
         category: d.category ?? 'misc',
         tags: Array.isArray(d.tags) ? d.tags : [],
+        active: typeof d.active === 'boolean' ? d.active : true,
       }))
     )
   }

@@ -9,6 +9,8 @@ export type Product = {
   images?: string[]
   category: string
   tags: string[]
+  // Whether the product is visible/available in the store (from Supabase inventory.active)
+  active?: boolean
 }
 
 // Empty local seed; the app loads from Supabase.
