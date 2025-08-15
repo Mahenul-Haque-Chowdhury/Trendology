@@ -17,39 +17,44 @@ export type CartState = {
 const CartCtx = createContext<CartState | null>(null)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  // Hydrate from localStorage synchronously on first render to avoid clearing on refresh
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined') return []
+  // Start with an empty cart for SSR parity; hydrate after mount to avoid hydration mismatch
+  const [items, setItems] = useState<CartItem[]>([])
+  const [open, setOpen] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
+
+  // Load from storage after mount (client-only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
     try {
       const raw = localStorage.getItem('storefront.cart.v1')
       let parsed = raw ? (JSON.parse(raw) as CartItem[]) : []
       if (!parsed || !Array.isArray(parsed)) {
-        // fallback: try cookie
         const m = document.cookie.match(/(?:^|; )cart=([^;]*)/)
         if (m) {
           try { parsed = JSON.parse(decodeURIComponent(m[1])) } catch {}
         }
       }
-      return Array.isArray(parsed) ? parsed : []
+      if (Array.isArray(parsed)) setItems(parsed)
     } catch {
-      return []
+      // ignore
+    } finally {
+      setHydrated(true)
     }
-  })
-  const [open, setOpen] = useState(false)
+  }, [])
 
 
-  // Persist on change
+  // Persist on change, but only after initial hydration to avoid overwriting saved cart with []
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !hydrated) return
     try {
       localStorage.setItem('storefront.cart.v1', JSON.stringify(items))
-  // Cookie fallback (7 days)
-  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()
-  document.cookie = `cart=${encodeURIComponent(JSON.stringify(items))}; path=/; expires=${expires}`
-    } catch (e) {
+      // Cookie fallback (7 days)
+      const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()
+      document.cookie = `cart=${encodeURIComponent(JSON.stringify(items))}; path=/; expires=${expires}`
+    } catch {
       // ignore
     }
-  }, [items])
+  }, [items, hydrated])
 
   const api: CartState = useMemo(() => ({
     items,
