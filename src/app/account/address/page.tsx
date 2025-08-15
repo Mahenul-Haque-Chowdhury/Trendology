@@ -92,17 +92,37 @@ function AddressManager({ userId }: { userId: string }) {
 
       <div className="card p-6">
         <h2 className="text-lg font-semibold mb-3">Add New Address</h2>
-        <form className="grid grid-cols-1 sm:grid-cols-2 gap-3" onSubmit={onSubmit}>
-          <input className="input" placeholder="Label (Home/Office)" value={form.label || ''} onChange={(e) => setForm({ ...form, label: e.target.value })} />
-          <input className="input" placeholder="Recipient" value={form.recipient || ''} onChange={(e) => setForm({ ...form, recipient: e.target.value })} required />
-          <input className="input" placeholder="Phone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-          <input className="input sm:col-span-2" placeholder="Address Line" value={form.address_line || ''} onChange={(e) => setForm({ ...form, address_line: e.target.value })} required />
-          <input className="input" placeholder="City" value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
-          <input className="input" placeholder="Country" value={form.country || ''} onChange={(e) => setForm({ ...form, country: e.target.value })} required />
-          <label className="flex items-center gap-2 text-sm sm:col-span-2 mt-1">
-            <input type="checkbox" checked={!!form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} />
-            Set as default
-          </label>
+    <form className="grid grid-cols-1 sm:grid-cols-2 gap-2" onSubmit={onSubmit}>
+          <div className="field">
+      <div className="text-xs text-gray-600 mb-0.5">Label</div>
+            <input className="input" placeholder="Home / Office" value={form.label || ''} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+          </div>
+          <div className="field">
+      <div className="text-xs text-gray-600 mb-0.5">Recipient</div>
+            <input className="input" placeholder="Full name" value={form.recipient || ''} onChange={(e) => setForm({ ...form, recipient: e.target.value })} required />
+          </div>
+          <div className="field">
+      <div className="text-xs text-gray-600 mb-0.5">Phone</div>
+            <input className="input" placeholder="e.g. 01XXXXXXXXX" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+          </div>
+          <div className="field sm:col-span-2">
+      <div className="text-xs text-gray-600 mb-0.5">Address Line</div>
+            <input className="input" placeholder="Street, area, house no." value={form.address_line || ''} onChange={(e) => setForm({ ...form, address_line: e.target.value })} required />
+          </div>
+          <div className="field">
+      <div className="text-xs text-gray-600 mb-0.5">City</div>
+            <input className="input" placeholder="City" value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
+          </div>
+          <div className="field">
+      <div className="text-xs text-gray-600 mb-0.5">Country</div>
+            <input className="input" placeholder="Country" value={form.country || ''} onChange={(e) => setForm({ ...form, country: e.target.value })} required />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={!!form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} />
+              Set as default
+            </label>
+          </div>
           <div className="sm:col-span-2">
             <button className="btn btn-primary" disabled={busy}>
               {busy ? 'Saving…' : 'Save Address'}
@@ -157,7 +177,7 @@ function EditableAddressCard({ address, onCancel, onSave, onDelete, onMakeDefaul
   const [draft, setDraft] = useState<Partial<Address>>({ ...address })
   return (
     <form
-      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+      className="grid grid-cols-1 sm:grid-cols-2 gap-2"
       onSubmit={(e) => { e.preventDefault(); onSave({
         label: draft.label,
         recipient: draft.recipient,
@@ -167,12 +187,30 @@ function EditableAddressCard({ address, onCancel, onSave, onDelete, onMakeDefaul
         country: draft.country,
       }) }}
     >
-      <input className="input" placeholder="Label (Home/Office)" value={draft.label || ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} />
-      <input className="input" placeholder="Recipient" value={draft.recipient || ''} onChange={(e) => setDraft({ ...draft, recipient: e.target.value })} required />
-      <input className="input" placeholder="Phone" value={draft.phone || ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} required />
-      <input className="input sm:col-span-2" placeholder="Address Line" value={draft.address_line || ''} onChange={(e) => setDraft({ ...draft, address_line: e.target.value })} required />
-      <input className="input" placeholder="City" value={draft.city || ''} onChange={(e) => setDraft({ ...draft, city: e.target.value })} required />
-      <input className="input" placeholder="Country" value={draft.country || ''} onChange={(e) => setDraft({ ...draft, country: e.target.value })} required />
+      <div className="field">
+        <div className="text-xs text-gray-600 mb-0.5">Label</div>
+        <input className="input" placeholder="Home / Office" value={draft.label || ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} />
+      </div>
+      <div className="field">
+        <div className="text-xs text-gray-600 mb-0.5">Recipient</div>
+        <input className="input" placeholder="Full name" value={draft.recipient || ''} onChange={(e) => setDraft({ ...draft, recipient: e.target.value })} required />
+      </div>
+      <div className="field">
+        <div className="text-xs text-gray-600 mb-0.5">Phone</div>
+        <input className="input" placeholder="e.g. 01XXXXXXXXX" value={draft.phone || ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} required />
+      </div>
+      <div className="field sm:col-span-2">
+        <div className="text-xs text-gray-600 mb-0.5">Address Line</div>
+        <input className="input" placeholder="Street, area, house no." value={draft.address_line || ''} onChange={(e) => setDraft({ ...draft, address_line: e.target.value })} required />
+      </div>
+      <div className="field">
+        <div className="text-xs text-gray-600 mb-0.5">City</div>
+        <input className="input" placeholder="City" value={draft.city || ''} onChange={(e) => setDraft({ ...draft, city: e.target.value })} required />
+      </div>
+      <div className="field">
+        <div className="text-xs text-gray-600 mb-0.5">Country</div>
+        <input className="input" placeholder="Country" value={draft.country || ''} onChange={(e) => setDraft({ ...draft, country: e.target.value })} required />
+      </div>
       <div className="sm:col-span-2 flex items-center gap-2">
         {!address.is_default && <button className="btn btn-sm" type="button" onClick={onMakeDefault}>Make Default</button>}
         <button className="btn btn-sm btn-primary" type="submit">Save</button>

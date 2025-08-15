@@ -30,4 +30,7 @@ html, body {
   .badge { @apply inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-2 py-0.5 text-xs; }
   .link { @apply text-brand hover:text-brand-dark underline-offset-4 hover:underline; }
   .section-title { @apply text-2xl font-semibold mb-6; }
+  /* Inputs */
+  .input { @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/30; }
+  .field { @apply border border-gray-200 rounded-lg p-3 bg-white; }
 }
