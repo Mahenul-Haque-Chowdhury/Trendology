@@ -1,15 +1,32 @@
 "use client"
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import React from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
+import { getSupabaseClient } from '@/lib/supabase'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const links = [
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/products', label: 'Products' },
     { href: '/admin/db', label: 'DB Check' },
   ]
+  useEffect(() => {
+    const mode = (process.env.NEXT_PUBLIC_ADMIN_AUTH_MODE || '').toLowerCase()
+    if (mode !== 'supabase') return
+    // Client-side soft guard: redirect non-admins to login page
+    async function check() {
+      const supabase = getSupabaseClient()
+      if (!supabase) return
+      const { data } = await supabase.auth.getUser()
+      const user = data.user
+      const emails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+      const isAdmin = user && ((emails.length > 0 && emails.includes(String(user.email || '').toLowerCase())) || String(user.user_metadata?.role || '').toLowerCase() === 'admin')
+      if (!isAdmin) router.replace('/account/login')
+    }
+    check()
+  }, [router])
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

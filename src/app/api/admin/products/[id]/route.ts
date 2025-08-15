@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getServerSupabaseUser, isUserAdmin } from '@/lib/adminAuth'
 
 const TABLE = 'inventory'
 
@@ -12,6 +13,10 @@ function getServiceClient() {
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    if ((process.env.ADMIN_AUTH_MODE || '').toLowerCase() === 'supabase') {
+      const user = await getServerSupabaseUser()
+      if (!isUserAdmin(user)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
     const client = getServiceClient()
     if (!client) return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 500 })
     const body = await req.json()
@@ -29,6 +34,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    if ((process.env.ADMIN_AUTH_MODE || '').toLowerCase() === 'supabase') {
+      const user = await getServerSupabaseUser()
+      if (!isUserAdmin(user)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
     const client = getServiceClient()
     if (!client) return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 500 })
     const { error } = await client.from(TABLE).delete().eq('id', params.id)

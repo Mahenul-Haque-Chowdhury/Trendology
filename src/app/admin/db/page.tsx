@@ -73,7 +73,7 @@ export default function DbCheckPage() {
           {envInfo.url && <div>URL: <code>{envInfo.url}</code></div>}
           {envInfo.keyHint && <div>Key: <code>{envInfo.keyHint}</code></div>}
         </div>
-      )}
+  )}
       {error && (
         <div className="p-3 rounded-md bg-red-50 text-red-700 text-sm">{error}</div>
       )}

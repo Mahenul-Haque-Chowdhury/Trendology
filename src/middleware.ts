@@ -5,6 +5,12 @@ export function middleware(req: NextRequest) {
 	const { pathname } = req.nextUrl
 	if (!pathname.startsWith('/admin')) return NextResponse.next()
 
+	// Allow Supabase-auth mode (role-based) to bypass Basic Auth.
+	const mode = (process.env.ADMIN_AUTH_MODE || '').toLowerCase()
+	if (mode === 'supabase') {
+		return NextResponse.next()
+	}
+
 	// Use server env vars; set in Vercel Project Settings → Environment Variables
 	const user = process.env.ADMIN_USER || process.env.NEXT_PUBLIC_ADMIN_USER || 'admin'
 	const pass = process.env.ADMIN_PASS || process.env.NEXT_PUBLIC_ADMIN_PASS || 'admin'
