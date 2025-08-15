@@ -17,28 +17,35 @@ export type CartState = {
 const CartCtx = createContext<CartState | null>(null)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [open, setOpen] = useState(false)
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    if (typeof window === 'undefined') return
+  // Hydrate from localStorage synchronously on first render to avoid clearing on refresh
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === 'undefined') return []
     try {
       const raw = localStorage.getItem('storefront.cart.v1')
-      if (raw) {
-        const parsed = JSON.parse(raw) as CartItem[]
-        if (Array.isArray(parsed)) setItems(parsed)
+      let parsed = raw ? (JSON.parse(raw) as CartItem[]) : []
+      if (!parsed || !Array.isArray(parsed)) {
+        // fallback: try cookie
+        const m = document.cookie.match(/(?:^|; )cart=([^;]*)/)
+        if (m) {
+          try { parsed = JSON.parse(decodeURIComponent(m[1])) } catch {}
+        }
       }
-    } catch (e) {
-      // ignore
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
     }
-  }, [])
+  })
+  const [open, setOpen] = useState(false)
+
 
   // Persist on change
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       localStorage.setItem('storefront.cart.v1', JSON.stringify(items))
+  // Cookie fallback (7 days)
+  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()
+  document.cookie = `cart=${encodeURIComponent(JSON.stringify(items))}; path=/; expires=${expires}`
     } catch (e) {
       // ignore
     }
