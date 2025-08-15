@@ -14,7 +14,7 @@ export default function Header() {
   const [userOpen, setUserOpen] = useState(false)
   const { products: items } = useCatalog()
   const categories = useMemo(() => Array.from(new Set(items.map((p) => p.category))).sort(), [items])
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
   const [q, setQ] = useState('')
@@ -136,6 +136,13 @@ export default function Header() {
                     <Link href="/" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
                       Home
                     </Link>
+                    <button
+                      role="menuitem"
+                      className="block w-full text-left px-2 py-1 rounded hover:bg-gray-50 text-red-600"
+                      onClick={() => { setUserOpen(false); logout(); router.push('/') }}
+                    >
+                      Sign out
+                    </button>
                   </div>
                 )}
               </div>
@@ -195,6 +202,12 @@ export default function Header() {
               <>
                 <div className="px-2 py-2 text-gray-600">Hi, {user.name.split(' ')[0]}</div>
                 <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Manage your Profile</Link>
+                <button
+                  className="block w-full text-left px-2 py-2 rounded hover:bg-gray-50 text-red-600"
+                  onClick={() => { setMobileOpen(false); logout(); router.push('/') }}
+                >
+                  Sign out
+                </button>
               </>
             )}
             <Link href="/" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Home</Link>
