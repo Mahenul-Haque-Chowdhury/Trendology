@@ -20,6 +20,7 @@ const Key = 'storefront.addresses.v1'
 // Module-level cache to dedupe fetches across Strict Mode double-invocation and multiple consumers.
 const addressCache = new Map<string, Address[]>()
 const inFlight = new Map<string, Promise<Address[]>>()
+const loadedOnce = new Set<string>()
 
 export function useAddresses(userId?: string) {
   const [items, setItems] = useState<Address[]>([])
@@ -32,6 +33,17 @@ export function useAddresses(userId?: string) {
       // Serve from cache if available
       const cached = addressCache.get(userId)
       if (cached) { setItems(cached); return }
+      // Try sessionStorage cache to avoid a fresh network call on navigation/refresh
+      try {
+        const sess = typeof window !== 'undefined' ? sessionStorage.getItem(`${Key}:ss:${userId}`) : null
+        if (sess) {
+          const parsed = JSON.parse(sess) as Address[]
+          addressCache.set(userId, parsed)
+          setItems(parsed)
+          // If we've already loaded once this session, don't refetch now
+          if (loadedOnce.has(userId)) return
+        }
+      } catch {}
       // Deduplicate concurrent loads
       if (inFlight.has(userId)) {
         try {
@@ -61,6 +73,9 @@ export function useAddresses(userId?: string) {
       const data = await p
       inFlight.delete(userId)
       addressCache.set(userId, data)
+      // Save to sessionStorage for this session and mark as loaded
+      try { if (typeof window !== 'undefined') sessionStorage.setItem(`${Key}:ss:${userId}`, JSON.stringify(data)) } catch {}
+      loadedOnce.add(userId)
       if (!cancelled) setItems(data)
     }
     loadOnce()
@@ -98,8 +113,11 @@ export function useAddresses(userId?: string) {
           .order('is_default', { ascending: false })
           .order('created_at', { ascending: false })
         if (res.data) {
-          setItems(res.data as Address[])
-          addressCache.set(userId, res.data as Address[])
+          const list = res.data as Address[]
+          setItems(list)
+          addressCache.set(userId, list)
+          try { if (typeof window !== 'undefined') sessionStorage.setItem(`${Key}:ss:${userId}`, JSON.stringify(list)) } catch {}
+          loadedOnce.add(userId)
         }
         return
       }
@@ -123,8 +141,11 @@ export function useAddresses(userId?: string) {
         // reload
         const res = await supabase.from('user_addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }).order('created_at', { ascending: false })
         if (res.data) {
-          setItems(res.data as Address[])
-          addressCache.set(userId, res.data as Address[])
+          const list = res.data as Address[]
+          setItems(list)
+          addressCache.set(userId, list)
+          try { if (typeof window !== 'undefined') sessionStorage.setItem(`${Key}:ss:${userId}`, JSON.stringify(list)) } catch {}
+          loadedOnce.add(userId)
         }
         // Persist a checkout prefill hint
         try {
@@ -149,8 +170,11 @@ export function useAddresses(userId?: string) {
         await supabase.from('user_addresses').delete().eq('user_id', userId).eq('id', id)
         const res = await supabase.from('user_addresses').select('*').eq('user_id', userId).order('is_default', { ascending: false }).order('created_at', { ascending: false })
         if (res.data) {
-          setItems(res.data as Address[])
-          addressCache.set(userId, res.data as Address[])
+          const list = res.data as Address[]
+          setItems(list)
+          addressCache.set(userId, list)
+          try { if (typeof window !== 'undefined') sessionStorage.setItem(`${Key}:ss:${userId}`, JSON.stringify(list)) } catch {}
+          loadedOnce.add(userId)
         }
         return
       }
