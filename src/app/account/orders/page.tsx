@@ -4,10 +4,12 @@ import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 import type { Order } from '@/lib/types'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
+import { useCatalog } from '@/lib/catalog'
 
 export default function OrdersPage() {
   const { user } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
+  const { products } = useCatalog()
 
   useEffect(() => {
     if (!user) return
@@ -22,30 +24,88 @@ export default function OrdersPage() {
             .or(`user_id.eq.${u.id},email.eq.${u.email}`)
             .order('created_at', { ascending: false })
           if (!error && rows) {
-            setOrders(rows.map((r: any) => ({
-              id: r.id,
-              createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
-              customer: {
-                fullName: r.customer_name || '',
-                email: r.email || u.email,
-                phone: r.phone || '',
-                address: r.address || '',
-                city: r.city || '',
-                country: r.country || '',
-              },
-              items: [],
-              subtotal: Number(r.subtotal || 0),
-              shipping: Number(r.shipping || 0),
-              total: Number(r.total || 0),
-              payment: { method: String(r.payment_method || 'cod') as any, txid: r.txid || undefined },
-              status: (r.status || 'pending') as any,
-            })))
+            // Fetch order items for these orders
+            const orderIds = rows.map((r: any) => r.id)
+            const { data: itemsRows } = await supabase
+              .from('order_items')
+              .select('*')
+              .in('order_id', orderIds)
+
+            const itemsByOrder = new Map<string, { product_id: string | null; qty: number; unit_price: number }[]>()
+            for (const it of itemsRows || []) {
+              const arr = itemsByOrder.get(it.order_id) || []
+              arr.push({ product_id: it.product_id, qty: it.qty, unit_price: Number(it.unit_price) })
+              itemsByOrder.set(it.order_id, arr)
+            }
+
+            setOrders(
+              rows.map((r: any) => {
+                const rawItems = itemsByOrder.get(r.id) || []
+                const mapped = rawItems
+                  .map((ri) => {
+                    const p = products.find((p) => p.id === ri.product_id)
+                    if (!p) return null
+                    return { product: p, qty: ri.qty }
+                  })
+                  .filter(Boolean) as Order['items']
+                // Prefer human code; else fallback to short suffix of UUID
+                const displayId: string = r.code || (typeof r.id === 'string' && r.id.includes('-')
+                  ? 'ORD-' + r.id.split('-').pop().toUpperCase()
+                  : String(r.id))
+                return {
+                  id: displayId,
+                  createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
+                  customer: {
+                    fullName: r.customer_name || '',
+                    email: r.email || u.email,
+                    phone: r.phone || '',
+                    address: r.address || '',
+                    city: r.city || '',
+                    country: r.country || '',
+                  },
+                  items: mapped,
+                  subtotal: Number(r.subtotal || 0),
+                  shipping: Number(r.shipping || 0),
+                  total: Number(r.total || 0),
+                  payment: { method: String(r.payment_method || 'cod') as any, txid: r.txid || undefined },
+                  status: (r.status || 'pending') as any,
+                } as Order
+              })
+            )
             return
           }
         } catch {}
       }
+      // Fallback to local orders
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('storefront.orders.v1') : null
+        const localOrders = raw ? (JSON.parse(raw) as Order[]) : []
+        setOrders(localOrders)
+      } catch {}
     }
     load()
+  }, [user, products])
+
+  // Live updates for status and totals
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured()) return
+    const supabase = getSupabaseClient()!
+    const channel = supabase
+      .channel('orders_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload: any) => {
+        const r = payload.new
+        setOrders((prev) => prev.map((o) => {
+          const isSame = o.id.endsWith(String((r?.code || '').split('-').pop()).toUpperCase()) || o.id === r?.code
+          if (!isSame) return o
+          return {
+            ...o,
+            total: Number(r.total ?? o.total),
+            status: (r.status || o.status) as any,
+          }
+        }))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
   }, [user])
 
   if (!user) {
@@ -68,17 +128,43 @@ export default function OrdersPage() {
         <p className="text-gray-600">No orders yet.</p>
       ) : (
         <ul className="space-y-3">
-          {orders.map((o) => (
-            <li key={o.id} className="border rounded-md p-3">
-              <div className="flex items-center justify-between">
-                <div className="font-medium">Order #{o.id}</div>
-                <div className="text-sm">{new Date(o.createdAt).toLocaleDateString()}</div>
-              </div>
-              <div className="text-sm text-gray-600">${o.total.toFixed(2)} · {o.status}</div>
-            </li>
-          ))}
+          {orders.map((o) => {
+            const itemCount = o.items.reduce((n, it) => n + it.qty, 0)
+            const first = o.items[0]?.product?.name
+            return (
+              <li key={o.id} className="border rounded-md p-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">Order #{o.id}</div>
+                  <div className="text-sm">{new Date(o.createdAt).toLocaleDateString()}</div>
+                </div>
+                <div className="flex items-center justify-between text-sm text-gray-700">
+                  <div className="truncate">
+                    {itemCount > 0 ? (
+                      <span>{itemCount} item{itemCount > 1 ? 's' : ''}{first ? ` · ${first}${itemCount > 1 ? ' +' + (itemCount - 1) : ''}` : ''}</span>
+                    ) : (
+                      <span>No items</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">${o.total.toFixed(2)}</span>
+                    <StatusBadge status={o.status} />
+                  </div>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
   )
+}
+
+function StatusBadge({ status }: { status: Order['status'] }) {
+  const color =
+    status === 'paid' ? 'bg-green-100 text-green-700 border-green-200' :
+    status === 'shipped' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+    status === 'cancelled' ? 'bg-red-100 text-red-700 border-red-200' :
+    'bg-yellow-100 text-yellow-800 border-yellow-200'
+  const label = status[0].toUpperCase() + status.slice(1)
+  return <span className={`border px-2 py-0.5 rounded text-xs ${color}`}>{label}</span>
 }

@@ -94,18 +94,19 @@ export default function CheckoutPage() {
   const paymentMethod = String(formData.get('paymentMethod') || 'cod') as typeof method
   const phone = String(formData.get('phone') || '')
     const txid = String(formData.get('txid') || '')
-    // Mock order id
-    const orderId = 'ORD-' + Date.now().toString(36).toUpperCase()
+  // Human-friendly short order code
+  const orderCode = 'ORD-' + Math.random().toString(36).slice(2, 8).toUpperCase()
     // If Supabase is configured, save order in DB (authenticated user recommended)
     if (isSupabaseConfigured()) {
       try {
         const supabase = getSupabaseClient()!
-        const orderIdDb = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0')
+    const orderIdDb = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0')
     const { error: orderErr } = await supabase
           .from('orders')
           .insert({
             id: orderIdDb,
             user_id: user?.id ?? null,
+      code: orderCode,
             customer_name: String(formData.get('fullName') || ''),
             email: String(formData.get('email') || ''),
       phone,
@@ -139,7 +140,7 @@ export default function CheckoutPage() {
     }
     try {
       const order: Order = {
-        id: orderId,
+        id: orderCode,
         createdAt: Date.now(),
         customer: {
           fullName: String(formData.get('fullName') || ''),
@@ -162,7 +163,7 @@ export default function CheckoutPage() {
       if (typeof window !== 'undefined') localStorage.setItem('storefront.orders.v1', JSON.stringify(orders))
     } catch {}
     clear()
-    const params = new URLSearchParams({ orderId, name, method: paymentMethod, txid })
+  const params = new URLSearchParams({ orderId: orderCode, name, method: paymentMethod, txid })
     router.push(`/checkout/success?${params.toString()}`)
   }
 

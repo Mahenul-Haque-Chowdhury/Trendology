@@ -21,6 +21,8 @@ alter table if exists public."Orders" rename to orders;
 -- Add columns if missing for orders
 alter table public.orders
   add column if not exists user_id uuid references auth.users(id) on delete set null,
+  -- Human-friendly short order code (e.g., ORD-ABC123) for display
+  add column if not exists code text unique,
   add column if not exists customer_name text,
   add column if not exists email text,
   add column if not exists address text,
@@ -67,6 +69,17 @@ for select using (auth.uid() = user_id or auth.role() = 'service_role');
 drop policy if exists "Insert order items" on public.order_items;
 create policy "Insert order items" on public.order_items
 for insert with check (true);
+
+-- Allow owners to read their own order items
+drop policy if exists "Owner read order items" on public.order_items;
+create policy "Owner read order items" on public.order_items
+for select using (
+  exists (
+    select 1 from public.orders o
+    where o.id = order_items.order_id
+      and (auth.uid() = o.user_id or auth.role() = 'service_role')
+  )
+);
 
 -- Optional: simple user profile table to mirror auth.users (aka "user data table")
 alter table if exists public."UserData" rename to profiles;
