@@ -235,7 +235,7 @@ export default function Header() {
 
           {/* Right-side actions */}
           <nav className="flex items-center gap-3 sm:gap-4 text-sm relative">
-            <Link href="#products" className="hover:text-brand-dark hidden sm:inline">Products</Link>
+            <Link href="/#products" className="hover:text-brand-dark hidden sm:inline">Products</Link>
             <div className="relative hidden sm:block">
               <button className="hover:text-brand-dark" onClick={() => setOpen((s) => !s)} aria-haspopup="menu" aria-expanded={open} aria-controls="category-menu">Categories ▾</button>
               {open && (
@@ -411,7 +411,7 @@ export default function Header() {
         <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Manage your Profile</Link>
               </>
             )}
-      <a href="#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Products</a>
+  <Link href="/#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Products</Link>
             <details className="px-2 py-2">
               <summary className="cursor-pointer select-none">Categories</summary>
               <div className="mt-2 ml-3 space-y-1 max-h-60 overflow-auto pr-2">
