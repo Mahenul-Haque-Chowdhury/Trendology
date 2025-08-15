@@ -101,14 +101,12 @@ export default function ProfilePage() {
         setBusy(false)
         return
       }
-      const payload = {
+  // Only update basic info here; addresses are managed in Addressbook
+  const payload = {
         id: user!.id,
         email: String(fd.get('email') || ''),
         name: String(fd.get('name') || ''),
         phone: String(fd.get('phone') || ''),
-        address: String(fd.get('address') || ''),
-        city: String(fd.get('city') || ''),
-        country: String(fd.get('country') || ''),
       }
       // Prefer user_details; if missing, fallback to profiles
       const client2 = supa!
@@ -129,11 +127,17 @@ export default function ProfilePage() {
         throw error
       }
   setMsg('Profile updated')
-  setProfile(payload)
+  // Preserve any existing address fields locally while updating core fields
+  setProfile((prev) => ({ ...(prev || { id: user!.id, email: payload.email }), ...payload }))
   // reflect change in header immediately
   if (payload.name) updateDisplayName(payload.name)
   // update local cache for checkout prefill
-  try { if (typeof window !== 'undefined') localStorage.setItem(`storefront.user_details.${user!.id}`, JSON.stringify(payload)) } catch {}
+  try {
+    if (typeof window !== 'undefined') {
+      const merged = { ...(profile || {}), ...payload }
+      localStorage.setItem(`storefront.user_details.${user!.id}`, JSON.stringify(merged))
+    }
+  } catch {}
     } catch (e: any) {
       setErr(e?.message || 'Failed to save profile')
     } finally { setBusy(false) }
@@ -163,16 +167,16 @@ export default function ProfilePage() {
             <input name="phone" defaultValue={profile?.phone || ''} className="border rounded-md px-3 py-2 w-full" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium">Address</label>
-            <input name="address" defaultValue={profile?.address || ''} className="border rounded-md px-3 py-2 w-full" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">City</label>
-            <input name="city" defaultValue={profile?.city || ''} className="border rounded-md px-3 py-2 w-full" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Country</label>
-            <input name="country" defaultValue={profile?.country || ''} className="border rounded-md px-3 py-2 w-full" />
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="block text-sm font-medium">Addresses</div>
+                <p className="text-xs text-gray-500">Manage your shipping addresses in the Addressbook.</p>
+              </div>
+              <Link href="/account/address" className="btn flex items-center gap-2">
+                <span className="text-lg leading-none">+</span>
+                <span>Go to Addressbook</span>
+              </Link>
+            </div>
           </div>
         </div>
         <div className="flex gap-2 items-center justify-end sm:justify-start sticky bottom-3 sm:static bg-white/70 sm:bg-transparent backdrop-blur sm:backdrop-blur-0 p-2 sm:p-0 rounded-md">
