@@ -148,7 +148,7 @@ export default function Header() {
       <div className="bg-accent text-gray-900 text-xs sm:text-sm">
         <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2">
           <span className="font-medium">Free delivery on orders over $50</span>
-          <Link href="/account" className="underline underline-offset-2 hover:text-gray-800">Join now</Link>
+          <span className="underline underline-offset-2 opacity-70 cursor-not-allowed" aria-disabled="true">Join now</span>
         </div>
       </div>
 
