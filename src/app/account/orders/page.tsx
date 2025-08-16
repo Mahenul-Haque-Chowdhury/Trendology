@@ -64,7 +64,7 @@ export default function OrdersPage() {
                   customer: {
                     fullName: r.customer_name || '',
                     email: r.email || u.email,
-                    phone: r.phone || '',
+                    phone: r.phone || (r.admin_notes?.includes('Phone:') ? (r.admin_notes.split('Phone:')[1].split('\n')[0].trim()) : ''),
                     address: r.address || '',
                     city: r.city || '',
                     country: r.country || '',
@@ -103,7 +103,7 @@ export default function OrdersPage() {
     const supabase = getSupabaseClient()!
     const channel = supabase
       .channel('orders_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload: any) => {
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload: any) => {
         const r = payload.new
         setOrders((prev) => prev.map((o) => {
           const isSame = o.backendId === r?.id || o.id === r?.code || o.id.endsWith(String((r?.code || '').split('-').pop()).toUpperCase())
@@ -200,8 +200,8 @@ function CancelButton({ order, onCancelled }: { order: Order; onCancelled: (id: 
     if (busy) return
     setBusy(true)
     try {
-      if (order.code) {
-        const res = await fetch('/api/orders/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: order.code }) })
+      if (order.code || order.backendId) {
+        const res = await fetch('/api/orders/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: order.code, id: order.backendId }) })
         const out = await res.json()
         if (!out.ok) alert('Failed to cancel: ' + (out.error || res.statusText))
         else onCancelled(order.id)

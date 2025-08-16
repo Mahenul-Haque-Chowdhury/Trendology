@@ -40,7 +40,7 @@ export default function OrderDetailsPage() {
         }
         if (!r) return
         // Optionally restrict to this user by user_id or email
-        if (r.user_id && r.user_id !== user.id && r.email?.toLowerCase() !== user.email.toLowerCase()) {
+  if (r.user_id && r.user_id !== user.id && (r.email || '').toLowerCase() !== user.email.toLowerCase()) {
           return
         }
         const { data: itemsRows } = await supabase.from('order_items').select('*').eq('order_id', r.id)
@@ -117,8 +117,8 @@ export default function OrderDetailsPage() {
     if (!order || !canCancel || busy) return
     setBusy(true)
     try {
-      if (order.code) {
-        const res = await fetch('/api/orders/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: order.code }) })
+      if (order.code || order.backendId) {
+        const res = await fetch('/api/orders/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: order.code, id: order.backendId }) })
         const out = await res.json()
         if (!out.ok) alert('Failed to cancel: ' + (out.error || res.statusText))
         else setOrder({ ...order, status: 'cancelled' })
