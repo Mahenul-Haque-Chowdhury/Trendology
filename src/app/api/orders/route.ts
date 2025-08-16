@@ -14,6 +14,8 @@ type OrderInput = {
   subtotal: number
   shipping: number
   total: number
+  coupon_code?: string
+  discount?: number
   payment_method: 'cod' | 'bkash' | 'rocket' | 'nagad'
   txid?: string | null
   status: 'pending' | 'paid' | 'shipped' | 'cancelled'
@@ -52,8 +54,12 @@ export async function POST(req: NextRequest) {
       payment_method: body.payment_method!,
       txid: body.txid ?? null,
       status: body.status!,
-      // Temporary: persist phone inside admin_notes if the 'phone' column is not present in your DB
-      admin_notes: body.phone ? `Phone: ${body.phone}` : undefined,
+      // Temporary: persist phone and coupon details inside admin_notes if dedicated columns aren't present
+      admin_notes: [
+        body.phone ? `Phone: ${body.phone}` : null,
+        body.coupon_code ? `Coupon: ${body.coupon_code}` : null,
+        body.discount ? `Discount: ${Number(body.discount).toFixed(2)}` : null,
+      ].filter(Boolean).join(' \n '),
     }).select('id, code').single()
     if (orderErr || !orderRow) {
       return NextResponse.json({ ok: false, error: orderErr?.message || 'Insert failed' }, { status: 500 })

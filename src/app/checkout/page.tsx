@@ -13,6 +13,8 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; freeShip?: boolean } | null>(null)
   const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string }>({})
   const [form, setForm] = useState<{ fullName: string; email: string; phone: string; address: string; city: string; country: string }>({ fullName: '', email: '', phone: '', address: '', city: '', country: '' })
   // Avoid instantiating the hook with undefined and let it bootstrap once user is present
@@ -22,8 +24,35 @@ export default function CheckoutPage() {
   const [addressPrefilled, setAddressPrefilled] = useState(false)
 
   const subtotal = total
-  const shipping = useMemo(() => (subtotal > 250 ? 0 : 12), [subtotal])
-  const grandTotal = subtotal + shipping
+  const baseShipping = useMemo(() => (subtotal > 250 ? 0 : 12), [subtotal])
+  const shipping = appliedCoupon?.freeShip ? 0 : baseShipping
+  const discount = appliedCoupon?.discount ?? 0
+  const grandTotal = Math.max(0, subtotal + shipping - discount)
+
+  function validateCoupon(codeRaw: string) {
+    const code = codeRaw.trim().toUpperCase()
+    if (!code) return null as null | { code: string; discount: number; freeShip?: boolean }
+    // Simple demo rules; replace with server validation if needed
+    const rules: Record<string, { type: 'percent' | 'fixed' | 'freeship'; value?: number; min?: number }> = {
+      SAVE10: { type: 'percent', value: 10, min: 50 }, // 10% off orders >= $50
+      WELCOME5: { type: 'fixed', value: 5, min: 20 }, // $5 off orders >= $20
+      FREESHIP: { type: 'freeship' }, // Free shipping
+    }
+    const rule = rules[code]
+    if (!rule) return null
+    const minOk = (rule.min ?? 0) <= subtotal
+    if (!minOk) return null
+    if (rule.type === 'freeship') return { code, discount: 0, freeShip: true }
+    if (rule.type === 'fixed') return { code, discount: Math.min(subtotal, Math.max(0, rule.value || 0)) }
+    if (rule.type === 'percent') return { code, discount: Math.min(subtotal, (Math.max(0, rule.value || 0) / 100) * subtotal) }
+    return null
+  }
+
+  function onApplyCoupon(e: React.FormEvent) {
+    e.preventDefault()
+    const res = validateCoupon(couponInput)
+    setAppliedCoupon(res)
+  }
 
   useEffect(() => {
     if (!user) return
@@ -148,7 +177,9 @@ export default function CheckoutPage() {
         country: String(formData.get('country') || ''),
         subtotal,
         shipping,
-        total: subtotal + shipping,
+        total: subtotal + shipping - discount,
+        coupon_code: appliedCoupon?.code || undefined,
+        discount: discount > 0 ? discount : undefined,
         payment_method: paymentMethod,
         txid: txid || null,
         status: paymentMethod === 'cod' ? 'pending' : 'paid',
@@ -196,7 +227,7 @@ export default function CheckoutPage() {
           country: String(formData.get('country') || ''),
           subtotal,
           shipping,
-          total: subtotal + shipping,
+          total: subtotal + shipping - discount,
           payment_method: paymentMethod,
           txid: txid || null,
           status: paymentMethod === 'cod' ? 'pending' : 'paid',
@@ -233,7 +264,9 @@ export default function CheckoutPage() {
         items: items.map((it) => ({ product: it.product, qty: it.qty })),
     subtotal,
     shipping,
-        total: subtotal + shipping,
+        discount: discount > 0 ? discount : 0,
+        couponCode: appliedCoupon?.code,
+        total: subtotal + shipping - discount,
         payment: { method: paymentMethod, txid: txid || undefined },
         status: paymentMethod === 'cod' ? 'pending' : 'paid',
       }
@@ -262,6 +295,19 @@ export default function CheckoutPage() {
       <section className="lg:col-span-2 space-y-4">
         <h1 className="text-3xl font-bold">Checkout</h1>
         <form className="space-y-6" onSubmit={onSubmit}>
+          {/* Coupon */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Have a coupon?</label>
+            <div className="flex gap-2">
+              <input value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="e.g., SAVE10, FREESHIP" className="border rounded-md px-3 py-2 w-full" />
+              <button className="btn" onClick={onApplyCoupon} type="button">Apply</button>
+            </div>
+            {appliedCoupon ? (
+              <p className="text-xs text-green-700">Applied {appliedCoupon.code}{appliedCoupon.discount > 0 ? ` · −$${appliedCoupon.discount.toFixed(2)}` : ''}{appliedCoupon.freeShip ? ' · Free Shipping' : ''}</p>
+            ) : (
+              couponInput.trim() ? <p className="text-xs text-gray-500">Enter a valid code and click Apply.</p> : null
+            )}
+          </div>
           {addresses.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">

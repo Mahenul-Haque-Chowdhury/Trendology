@@ -17,6 +17,9 @@ export type Order = {
   items: OrderItem[]
   subtotal: number
   shipping: number
+  // Optional coupon details (client-calculated)
+  discount?: number
+  couponCode?: string
   total: number
   payment: {
     method: 'cod' | 'bkash' | 'rocket' | 'nagad'

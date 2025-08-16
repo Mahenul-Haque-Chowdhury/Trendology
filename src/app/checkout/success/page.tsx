@@ -65,6 +65,9 @@ export default function SuccessPage() {
           </ul>
           <div className="border-t pt-2 text-sm space-y-1">
             <div className="flex justify-between"><span>Subtotal</span><span>${order.subtotal.toFixed(2)}</span></div>
+            {order.discount && order.discount > 0 ? (
+              <div className="flex justify-between text-green-700"><span>Discount{order.couponCode ? ` (${order.couponCode})` : ''}</span><span>- ${order.discount.toFixed(2)}</span></div>
+            ) : null}
             <div className="flex justify-between"><span>Shipping</span><span>{order.shipping === 0 ? 'Free' : `$${order.shipping.toFixed(2)}`}</span></div>
             <div className="flex justify-between font-semibold"><span>Total</span><span>${order.total.toFixed(2)}</span></div>
           </div>
