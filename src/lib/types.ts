@@ -22,7 +22,7 @@ export type Order = {
   couponCode?: string
   total: number
   payment: {
-    method: 'cod' | 'bkash' | 'rocket' | 'nagad'
+  method: 'cod' | 'bkash' | 'rocket' | 'nagad' | 'upay'
     txid?: string
   }
   status: OrderStatus
