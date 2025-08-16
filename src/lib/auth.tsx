@@ -47,6 +47,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const ensuredRef = { current: false }
   async function ensureProfile(u: import('@supabase/supabase-js').User) {
       if (ensuredRef.current) return
+      // Guard against duplicate upserts in dev (React Strict Mode runs effects twice)
+      const guardKey = `storefront.ensureProfile.${u.id}`
+      try {
+        if (typeof window !== 'undefined' && sessionStorage.getItem(guardKey) === '1') {
+          ensuredRef.current = true
+          return
+        }
+      } catch {}
       try {
         const payload = {
           id: u.id,
@@ -61,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await supabase.from('user_details').upsert(payload as any, { onConflict: 'id', ignoreDuplicates: false })
         } catch {}
         ensuredRef.current = true
+        try { if (typeof window !== 'undefined') sessionStorage.setItem(guardKey, '1') } catch {}
       } catch (e) {
         console.debug('[auth] ensureProfile skipped/failed:', e)
       }
