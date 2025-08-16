@@ -5,6 +5,9 @@ export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'cancelled'
 
 export type Order = {
   id: string
+  // Internal identifiers (optional, useful for updates)
+  backendId?: string
+  code?: string
   createdAt: number
   customer: {
     fullName: string
@@ -25,5 +28,11 @@ export type Order = {
   method: 'cod' | 'bkash' | 'rocket' | 'nagad' | 'upay'
     txid?: string
   }
+  // Shipping / tracking metadata (optional)
+  courier?: string
+  trackingNumber?: string
+  placedAt?: number
+  paidAt?: number
+  shippedAt?: number
   status: OrderStatus
 }

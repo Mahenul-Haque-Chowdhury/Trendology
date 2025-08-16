@@ -313,6 +313,9 @@ export default function Header() {
                     <Link href="/account/profile" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
                       Manage your Profile
                     </Link>
+                    <Link href="/account/orders" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
+                      My Orders
+                    </Link>
                     <button
                       role="menuitem"
                       className="block w-full text-left px-2 py-1 rounded hover:bg-gray-50 text-red-600"
@@ -442,6 +445,7 @@ export default function Header() {
                   </button>
                 </div>
         <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Manage your Profile</Link>
+  <Link href="/account/orders" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>My Orders</Link>
               </>
             )}
   {(() => {

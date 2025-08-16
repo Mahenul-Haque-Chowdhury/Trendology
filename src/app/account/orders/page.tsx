@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 import type { Order } from '@/lib/types'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { useCatalog } from '@/lib/catalog'
 
@@ -57,6 +58,8 @@ export default function OrdersPage() {
                   : String(r.id))
                 return {
                   id: displayId,
+                  backendId: r.id,
+                  code: r.code,
                   createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
                   customer: {
                     fullName: r.customer_name || '',
@@ -71,6 +74,11 @@ export default function OrdersPage() {
                   shipping: Number(r.shipping || 0),
                   total: Number(r.total || 0),
                   payment: { method: String(r.payment_method || 'cod') as any, txid: r.txid || undefined },
+                  courier: r.courier || undefined,
+                  trackingNumber: r.tracking_number || undefined,
+                  placedAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
+                  paidAt: r.paid_at ? new Date(r.paid_at).getTime() : undefined,
+                  shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : undefined,
                   status: (r.status || 'pending') as any,
                 } as Order
               })
@@ -98,12 +106,16 @@ export default function OrdersPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload: any) => {
         const r = payload.new
         setOrders((prev) => prev.map((o) => {
-          const isSame = o.id.endsWith(String((r?.code || '').split('-').pop()).toUpperCase()) || o.id === r?.code
+          const isSame = o.backendId === r?.id || o.id === r?.code || o.id.endsWith(String((r?.code || '').split('-').pop()).toUpperCase())
           if (!isSame) return o
           return {
             ...o,
             total: Number(r.total ?? o.total),
             status: (r.status || o.status) as any,
+            courier: r.courier || o.courier,
+            trackingNumber: r.tracking_number || o.trackingNumber,
+            paidAt: r.paid_at ? new Date(r.paid_at).getTime() : o.paidAt,
+            shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : o.shippedAt,
           }
         }))
       })
@@ -153,6 +165,15 @@ export default function OrdersPage() {
                     <StatusBadge status={o.status} />
                   </div>
                 </div>
+                <div className="flex items-center justify-between mt-2 text-sm">
+                  <div className="flex gap-2">
+                    <Link href={`/account/orders/${encodeURIComponent(o.code || o.backendId || o.id)}`} className="btn btn-primary btn-xs">Track</Link>
+                    {o.status !== 'shipped' && o.status !== 'cancelled' && (
+                      <CancelButton order={o} onCancelled={(id) => setOrders((prev) => prev.map((it) => it.id === id ? { ...it, status: 'cancelled' } : it))} />
+                    )}
+                  </div>
+                  {o.trackingNumber && <div className="text-gray-600">Tracking: {o.trackingNumber}</div>}
+                </div>
               </li>
             )
           })}
@@ -170,4 +191,47 @@ function StatusBadge({ status }: { status: Order['status'] }) {
     'bg-yellow-100 text-yellow-800 border-yellow-200'
   const label = status[0].toUpperCase() + status.slice(1)
   return <span className={`border px-2 py-0.5 rounded text-xs ${color}`}>{label}</span>
+}
+
+function CancelButton({ order, onCancelled }: { order: Order; onCancelled: (id: string) => void }) {
+  const [busy, setBusy] = useState(false)
+  const [open, setOpen] = useState(false)
+  async function cancel() {
+    if (busy) return
+    setBusy(true)
+    try {
+      if (order.code) {
+        const res = await fetch('/api/orders/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: order.code }) })
+        const out = await res.json()
+        if (!out.ok) alert('Failed to cancel: ' + (out.error || res.statusText))
+        else onCancelled(order.id)
+      } else {
+        // Local fallback
+        try {
+          const raw = localStorage.getItem('storefront.orders.v1')
+          const all = raw ? (JSON.parse(raw) as Order[]) : []
+          const next = all.map((o) => (o.id === order.id && o.status !== 'shipped' ? { ...o, status: 'cancelled' } : o))
+          localStorage.setItem('storefront.orders.v1', JSON.stringify(next))
+          onCancelled(order.id)
+        } catch {}
+      }
+    } finally {
+      setBusy(false)
+      setOpen(false)
+    }
+  }
+  return (
+    <>
+      <button className="btn border border-red-200 text-red-700 hover:bg-red-50 btn-xs" onClick={() => setOpen(true)} disabled={busy}>{busy ? 'Cancelling…' : 'Cancel'}</button>
+      <ConfirmDialog
+        open={open}
+        title="Cancel this order?"
+        description="You can only cancel before it ships. This action cannot be undone."
+        confirmLabel="Yes, cancel order"
+        onCancel={() => setOpen(false)}
+        onConfirm={cancel}
+        loading={busy}
+      />
+    </>
+  )
 }

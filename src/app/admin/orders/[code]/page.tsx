@@ -69,8 +69,8 @@ export default function AdminOrderDetailsPage() {
       if (isSupabaseConfigured()) {
         const supabase = getSupabaseClient()!
         const updates: any = { status: fields.status, tracking_number: fields.tracking_number || null, courier: fields.courier || null, admin_notes: fields.admin_notes || null }
-        if (fields.status === 'paid') updates.paid_at = new Date().toISOString()
-        if (fields.status === 'shipped') updates.shipped_at = new Date().toISOString()
+        if (fields.status === 'paid' && !order.paidAt) updates.paid_at = new Date().toISOString()
+        if (fields.status === 'shipped' && !order.shippedAt) updates.shipped_at = new Date().toISOString()
         const { error } = await supabase.from('orders').update(updates).eq('code', code)
         if (error) console.error('[admin] update order error:', error)
       } else {
