@@ -56,13 +56,12 @@ export default function CheckoutPage() {
   const [selectedAddrId, setSelectedAddrId] = useState<string | undefined>(undefined)
   const [method, setMethod] = useState<PaymentKey>('cod')
   const [addressPrefilled, setAddressPrefilled] = useState(false)
+  const [shipZone, setShipZone] = useState<'inside' | 'outside'>('outside')
+  const [shipManual, setShipManual] = useState(false)
 
   const subtotal = total
-  const baseShipping = useMemo(() => {
-    const city = (form.city || '').trim().toLowerCase()
-    if (!city) return 130
-    return city.includes('dhaka') ? 70 : 130
-  }, [form.city])
+  // Determine base shipping from selected zone; default is outside.
+  const baseShipping = useMemo(() => (shipZone === 'inside' ? 70 : 130), [shipZone])
   const shipping = appliedCoupon?.freeShip ? 0 : baseShipping
   const discount = appliedCoupon?.discount ?? 0
   const grandTotal = Math.max(0, subtotal + shipping - discount)
@@ -156,6 +155,14 @@ export default function CheckoutPage() {
     }))
     setAddressPrefilled(true)
   }, [addresses, defaultAddress, addressPrefilled])
+
+  // Auto-detect shipping zone from city unless user already chose manually
+  useEffect(() => {
+    if (shipManual) return
+    const city = (form.city || '').trim().toLowerCase()
+    if (!city) return
+    setShipZone(city.includes('dhaka') ? 'inside' : 'outside')
+  }, [form.city, shipManual])
 
   // If user just added an address, prefill from the checkout prefill cache (demo/local only)
   useEffect(() => {
@@ -509,6 +516,39 @@ export default function CheckoutPage() {
             couponInput.trim() ? <p className="text-xs text-gray-500">Enter a valid code and click Apply.</p> : null
           )}
         </div>
+
+        {/* Shipping zone selector */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Delivery Area</label>
+          <div className="grid grid-cols-1 gap-2">
+            <label className={`flex items-center gap-2 rounded-md border p-2 cursor-pointer ${shipZone === 'inside' ? 'border-brand ring-1 ring-brand/40' : 'border-gray-200'}`}>
+              <input
+                type="radio"
+                name="shippingZone"
+                className="sr-only"
+                checked={shipZone === 'inside'}
+                onChange={() => { setShipZone('inside'); setShipManual(true) }}
+              />
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border">
+                <span className={`h-2.5 w-2.5 rounded-full ${shipZone === 'inside' ? 'bg-brand' : 'bg-transparent'}`}></span>
+              </span>
+              <span className="text-sm">Inside Dhaka City — 70 Taka</span>
+            </label>
+            <label className={`flex items-center gap-2 rounded-md border p-2 cursor-pointer ${shipZone === 'outside' ? 'border-brand ring-1 ring-brand/40' : 'border-gray-200'}`}>
+              <input
+                type="radio"
+                name="shippingZone"
+                className="sr-only"
+                checked={shipZone === 'outside'}
+                onChange={() => { setShipZone('outside'); setShipManual(true) }}
+              />
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border">
+                <span className={`h-2.5 w-2.5 rounded-full ${shipZone === 'outside' ? 'bg-brand' : 'bg-transparent'}`}></span>
+              </span>
+              <span className="text-sm">Outside Dhaka City (Courier) — 130 Taka</span>
+            </label>
+          </div>
+        </div>
         <div className="rounded-md bg-gray-50 border p-3 text-sm space-y-1">
           <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
           {discount > 0 && (
@@ -516,7 +556,7 @@ export default function CheckoutPage() {
           )}
           <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span></div>
           <div className="flex justify-between font-semibold text-base pt-1 border-t"><span>Total</span><span>${grandTotal.toFixed(2)}</span></div>
-          <p className="text-xs text-gray-500">Shipping: Inside Dhaka $70.00 · Outside Dhaka $130.00. Applying FREESHIP will waive shipping.</p>
+          <p className="text-xs text-gray-500">Shipping: Inside Dhaka 70 Taka · Outside Dhaka 130 Taka. Applying FREESHIP will waive shipping.</p>
         </div>
       </aside>
     </div>
