@@ -5,7 +5,7 @@ import WishlistButton from './WishlistButton'
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { products } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useCatalog } from '@/lib/catalog'
 import Image from 'next/image'
 
@@ -21,6 +21,7 @@ export default function Header() {
   const [q, setQ] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const pathname = usePathname()
   const userMenuRef = useRef<HTMLDivElement | null>(null)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const modalRef = useRef<HTMLDivElement | null>(null)
@@ -235,15 +236,47 @@ export default function Header() {
 
           {/* Right-side actions */}
           <nav className="flex items-center gap-3 sm:gap-4 text-sm relative">
-            <Link href="/#products" className="hover:text-brand-dark hidden sm:inline">Products</Link>
+            {(() => {
+              const activeProducts = pathname === '/' || pathname.startsWith('/products') || pathname.startsWith('/category')
+              return (
+                <Link
+                  href="/#products"
+                  aria-current={activeProducts ? 'page' : undefined}
+                  className={`hidden sm:inline inline-block pb-0.5 ${activeProducts ? 'text-brand font-semibold border-b-2 border-brand' : 'hover:text-brand-dark'}`}
+                >
+                  Products
+                </Link>
+              )
+            })()}
             <div className="relative hidden sm:block">
-              <button className="hover:text-brand-dark" onClick={() => setOpen((s) => !s)} aria-haspopup="menu" aria-expanded={open} aria-controls="category-menu">Categories ▾</button>
+                {(() => {
+                  const activeCategories = pathname.startsWith('/category/')
+                  return (
+                    <button
+                      className={`${activeCategories ? 'text-brand font-semibold border-b-2 border-brand inline-block pb-0.5' : 'hover:text-brand-dark'}`}
+                      onClick={() => setOpen((s) => !s)}
+                      aria-haspopup="menu"
+                      aria-expanded={open}
+                      aria-controls="category-menu"
+                      aria-current={activeCategories ? 'page' : undefined}
+                    >
+                      Categories ▾
+                    </button>
+                  )
+                })()}
               {open && (
                 <div id="category-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
                   {categories.map((c) => (
-                    <Link key={c} href={`/category/${c}`} role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setOpen(false)}>
-                      {c.charAt(0).toUpperCase() + c.slice(1)}
-                    </Link>
+                      <Link
+                        key={c}
+                        href={`/category/${c}`}
+                        role="menuitem"
+                        aria-current={pathname === `/category/${c}` ? 'page' : undefined}
+                        className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c}` ? 'bg-brand/5 text-brand font-medium' : ''}`}
+                        onClick={() => setOpen(false)}
+                      >
+                        {c.charAt(0).toUpperCase() + c.slice(1)}
+                      </Link>
                   ))}
                 </div>
               )}
@@ -411,19 +444,44 @@ export default function Header() {
         <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Manage your Profile</Link>
               </>
             )}
-  <Link href="/#products" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Products</Link>
+  {(() => {
+    const activeProducts = pathname === '/' || pathname.startsWith('/products') || pathname.startsWith('/category')
+    return (
+      <Link
+        href="/#products"
+        aria-current={activeProducts ? 'page' : undefined}
+        className={`block px-2 py-2 rounded hover:bg-gray-50 ${activeProducts ? 'bg-gray-100 text-brand font-medium' : ''}`}
+        onClick={closeMobileMenu}
+      >
+        Products
+      </Link>
+    )
+  })()}
             <details className="px-2 py-2">
               <summary className="cursor-pointer select-none">Categories</summary>
               <div className="mt-2 ml-3 space-y-1 max-h-60 overflow-auto pr-2">
                 {categories.map((c) => (
-          <Link key={c} href={`/category/${c}`} className="block px-2 py-1 rounded hover:bg-gray-50" onClick={closeMobileMenu}>
+          <Link
+            key={c}
+            href={`/category/${c}`}
+            aria-current={pathname === `/category/${c}` ? 'page' : undefined}
+            className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c}` ? 'bg-gray-100 text-brand font-medium' : ''}`}
+            onClick={closeMobileMenu}
+          >
                     {c.charAt(0).toUpperCase() + c.slice(1)}
                   </Link>
                 ))}
               </div>
             </details>
             {!user && (
-        <Link href="/account" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Account</Link>
+        <Link
+          href="/account"
+          aria-current={pathname.startsWith('/account') ? 'page' : undefined}
+          className={`block px-2 py-2 rounded hover:bg-gray-50 ${pathname.startsWith('/account') ? 'bg-gray-100 text-brand font-medium' : ''}`}
+          onClick={closeMobileMenu}
+        >
+          Account
+        </Link>
             )}
           </nav>
         </aside>
