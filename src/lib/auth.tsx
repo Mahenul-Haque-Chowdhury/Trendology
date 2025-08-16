@@ -44,7 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const supabase = getSupabaseClient()!
 
+  const ensuredRef = { current: false }
   async function ensureProfile(u: import('@supabase/supabase-js').User) {
+      if (ensuredRef.current) return
       try {
         const payload = {
           id: u.id,
@@ -58,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           await supabase.from('user_details').upsert(payload as any, { onConflict: 'id', ignoreDuplicates: false })
         } catch {}
+        ensuredRef.current = true
       } catch (e) {
         console.debug('[auth] ensureProfile skipped/failed:', e)
       }

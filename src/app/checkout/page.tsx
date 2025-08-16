@@ -25,35 +25,20 @@ export default function CheckoutPage() {
   const grandTotal = subtotal + shipping
 
   useEffect(() => {
-    async function loadProfile() {
-      if (!user) return
-      const u = user
-      if (!isSupabaseConfigured()) {
-        // try local cache first
-        try {
-          const raw = typeof window !== 'undefined' ? localStorage.getItem(`storefront.user_details.${u.id}`) : null
-          if (raw) {
-            const cached = JSON.parse(raw)
-            setPrefill({ name: cached.name || u.name, email: cached.email || u.email, phone: cached.phone || '' })
-            return
-          }
-        } catch {}
-        setPrefill({ name: u.name, email: u.email })
-        return
-      }
+    if (!user) return
+    const u = user
+    if (!isSupabaseConfigured()) {
       try {
-        const supa = getSupabaseClient()!
-        async function getFrom(table: string) {
-          return await supa.from(table).select('name,email,phone').eq('id', u.id).maybeSingle()
+        const raw = typeof window !== 'undefined' ? localStorage.getItem(`storefront.user_details.${u.id}`) : null
+        if (raw) {
+          const cached = JSON.parse(raw)
+          setPrefill({ name: cached.name || u.name, email: cached.email || u.email, phone: cached.phone || '' })
+          return
         }
-        let r = await getFrom('user_details')
-        if (r.error) r = await getFrom('profiles')
-        const data = r.data
-        if (data) setPrefill({ name: data.name || u.name, email: data.email || u.email, phone: data.phone || '' })
-        else setPrefill({ name: u.name, email: u.email, phone: '' })
       } catch {}
     }
-    loadProfile()
+    // In Supabase mode, use auth session’s user for basic fields; no table reads.
+    setPrefill({ name: u.name, email: u.email })
   }, [user])
 
   // Initialize form fields when prefill data arrives
