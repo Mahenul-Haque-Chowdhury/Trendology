@@ -12,6 +12,7 @@ export default function CheckoutPage() {
   const { items, total, clear } = useCart()
   const router = useRouter()
   const { user } = useAuth()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [prefill, setPrefill] = useState<{ name?: string; email?: string; phone?: string }>({})
   const [form, setForm] = useState<{ fullName: string; email: string; phone: string; address: string; city: string; country: string }>({ fullName: '', email: '', phone: '', address: '', city: '', country: '' })
   // Avoid instantiating the hook with undefined and let it bootstrap once user is present
@@ -114,6 +115,7 @@ export default function CheckoutPage() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+  setIsSubmitting(true)
     if (items.length === 0) return router.push('/')
     const formData = new FormData(e.currentTarget)
     const name = String(formData.get('fullName') || '')
@@ -240,13 +242,12 @@ export default function CheckoutPage() {
       orders.unshift(order)
       if (typeof window !== 'undefined') localStorage.setItem('storefront.orders.v1', JSON.stringify(orders))
     } catch {}
-    clear()
   const source = serverOk ? 'server' : (isSupabaseConfigured() ? 'client' : 'local')
   const params = new URLSearchParams({ orderId: orderCode, name, method: paymentMethod, txid, src: source })
     router.push(`/checkout/success?${params.toString()}`)
   }
 
-  if (items.length === 0) {
+  if (!isSubmitting && items.length === 0) {
     return (
       <div className="space-y-4">
         <h1 className="text-3xl font-bold">Checkout</h1>
@@ -345,7 +346,9 @@ export default function CheckoutPage() {
             <label htmlFor="terms" className="text-sm">I agree to the terms and privacy policy.</label>
           </div>
 
-          <button type="submit" className="btn btn-primary">Place Order</button>
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting} aria-busy={isSubmitting}>
+            {isSubmitting ? 'Placing Order…' : 'Place Order'}
+          </button>
         </form>
       </section>
 
