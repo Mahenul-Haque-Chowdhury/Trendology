@@ -18,7 +18,7 @@ const paymentLogos: Record<Exclude<PaymentKey, 'cod'>, { src: string; alt: strin
   upay: { src: '/logos/upay.webp', alt: 'Upay' },
 }
 
-function PaymentLogo({ method, size = 32 }: { method: PaymentKey; size?: number }) {
+function PaymentLogo({ method, size = 36 }: { method: PaymentKey; size?: number }) {
   const [failed, setFailed] = useState(false)
   if (method === 'cod') {
     return (
@@ -384,7 +384,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <fieldset className="space-y-3">
+          <fieldset className="space-y-3" role="radiogroup" aria-label="Payment Method">
             <legend className="text-sm font-medium">Payment Method</legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {([
@@ -396,7 +396,9 @@ export default function CheckoutPage() {
               ] as { key: PaymentKey; label: string }[]).map((m) => (
                 <label
                   key={m.key}
-                  className={`group flex items-center gap-3 rounded-md border p-3 cursor-pointer transition shadow-sm hover:shadow ${method === m.key ? 'border-brand ring-2 ring-brand/40' : 'border-gray-200'}`}
+                  className={`group flex items-center gap-3.5 rounded-lg border p-3.5 sm:p-3 min-h-[60px] cursor-pointer transition shadow-sm hover:shadow ${method === m.key ? 'border-brand ring-2 ring-brand/40' : 'border-gray-200'}`}
+                  role="radio"
+                  aria-checked={method === m.key}
                 >
                   <input className="sr-only" type="radio" name="paymentMethod" value={m.key}
                     checked={method === m.key} onChange={() => setMethod(m.key)} />
@@ -409,8 +411,8 @@ export default function CheckoutPage() {
               ))}
             </div>
             {/* Details dropdown for the selected method */}
-            <div className="overflow-hidden transition-[max-height] duration-300" style={{ maxHeight: method === 'cod' ? '96px' : '160px' }}>
-              <div className="mt-2 rounded-md border bg-white/50 p-3 text-sm">
+            <div className="overflow-hidden transition-[max-height] duration-300" style={{ maxHeight: method === 'cod' ? '110px' : '260px' }}>
+              <div className="mt-1.5 rounded-md border bg-white/50 p-3 text-sm">
                 {method === 'cod' ? (
                   <div className="flex items-start gap-2">
                     <svg width="18" height="18" viewBox="0 0 24 24" className="text-gray-700" fill="none" stroke="currentColor"><path d="M3 6h18v12H3z"/><path d="M16 10h.01M8 12h8M8 15h6"/></svg>
@@ -431,7 +433,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="space-y-1">
                       <label className="block text-xs font-medium">Transaction ID</label>
-                      <input name="txid" required className="border rounded-md px-3 py-2 w-full" placeholder="e.g., TX123ABC456" />
+                      <input name="txid" required className="border rounded-md px-3 py-2 w-full" placeholder="e.g., TX123ABC456" inputMode="text" />
                       <p className="text-[11px] text-gray-500">We’ll verify and confirm your order by SMS/phone.</p>
                     </div>
                   </div>
