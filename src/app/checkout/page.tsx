@@ -9,6 +9,39 @@ import { useAddresses } from '@/lib/addresses'
 import Link from 'next/link'
 import Image from 'next/image'
 
+type PaymentKey = 'cod' | 'bkash' | 'nagad' | 'rocket' | 'upay'
+
+const paymentLogos: Record<Exclude<PaymentKey, 'cod'>, { src: string; alt: string }> = {
+  bkash: { src: '/logos/bkash.webp', alt: 'bKash' },
+  nagad: { src: '/logos/nagad.webp', alt: 'Nagad' },
+  rocket: { src: '/logos/rocket.png', alt: 'Rocket (DBBL Mobile Banking)' },
+  upay: { src: '/logos/upay.webp', alt: 'Upay' },
+}
+
+function PaymentLogo({ method, size = 32 }: { method: PaymentKey; size?: number }) {
+  const [failed, setFailed] = useState(false)
+  if (method === 'cod') {
+    return (
+      <span className="inline-flex items-center justify-center rounded bg-gray-900 text-white" style={{ width: size, height: size }}>
+        <svg viewBox="0 0 24 24" width={Math.floor(size * 0.65)} height={Math.floor(size * 0.65)} fill="currentColor"><path d="M3 6h18v12H3z"/><path d="M16 10h.01M8 12h8M8 15h6"/></svg>
+      </span>
+    )
+  }
+  const cfg = paymentLogos[method as Exclude<PaymentKey, 'cod'>]
+  return (
+    <span className="inline-flex items-center justify-center rounded overflow-hidden bg-white" style={{ width: size, height: size }}>
+      {failed ? (
+        <span className="inline-flex items-center justify-center w-full h-full text-xs font-semibold bg-gray-100 text-gray-700">
+          {cfg.alt[0]}
+        </span>
+      ) : (
+        <Image src={cfg.src} alt={cfg.alt} width={size} height={size} className="object-contain"
+          onError={() => setFailed(true)} />
+      )}
+    </span>
+  )
+}
+
 export default function CheckoutPage() {
   const { items, total, clear, setOpen, hydrated } = useCart()
   const router = useRouter()
@@ -21,7 +54,7 @@ export default function CheckoutPage() {
   // Avoid instantiating the hook with undefined and let it bootstrap once user is present
   const { addresses, defaultAddress } = useAddresses(user?.id || undefined)
   const [selectedAddrId, setSelectedAddrId] = useState<string | undefined>(undefined)
-  const [method, setMethod] = useState<'cod' | 'bkash' | 'rocket' | 'nagad' | 'upay'>('cod')
+  const [method, setMethod] = useState<PaymentKey>('cod')
   const [addressPrefilled, setAddressPrefilled] = useState(false)
 
   const subtotal = total
@@ -354,45 +387,20 @@ export default function CheckoutPage() {
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium">Payment Method</legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { key: 'cod', label: 'Cash on Delivery', color: 'bg-gray-900', ring: 'ring-gray-900' },
-                { key: 'bkash', label: 'bKash', color: 'bg-[#E2136E]', ring: 'ring-[#E2136E]' },
-                { key: 'nagad', label: 'Nagad', color: 'bg-[#F37921]', ring: 'ring-[#F37921]' },
-                { key: 'rocket', label: 'Rocket', color: 'bg-[#7A1FA2]', ring: 'ring-[#7A1FA2]' },
-                { key: 'upay', label: 'Upay', color: 'bg-[#FFCC00]', ring: 'ring-[#FFCC00]' },
-              ].map((m) => (
+              {([
+                { key: 'cod', label: 'Cash on Delivery' },
+                { key: 'bkash', label: 'bKash' },
+                { key: 'nagad', label: 'Nagad' },
+                { key: 'rocket', label: 'Rocket' },
+                { key: 'upay', label: 'Upay' },
+              ] as { key: PaymentKey; label: string }[]).map((m) => (
                 <label
                   key={m.key}
-                  className={`group flex items-center gap-3 rounded-md border p-3 cursor-pointer transition shadow-sm hover:shadow ${method === (m.key as any) ? `border-brand ring-2 ${m.ring}` : 'border-gray-200'}`}
+                  className={`group flex items-center gap-3 rounded-md border p-3 cursor-pointer transition shadow-sm hover:shadow ${method === m.key ? 'border-brand ring-2 ring-brand/40' : 'border-gray-200'}`}
                 >
                   <input className="sr-only" type="radio" name="paymentMethod" value={m.key}
-                    checked={method === (m.key as any)} onChange={() => setMethod(m.key as any)} />
-                  {/* Brand icon */}
-                  {m.key === 'bkash' && (
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#E2136E] text-white">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20.5 6.2c-1.2-.4-2.5.3-3.7 1.6-1.2 1.3-2.5 3.2-3.7 5.7-1-2.9-2.1-4.9-3.2-6C8.3 6.3 6.9 5.9 5.6 6.5 4 7.2 3.2 8.7 3.6 10.3c.3 1.1 1.2 2.1 2.7 2.9-1.2.6-2 .9-2.3 1.9-.4 1.2.3 2.6 1.7 3.1 1.2.4 2.6-.1 4-1.3 1.1-1 2.3-2.6 3.5-4.7.7 1.9 1.3 3.5 2 4.6 1 1.6 2.2 2.2 3.4 2 1.7-.2 2.9-1.9 2.6-3.6-.2-1.2-1.1-2.1-2.8-2.7 1.4-.7 2.3-1.3 2.7-2.4.6-1.5-.3-3.1-2-3.6z"/></svg>
-                    </span>
-                  )}
-                  {m.key === 'nagad' && (
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#F37921] text-white">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2l3 6 6 .9-4.3 4.2L18 20l-6-3.2L6 20l1.3-6.9L3 8.9 9 8z"/></svg>
-                    </span>
-                  )}
-                  {m.key === 'rocket' && (
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#7A1FA2] text-white">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 13l6.5-6.5a8 8 0 018 8L12 21l-8-8z"/><circle cx="15" cy="9" r="2"/></svg>
-                    </span>
-                  )}
-                  {m.key === 'upay' && (
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#FFCC00] text-gray-900">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5h4v2h-4v8h-2V9H7V7h4V5h2v2z"/></svg>
-                    </span>
-                  )}
-                  {m.key === 'cod' && (
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-gray-900 text-white">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 6h18v12H3z"/><path d="M16 10h.01M8 12h8M8 15h6"/></svg>
-                    </span>
-                  )}
+                    checked={method === m.key} onChange={() => setMethod(m.key)} />
+                  <PaymentLogo method={m.key} />
                   <div className="min-w-0">
                     <div className="font-medium leading-tight">{m.label}</div>
                     <p className="text-xs text-gray-600">{m.key === 'cod' ? 'Pay in cash when your order arrives.' : 'Send payment and enter the Transaction ID below.'}</p>
@@ -412,10 +420,7 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        {method === 'bkash' && (<span className="inline-flex h-6 w-6 items-center justify-center rounded bg-[#E2136E] text-white text-xs font-bold">b</span>)}
-                        {method === 'nagad' && (<span className="inline-flex h-6 w-6 items-center justify-center rounded bg-[#F37921] text-white text-xs font-bold">N</span>)}
-                        {method === 'rocket' && (<span className="inline-flex h-6 w-6 items-center justify-center rounded bg-[#7A1FA2] text-white text-xs font-bold">R</span>)}
-                        {method === 'upay' && (<span className="inline-flex h-6 w-6 items-center justify-center rounded bg-[#FFCC00] text-gray-900 text-xs font-bold">U</span>)}
+                        <PaymentLogo method={method} size={24} />
                         <div className="font-medium">{method === 'bkash' ? 'bKash' : method === 'nagad' ? 'Nagad' : method === 'rocket' ? 'Rocket' : 'Upay'} payment details</div>
                       </div>
                       <ul className="text-gray-700 list-disc list-inside text-xs space-y-1">
