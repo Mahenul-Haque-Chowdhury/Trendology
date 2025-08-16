@@ -126,15 +126,22 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-      <form
+            <form
               className="space-y-2"
               onSubmit={async (e) => {
                 e.preventDefault()
-                const fd = new FormData(e.currentTarget as HTMLFormElement)
+                const form = e.currentTarget as HTMLFormElement
+                const fd = new FormData(form)
                 const rating = Number(fd.get('rating') || String(ratingInput || 5))
         const title = product.name
                 const body = String(fd.get('body') || '')
-                try { await addReview(rating, title, body); (e.currentTarget as HTMLFormElement).reset() } catch (err: any) { alert(err.message || String(err)) }
+                try {
+                  await addReview(rating, title, body)
+                  form.reset()
+                  setRatingInput(5)
+                } catch (err: any) {
+                  alert(err.message || String(err))
+                }
               }}
             >
               {/* Star rating input */}
@@ -193,10 +200,14 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               className="space-y-2"
               onSubmit={async (e) => {
                 e.preventDefault()
-                const fd = new FormData(e.currentTarget as HTMLFormElement)
+                const form = e.currentTarget as HTMLFormElement
+                const fd = new FormData(form)
                 const q = String(fd.get('question') || '')
                 if (!q.trim()) return
-                try { await ask(q); (e.currentTarget as HTMLFormElement).reset() } catch (err: any) { alert(err.message || String(err)) }
+                try {
+                  await ask(q)
+                  form.reset()
+                } catch (err: any) { alert(err.message || String(err)) }
               }}
             >
               <div className="flex items-center gap-2">
