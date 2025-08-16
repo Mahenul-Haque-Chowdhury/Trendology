@@ -11,14 +11,16 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <article className="card card-hover overflow-hidden">
   <div className="relative aspect-[3/2] sm:aspect-[5/4] bg-gray-50">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover"
-          priority
-        />
+        <Link href={`/products/${product.id}`} aria-label={`Open ${product.name}`} className="absolute inset-0">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover"
+            priority
+          />
+        </Link>
         {/* Accent badge */}
         <div className="absolute left-3 top-3">
           <span className="badge bg-accent text-gray-900">Free delivery 50+</span>

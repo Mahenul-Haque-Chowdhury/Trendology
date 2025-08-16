@@ -261,3 +261,42 @@ alter table public.user_addresses enable row level security;
 drop policy if exists "Owner manage addresses" on public.user_addresses;
 create policy "Owner manage addresses" on public.user_addresses
 for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Product Reviews
+create table if not exists public.product_reviews (
+  id bigserial primary key,
+  product_id uuid not null references public.inventory(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  rating int not null check (rating between 1 and 5),
+  title text,
+  body text,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.product_reviews enable row level security;
+drop policy if exists "Public read reviews" on public.product_reviews;
+create policy "Public read reviews" on public.product_reviews for select using (true);
+drop policy if exists "User write own reviews" on public.product_reviews;
+create policy "User write own reviews" on public.product_reviews for insert with check (auth.uid() = user_id);
+drop policy if exists "Owner update/delete own reviews" on public.product_reviews;
+create policy "Owner update/delete own reviews" on public.product_reviews for all using (auth.uid() = user_id);
+
+-- Product Q&A
+create table if not exists public.product_qna (
+  id bigserial primary key,
+  product_id uuid not null references public.inventory(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  question text not null,
+  answer text,
+  created_at timestamp with time zone default now(),
+  answered_at timestamp with time zone
+);
+
+alter table public.product_qna enable row level security;
+drop policy if exists "Public read qna" on public.product_qna;
+create policy "Public read qna" on public.product_qna for select using (true);
+drop policy if exists "User ask questions" on public.product_qna;
+create policy "User ask questions" on public.product_qna for insert with check (auth.uid() = user_id);
+-- Optionally restrict updates to admins; for now allow anyone to answer (demo)
+drop policy if exists "Anyone answer qna (demo)" on public.product_qna;
+create policy "Anyone answer qna (demo)" on public.product_qna for update using (true) with check (true);

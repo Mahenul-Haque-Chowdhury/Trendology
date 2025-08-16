@@ -7,9 +7,10 @@ import { useCart } from '@/lib/cart'
 import { useRouter } from 'next/navigation'
 import { useAddresses } from '@/lib/addresses'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function CheckoutPage() {
-  const { items, total, clear } = useCart()
+  const { items, total, clear, setOpen, hydrated } = useCart()
   const router = useRouter()
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,7 +25,11 @@ export default function CheckoutPage() {
   const [addressPrefilled, setAddressPrefilled] = useState(false)
 
   const subtotal = total
-  const baseShipping = useMemo(() => (subtotal > 250 ? 0 : 12), [subtotal])
+  const baseShipping = useMemo(() => {
+    const city = (form.city || '').trim().toLowerCase()
+    if (!city) return 130
+    return city.includes('dhaka') ? 70 : 130
+  }, [form.city])
   const shipping = appliedCoupon?.freeShip ? 0 : baseShipping
   const discount = appliedCoupon?.discount ?? 0
   const grandTotal = Math.max(0, subtotal + shipping - discount)
@@ -280,6 +285,15 @@ export default function CheckoutPage() {
     router.push(`/checkout/success?${params.toString()}`)
   }
 
+  if (!hydrated) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Checkout</h1>
+        <p className="text-gray-600 text-sm">Loading your cart…</p>
+      </div>
+    )
+  }
+
   if (!isSubmitting && items.length === 0) {
     return (
       <div className="space-y-4">
@@ -294,20 +308,7 @@ export default function CheckoutPage() {
     <div className="grid gap-8 grid-cols-1 lg:grid-cols-3 items-start">
       <section className="lg:col-span-2 space-y-4">
         <h1 className="text-3xl font-bold">Checkout</h1>
-        <form className="space-y-6" onSubmit={onSubmit}>
-          {/* Coupon */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Have a coupon?</label>
-            <div className="flex gap-2">
-              <input value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="e.g., SAVE10, FREESHIP" className="border rounded-md px-3 py-2 w-full" />
-              <button className="btn" onClick={onApplyCoupon} type="button">Apply</button>
-            </div>
-            {appliedCoupon ? (
-              <p className="text-xs text-green-700">Applied {appliedCoupon.code}{appliedCoupon.discount > 0 ? ` · −$${appliedCoupon.discount.toFixed(2)}` : ''}{appliedCoupon.freeShip ? ' · Free Shipping' : ''}</p>
-            ) : (
-              couponInput.trim() ? <p className="text-xs text-gray-500">Enter a valid code and click Apply.</p> : null
-            )}
-          </div>
+  <form className="space-y-6" onSubmit={onSubmit}>
           {addresses.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -398,20 +399,68 @@ export default function CheckoutPage() {
         </form>
       </section>
 
-      <aside className="card p-4 space-y-4">
-        <h2 className="text-lg font-semibold">Order Summary</h2>
-        <ul className="space-y-2">
-          {items.map(({ product, qty }) => (
-            <li key={product.id} className="flex items-center justify-between text-sm">
-              <span className="truncate mr-2">{product.name} × {qty}</span>
-              <span>${(product.price * qty).toFixed(2)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="border-t pt-2 text-sm space-y-1">
+      <aside className="card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Order Summary</h2>
+          <button type="button" className="text-sm text-brand hover:underline" onClick={() => setOpen(true)}>Edit</button>
+        </div>
+        <div className="rounded-md border bg-white/50">
+          <ul className="max-h-64 overflow-auto divide-y">
+            {items.map(({ product, qty }) => (
+              <li key={product.id} className="flex items-center gap-3 p-3 text-sm">
+                {product.image ? (
+                  <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden bg-gray-100">
+                    <Image src={product.image} alt={product.name} fill sizes="48px" className="object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 shrink-0 rounded bg-gray-100" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium text-gray-900">{product.name}</div>
+                  <div className="text-xs text-gray-500 truncate">Qty: {qty} · ${product.price.toFixed(2)} each</div>
+                </div>
+                <div className="font-medium">${(product.price * qty).toFixed(2)}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        {/* Coupon input inside the summary box */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Have a coupon?</label>
+          <div className="flex items-center gap-2">
+            <input
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              placeholder="e.g., SAVE10, FREESHIP"
+              className="border rounded-md px-3 py-2 w-full"
+            />
+            <button className="btn btn-sm btn-primary" onClick={onApplyCoupon} type="button">Apply</button>
+          </div>
+          {appliedCoupon ? (
+            <p className="text-xs text-green-700">
+              Applied {appliedCoupon.code}
+              {appliedCoupon.discount > 0 ? ` · −$${appliedCoupon.discount.toFixed(2)}` : ''}
+              {appliedCoupon.freeShip ? ' · Free Shipping' : ''}
+              <button
+                type="button"
+                onClick={() => setAppliedCoupon(null)}
+                className="ml-2 underline text-green-700/90 hover:text-green-800"
+              >
+                Remove
+              </button>
+            </p>
+          ) : (
+            couponInput.trim() ? <p className="text-xs text-gray-500">Enter a valid code and click Apply.</p> : null
+          )}
+        </div>
+        <div className="rounded-md bg-gray-50 border p-3 text-sm space-y-1">
           <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+          {discount > 0 && (
+            <div className="flex justify-between text-green-700"><span>Discount{appliedCoupon?.code ? ` (${appliedCoupon.code})` : ''}</span><span>- ${discount.toFixed(2)}</span></div>
+          )}
           <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span></div>
-          <div className="flex justify-between font-semibold"><span>Total</span><span>${grandTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between font-semibold text-base pt-1 border-t"><span>Total</span><span>${grandTotal.toFixed(2)}</span></div>
+          <p className="text-xs text-gray-500">Shipping: Inside Dhaka $70.00 · Outside Dhaka $130.00. Applying FREESHIP will waive shipping.</p>
         </div>
       </aside>
     </div>

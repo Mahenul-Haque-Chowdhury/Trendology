@@ -12,6 +12,7 @@ export type CartState = {
   clear: () => void
   open: boolean
   setOpen: (open: boolean) => void
+  hydrated: boolean
 }
 
 const CartCtx = createContext<CartState | null>(null)
@@ -60,6 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     items,
     open,
     setOpen,
+    hydrated,
     add: (product, qty = 1) => {
       setItems((prev) => {
         const idx = prev.findIndex((i) => i.product.id === product.id)
@@ -76,7 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     update: (productId, qty) =>
       setItems((prev) => prev.map((i) => (i.product.id === productId ? { ...i, qty: Math.max(1, qty) } : i))),
     clear: () => setItems([]),
-  }), [items, open])
+  }), [items, open, hydrated])
 
   return <CartCtx.Provider value={api}>{children}</CartCtx.Provider>
 }
