@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { Product } from '@/lib/products'
 import { useCart } from '@/lib/cart'
 import { useWishlist } from '@/lib/wishlist'
+import { useProductRating } from '@/lib/reviews'
 
 export default function ProductCard({ product }: { product: Product }) {
   const { add } = useCart()
   const wishlist = useWishlist()
+  const { avg, count } = useProductRating(product.id)
   return (
     <article className="card card-hover overflow-hidden">
   <div className="relative aspect-[3/2] sm:aspect-[5/4] bg-gray-50">
@@ -32,12 +34,16 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.name}
           </Link>
         </h3>
-        {/* Ratings (simple visual from tags length for demo) */}
+        {/* Ratings (live from Supabase with fallback) */}
         <div className="mt-1 flex items-center gap-1 text-amber-500" aria-label="Rating">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg key={i} width="14" height="14" viewBox="0 0 20 20" fill={i < Math.min(5, product.tags.length) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.954L10 0l2.951 5.956 6.561.954-4.756 4.635 1.122 6.545z"/></svg>
-          ))}
-          <span className="ml-1 text-xs text-gray-500">({Math.max(12, product.tags.length * 23)})</span>
+          {Array.from({ length: 5 }).map((_, i) => {
+            const rounded = Math.max(0, Math.min(5, Math.round(avg || 0)))
+            const filled = i < (rounded || Math.min(5, product.tags.length))
+            return (
+              <svg key={i} width="14" height="14" viewBox="0 0 20 20" fill={filled ? 'currentColor' : 'none'} stroke="currentColor"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.954L10 0l2.951 5.956 6.561.954-4.756 4.635 1.122 6.545z"/></svg>
+            )
+          })}
+          <span className="ml-1 text-xs text-gray-500">({count || Math.max(12, product.tags.length * 23)})</span>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
         <div className="mt-4 sm:flex sm:items-end sm:justify-between">

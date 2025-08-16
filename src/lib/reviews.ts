@@ -59,3 +59,47 @@ export function useProductReviews(productId: string | undefined) {
 
   return { reviews, loading, add, stats, reload: load }
 }
+
+// Lightweight aggregate hook for average rating and count with realtime updates
+export function useProductRating(productId: string | undefined) {
+  const supabase = getSupabaseClient()
+  const [avg, setAvg] = useState(0)
+  const [count, setCount] = useState(0)
+  const [loading, setLoading] = useState(false)
+
+  const load = useCallback(async () => {
+    if (!productId || !supabase || !isSupabaseConfigured()) return
+    setLoading(true)
+    try {
+      const { data, count } = await supabase
+        .from('product_reviews')
+        .select('rating', { count: 'exact' })
+        .eq('product_id', productId)
+      const ratings = (data as any[] | null) || []
+      const sum = ratings.reduce((s, r: any) => s + (Number(r?.rating) || 0), 0)
+      const c = count || ratings.length
+      setAvg(c ? sum / c : 0)
+      setCount(c)
+    } finally {
+      setLoading(false)
+    }
+  }, [productId, supabase])
+
+  useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!productId || !supabase || !isSupabaseConfigured()) return
+    const channel = supabase
+      .channel(`reviews_${productId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'product_reviews',
+        filter: `product_id=eq.${productId}`,
+      }, () => { load() })
+      .subscribe()
+    return () => { try { supabase.removeChannel(channel) } catch {} }
+  }, [productId, supabase, load])
+
+  return { avg, count, loading, reload: load }
+}
