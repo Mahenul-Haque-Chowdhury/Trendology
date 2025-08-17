@@ -1,7 +1,8 @@
 "use client"
 import { useCatalog } from '@/lib/catalog'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Product } from '@/lib/products'
+import ImageUploader from '@/components/ImageUploader'
 
 export default function AdminProductsPage() {
   const { products, add, update, remove, categories } = useCatalog()
@@ -72,7 +73,7 @@ export default function AdminProductsPage() {
 
       <section className="card p-4">
         <h2 className="text-lg font-semibold mb-3">{editing ? 'Edit Product' : 'Add Product'}</h2>
-        <form className="grid gap-3 grid-cols-1 sm:grid-cols-2" onSubmit={onSubmit}>
+  <form className="grid gap-3 grid-cols-1 sm:grid-cols-2" onSubmit={onSubmit}>
           <input name="name" placeholder="Name" defaultValue={editing?.name} className="border rounded-md px-3 py-2" required />
           <input name="price" placeholder="Price" type="number" step="0.01" defaultValue={editing?.price} className="border rounded-md px-3 py-2" required />
           <input name="category" placeholder="Category" defaultValue={editing?.category} list="categories" className="border rounded-md px-3 py-2" required />
@@ -82,8 +83,26 @@ export default function AdminProductsPage() {
             ))}
           </datalist>
           <input name="tags" placeholder="Tags (comma separated)" defaultValue={editing?.tags.join(', ')} className="border rounded-md px-3 py-2 sm:col-span-2" />
-          <input name="image" placeholder="Main image URL" defaultValue={editing?.image} className="border rounded-md px-3 py-2 sm:col-span-2" />
-          <input name="images" placeholder="Extra image URLs (comma separated)" defaultValue={editing?.images?.join(', ')} className="border rounded-md px-3 py-2 sm:col-span-2" />
+          <div className="sm:col-span-2 grid grid-cols-1 gap-2">
+            <label className="text-sm text-gray-700">Main image</label>
+            <div className="flex items-center gap-3">
+              <input name="image" placeholder="Main image URL" defaultValue={editing?.image} className="border rounded-md px-3 py-2 flex-1" />
+              <ImageUploader label="Upload" folder="products/main" onUploaded={(url) => {
+                const el = (document.querySelector('input[name="image"]') as HTMLInputElement | null)
+                if (el) el.value = url
+              }} />
+            </div>
+          </div>
+          <div className="sm:col-span-2 grid grid-cols-1 gap-2">
+            <label className="text-sm text-gray-700">Gallery images</label>
+            <div className="flex items-center gap-3">
+              <input name="images" placeholder="Extra image URLs (comma separated)" defaultValue={editing?.images?.join(', ')} className="border rounded-md px-3 py-2 flex-1" />
+              <ImageUploader label="Upload" folder="products/gallery" onUploaded={(url) => {
+                const el = (document.querySelector('input[name="images"]') as HTMLInputElement | null)
+                if (el) el.value = el.value ? `${el.value}, ${url}` : url
+              }} />
+            </div>
+          </div>
           <textarea name="description" placeholder="Description" defaultValue={editing?.description} className="border rounded-md px-3 py-2 sm:col-span-2" />
           <div className="sm:col-span-2 flex gap-2">
             <button className="btn btn-primary" type="submit">{editing ? 'Save Changes' : 'Add Product'}</button>
