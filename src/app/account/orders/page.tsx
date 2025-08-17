@@ -79,6 +79,7 @@ export default function OrdersPage() {
                   placedAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
                   paidAt: r.paid_at ? new Date(r.paid_at).getTime() : undefined,
                   shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : undefined,
+                  deliveredAt: r.delivered_at ? new Date(r.delivered_at).getTime() : undefined,
                   status: (r.status || 'pending') as any,
                 } as Order
               })
@@ -116,6 +117,7 @@ export default function OrdersPage() {
             trackingNumber: r.tracking_number || o.trackingNumber,
             paidAt: r.paid_at ? new Date(r.paid_at).getTime() : o.paidAt,
             shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : o.shippedAt,
+            deliveredAt: r.delivered_at ? new Date(r.delivered_at).getTime() : (o as any).deliveredAt,
           }
         }))
       })
@@ -168,7 +170,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between mt-2 text-sm">
                   <div className="flex gap-2">
                     <Link href={`/account/orders/${encodeURIComponent(o.code || o.backendId || o.id)}`} className="btn btn-primary btn-xs">Track</Link>
-                    {o.status !== 'shipped' && o.status !== 'cancelled' && (
+                    {o.status !== 'shipped' && o.status !== 'delivered' && o.status !== 'cancelled' && (
                       <CancelButton order={o} onCancelled={(id) => setOrders((prev) => prev.map((it) => it.id === id ? { ...it, status: 'cancelled' } : it))} />
                     )}
                   </div>
@@ -187,6 +189,7 @@ function StatusBadge({ status }: { status: Order['status'] }) {
   const color =
     status === 'paid' ? 'bg-green-100 text-green-700 border-green-200' :
     status === 'shipped' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+    status === 'delivered' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
     status === 'cancelled' ? 'bg-red-100 text-red-700 border-red-200' :
     'bg-yellow-100 text-yellow-800 border-yellow-200'
   const label = status[0].toUpperCase() + status.slice(1)

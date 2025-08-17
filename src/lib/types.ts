@@ -1,7 +1,7 @@
 import type { Product } from './products'
 
 export type OrderItem = { product: Product; qty: number }
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'cancelled'
+export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
 
 export type Order = {
   id: string
@@ -12,7 +12,7 @@ export type Order = {
   customer: {
     fullName: string
     email: string
-  phone: string
+    phone: string
     address: string
     city: string
     country: string
@@ -25,7 +25,7 @@ export type Order = {
   couponCode?: string
   total: number
   payment: {
-  method: 'cod' | 'bkash' | 'rocket' | 'nagad' | 'upay'
+    method: 'cod' | 'bkash' | 'rocket' | 'nagad' | 'upay'
     txid?: string
   }
   // Shipping / tracking metadata (optional)
@@ -34,5 +34,6 @@ export type Order = {
   placedAt?: number
   paidAt?: number
   shippedAt?: number
+  deliveredAt?: number
   status: OrderStatus
 }

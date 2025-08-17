@@ -40,6 +40,9 @@ export default function AdminOrderDetailsPage() {
           shipping: Number(r.shipping || 0),
           total: Number(r.total || 0),
           payment: { method: String(r.payment_method || 'cod') as any, txid: r.txid || undefined },
+          paidAt: r.paid_at ? new Date(r.paid_at).getTime() : undefined,
+          shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : undefined,
+          deliveredAt: r.delivered_at ? new Date(r.delivered_at).getTime() : undefined,
           status: (r.status || 'pending') as OrderStatus,
         }
         setOrder(o)
@@ -71,6 +74,7 @@ export default function AdminOrderDetailsPage() {
         const updates: any = { status: fields.status, tracking_number: fields.tracking_number || null, courier: fields.courier || null, admin_notes: fields.admin_notes || null }
         if (fields.status === 'paid' && !order.paidAt) updates.paid_at = new Date().toISOString()
         if (fields.status === 'shipped' && !order.shippedAt) updates.shipped_at = new Date().toISOString()
+        if (fields.status === 'delivered' && !order.deliveredAt) updates.delivered_at = new Date().toISOString()
         const { error } = await supabase.from('orders').update(updates).eq('code', code)
         if (error) console.error('[admin] update order error:', error)
       } else {
@@ -132,6 +136,7 @@ export default function AdminOrderDetailsPage() {
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
             <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
           <label className="block text-sm">Courier</label>

@@ -1,8 +1,9 @@
 "use client"
 import { useCatalog } from '@/lib/catalog'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/lib/products'
 import ImageUploader from '@/components/ImageUploader'
+import GalleryUploader from '@/components/GalleryUploader'
 
 export default function AdminProductsPage() {
   const { products, add, update, remove, categories } = useCatalog()
@@ -11,6 +12,8 @@ export default function AdminProductsPage() {
   const [category, setCategory] = useState<string | 'all'>('all')
   const [onlyActive, setOnlyActive] = useState(false)
   const [count, setCount] = useState<number | null>(null)
+  const [mainImage, setMainImage] = useState<string>(editing?.image || '')
+  const [gallery, setGallery] = useState<string[]>(editing?.images || [])
 
   useEffect(() => {
     let ignore = false
@@ -56,6 +59,8 @@ export default function AdminProductsPage() {
 
   function startEdit(p: Product) {
     setEditing(p)
+  setMainImage(p.image || '')
+  setGallery(p.images || [])
   }
 
   const filtered = useMemo(() => {
@@ -86,22 +91,99 @@ export default function AdminProductsPage() {
           <div className="sm:col-span-2 grid grid-cols-1 gap-2">
             <label className="text-sm text-gray-700">Main image</label>
             <div className="flex items-center gap-3">
-              <input name="image" placeholder="Main image URL" defaultValue={editing?.image} className="border rounded-md px-3 py-2 flex-1" />
+              <input
+                name="image"
+                placeholder="Main image URL"
+                defaultValue={editing?.image}
+                className="border rounded-md px-3 py-2 flex-1"
+                onChange={(e) => setMainImage(e.target.value)}
+              />
               <ImageUploader label="Upload" folder="products/main" onUploaded={(url) => {
-                const el = (document.querySelector('input[name="image"]') as HTMLInputElement | null)
+                const el = (document.querySelector('input[name=\"image\"]') as HTMLInputElement | null)
                 if (el) el.value = url
+                setMainImage(url)
               }} />
             </div>
+            {mainImage && (
+              <div className="mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={mainImage} alt="Preview" className="w-32 h-32 object-cover rounded border" />
+              </div>
+            )}
           </div>
           <div className="sm:col-span-2 grid grid-cols-1 gap-2">
             <label className="text-sm text-gray-700">Gallery images</label>
             <div className="flex items-center gap-3">
-              <input name="images" placeholder="Extra image URLs (comma separated)" defaultValue={editing?.images?.join(', ')} className="border rounded-md px-3 py-2 flex-1" />
+              <input
+                name="images"
+                placeholder="Extra image URLs (comma separated)"
+                defaultValue={editing?.images?.join(', ')}
+                className="border rounded-md px-3 py-2 flex-1"
+                onChange={(e) => setGallery(e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+              />
               <ImageUploader label="Upload" folder="products/gallery" onUploaded={(url) => {
-                const el = (document.querySelector('input[name="images"]') as HTMLInputElement | null)
+                const el = (document.querySelector('input[name=\"images\"]') as HTMLInputElement | null)
                 if (el) el.value = el.value ? `${el.value}, ${url}` : url
+                setGallery((prev) => [...prev, url])
               }} />
             </div>
+            <GalleryUploader folder="products/gallery" onUploaded={(items) => {
+              const urls = items.map((i) => i.url)
+              setGallery((prev) => {
+                const next = [...prev, ...urls]
+                const el = (document.querySelector('input[name=\"images\"]') as HTMLInputElement | null)
+                if (el) el.value = next.join(', ')
+                return next
+              })
+            }} />
+            {gallery.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {gallery.map((g, idx) => (
+                  <div key={g + idx} className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={g} alt="Gallery" className="w-20 h-20 object-cover rounded border" />
+                    <button
+                      type="button"
+                      className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-6 h-6 text-xs"
+                      title="Remove"
+                      onClick={() => {
+                        const next = gallery.filter((_, i) => i !== idx)
+                        setGallery(next)
+                        const el = (document.querySelector('input[name=\"images\"]') as HTMLInputElement | null)
+                        if (el) el.value = next.join(', ')
+                        // Try deleting from storage (best effort)
+                        try {
+                          const path = new URL(g).pathname.split('/').slice(3).join('/') // /storage/v1/object/public/<bucket>/... -> path
+                          fetch('/api/admin/upload', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path }) })
+                        } catch {}
+                      }}
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-1 left-1 flex gap-1">
+                      <button type="button" className="text-[10px] bg-white/80 rounded px-1" onClick={() => {
+                        if (idx === 0) return
+                        const next = [...gallery]
+                        const [m] = next.splice(idx, 1)
+                        next.splice(idx - 1, 0, m)
+                        setGallery(next)
+                        const el = (document.querySelector('input[name=\"images\"]') as HTMLInputElement | null)
+                        if (el) el.value = next.join(', ')
+                      }}>↑</button>
+                      <button type="button" className="text-[10px] bg-white/80 rounded px-1" onClick={() => {
+                        if (idx === gallery.length - 1) return
+                        const next = [...gallery]
+                        const [m] = next.splice(idx, 1)
+                        next.splice(idx + 1, 0, m)
+                        setGallery(next)
+                        const el = (document.querySelector('input[name=\"images\"]') as HTMLInputElement | null)
+                        if (el) el.value = next.join(', ')
+                      }}>↓</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <textarea name="description" placeholder="Description" defaultValue={editing?.description} className="border rounded-md px-3 py-2 sm:col-span-2" />
           <div className="sm:col-span-2 flex gap-2">

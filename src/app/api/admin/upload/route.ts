@@ -52,3 +52,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: String(e?.message || e) }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    if ((process.env.ADMIN_AUTH_MODE || '').toLowerCase() === 'supabase') {
+      const user = await getServerSupabaseUser()
+      if (!isUserAdmin(user)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
+    const supabase = getServiceClient()
+    if (!supabase) return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 500 })
+
+    const body = await req.json()
+    const path = String(body?.path || '')
+    if (!path) return NextResponse.json({ ok: false, error: 'Missing path' }, { status: 400 })
+
+    const { error } = await supabase.storage.from(BUCKET).remove([path])
+    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 })
+    return NextResponse.json({ ok: true })
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: String(e?.message || e) }, { status: 500 })
+  }
+}

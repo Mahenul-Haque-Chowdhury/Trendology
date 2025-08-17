@@ -67,6 +67,7 @@ export default function OrderDetailsPage() {
           placedAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
           paidAt: r.paid_at ? new Date(r.paid_at).getTime() : undefined,
           shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : undefined,
+          deliveredAt: r.delivered_at ? new Date(r.delivered_at).getTime() : undefined,
           status: (r.status || 'pending') as any,
         })
         return
@@ -96,19 +97,20 @@ export default function OrderDetailsPage() {
           trackingNumber: r.tracking_number || o.trackingNumber,
           paidAt: r.paid_at ? new Date(r.paid_at).getTime() : o.paidAt,
           shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : o.shippedAt,
+          deliveredAt: r.delivered_at ? new Date(r.delivered_at).getTime() : (o as any).deliveredAt,
         }) : o)
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [user, code])
 
-  const canCancel = order && order.status !== 'shipped' && order.status !== 'cancelled'
+  const canCancel = order && !(['shipped','delivered','cancelled'] as any[]).includes(order.status)
   const steps = useMemo(() => {
     const arr: { key: string; label: string; at?: number }[] = [
       { key: 'placed', label: 'Order Placed', at: order?.placedAt || order?.createdAt },
       { key: 'paid', label: 'Payment Confirmed', at: order?.paidAt },
-      { key: 'shipped', label: 'Shipped', at: order?.shippedAt },
-      { key: 'delivered', label: 'Delivered', at: undefined },
+  { key: 'shipped', label: 'Shipped', at: order?.shippedAt },
+  { key: 'delivered', label: 'Delivered', at: (order as any)?.deliveredAt },
     ]
     return arr
   }, [order])
@@ -163,7 +165,7 @@ export default function OrderDetailsPage() {
           <div className="text-gray-600 text-sm">{new Date(order.createdAt).toLocaleString()} · {itemCount} item{itemCount>1?'s':''}</div>
         </div>
         <div className="flex gap-2 items-center">
-          <span className={`px-2 py-1 rounded text-xs border ${order.status==='paid'?'bg-green-100 text-green-700 border-green-200':order.status==='shipped'?'bg-blue-100 text-blue-700 border-blue-200':order.status==='cancelled'?'bg-red-100 text-red-700 border-red-200':'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>{order.status[0].toUpperCase()+order.status.slice(1)}</span>
+          <span className={`px-2 py-1 rounded text-xs border ${order.status==='paid'?'bg-green-100 text-green-700 border-green-200':order.status==='shipped'?'bg-blue-100 text-blue-700 border-blue-200':order.status==='delivered'?'bg-emerald-100 text-emerald-700 border-emerald-200':order.status==='cancelled'?'bg-red-100 text-red-700 border-red-200':'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>{order.status[0].toUpperCase()+order.status.slice(1)}</span>
           {canCancel && <button className="btn border border-red-200 text-red-700 hover:bg-red-50 btn-sm" onClick={() => setOpen(true)} disabled={busy}>{busy ? 'Cancelling…' : 'Cancel Order'}</button>}
         </div>
       </div>
