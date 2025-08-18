@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useMemo, useState } from 'react'
+import { formatCurrencyBDT } from '@/lib/currency'
 import type { Order } from '@/lib/types'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -71,8 +72,8 @@ export default function CheckoutPage() {
     if (!code) return null as null | { code: string; discount: number; freeShip?: boolean }
     // Simple demo rules; replace with server validation if needed
     const rules: Record<string, { type: 'percent' | 'fixed' | 'freeship'; value?: number; min?: number }> = {
-      SAVE10: { type: 'percent', value: 10, min: 50 }, // 10% off orders >= $50
-      WELCOME5: { type: 'fixed', value: 5, min: 20 }, // $5 off orders >= $20
+      SAVE10: { type: 'percent', value: 10, min: 50 }, // 10% off orders >= 50 BDT
+      WELCOME5: { type: 'fixed', value: 5, min: 20 }, // 5 BDT off orders >= 20 BDT
       FREESHIP: { type: 'freeship' }, // Free shipping
     }
     const rule = rules[code]
@@ -435,7 +436,7 @@ export default function CheckoutPage() {
                       <ul className="text-gray-700 list-disc list-inside text-xs space-y-1">
                         <li>Send to: 01XXXXXXXXX</li>
                         <li>Reference: Your mobile number</li>
-                        <li>Amount: ${grandTotal.toFixed(2)}</li>
+                        <li>Amount: {formatCurrencyBDT(grandTotal)}</li>
                       </ul>
                     </div>
                     <div className="space-y-1">
@@ -480,9 +481,9 @@ export default function CheckoutPage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium text-gray-900">{product.name}</div>
-                  <div className="text-xs text-gray-500 truncate">Qty: {qty} · ${product.price.toFixed(2)} each</div>
+                  <div className="text-xs text-gray-500 truncate">Qty: {qty} · {formatCurrencyBDT(product.price)} each</div>
                 </div>
-                <div className="font-medium">${(product.price * qty).toFixed(2)}</div>
+                <div className="font-medium">{formatCurrencyBDT(product.price * qty)}</div>
               </li>
             ))}
           </ul>
@@ -499,10 +500,10 @@ export default function CheckoutPage() {
             />
             <button className="btn btn-sm btn-primary" onClick={onApplyCoupon} type="button">Apply</button>
           </div>
-          {appliedCoupon ? (
+              {appliedCoupon ? (
             <p className="text-xs text-green-700">
               Applied {appliedCoupon.code}
-              {appliedCoupon.discount > 0 ? ` · −$${appliedCoupon.discount.toFixed(2)}` : ''}
+              {appliedCoupon.discount > 0 ? ` · −${formatCurrencyBDT(appliedCoupon.discount)}` : ''}
               {appliedCoupon.freeShip ? ' · Free Shipping' : ''}
               <button
                 type="button"
@@ -550,12 +551,12 @@ export default function CheckoutPage() {
           </div>
         </div>
         <div className="rounded-md bg-gray-50 border p-3 text-sm space-y-1">
-          <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrencyBDT(subtotal)}</span></div>
           {discount > 0 && (
-            <div className="flex justify-between text-green-700"><span>Discount{appliedCoupon?.code ? ` (${appliedCoupon.code})` : ''}</span><span>- ${discount.toFixed(2)}</span></div>
+            <div className="flex justify-between text-green-700"><span>Discount{appliedCoupon?.code ? ` (${appliedCoupon.code})` : ''}</span><span>- {formatCurrencyBDT(discount)}</span></div>
           )}
-          <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span></div>
-          <div className="flex justify-between font-semibold text-base pt-1 border-t"><span>Total</span><span>${grandTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : formatCurrencyBDT(shipping)}</span></div>
+          <div className="flex justify-between font-semibold text-base pt-1 border-t"><span>Total</span><span>{formatCurrencyBDT(grandTotal)}</span></div>
           <p className="text-xs text-gray-500">Shipping: Inside Dhaka 70 Taka · Outside Dhaka 130 Taka. Applying FREESHIP will waive shipping.</p>
         </div>
       </aside>

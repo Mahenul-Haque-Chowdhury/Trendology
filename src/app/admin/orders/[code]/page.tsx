@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { formatCurrencyBDT } from '@/lib/currency'
 import { useParams, useRouter } from 'next/navigation'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import type { Order, OrderStatus } from '@/lib/types'
@@ -116,16 +117,16 @@ export default function AdminOrderDetailsPage() {
               <li key={it.product.id} className="py-2 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="font-medium truncate">{it.product.name}</div>
-                  <div className="text-sm text-gray-600">Qty {it.qty} · ${it.product.price.toFixed(2)} each</div>
+                  <div className="text-sm text-gray-600">Qty {it.qty} · {formatCurrencyBDT(it.product.price)} each</div>
                 </div>
-                <div className="font-medium">${(it.product.price * it.qty).toFixed(2)}</div>
+                <div className="font-medium">{formatCurrencyBDT(it.product.price * it.qty)}</div>
               </li>
             ))}
           </ul>
           <div className="border-t pt-3 text-sm space-y-1">
-            <div className="flex justify-between"><span>Subtotal</span><span>${order.subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span>{order.shipping === 0 ? 'Free' : `$${order.shipping.toFixed(2)}`}</span></div>
-            <div className="flex justify-between font-semibold"><span>Total</span><span>${order.total.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrencyBDT(order.subtotal)}</span></div>
+            <div className="flex justify-between"><span>Shipping</span><span>{order.shipping === 0 ? 'Free' : formatCurrencyBDT(order.shipping)}</span></div>
+            <div className="flex justify-between font-semibold"><span>Total</span><span>{formatCurrencyBDT(order.total)}</span></div>
           </div>
         </div>
 

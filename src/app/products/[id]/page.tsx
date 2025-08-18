@@ -6,6 +6,7 @@ import { useCatalog } from '@/lib/catalog'
 import { useProductReviews } from '@/lib/reviews'
 import { useProductQnA } from '@/lib/qna'
 import { useMemo, useState } from 'react'
+import { formatCurrencyBDT } from '@/lib/currency'
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const { products } = useCatalog()
@@ -31,7 +32,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="text-gray-600 leading-relaxed">{product.description}</p>
           <div className="flex items-center gap-6">
-            <span className="text-2xl font-semibold">${product.price.toFixed(2)}</span>
+                  <span className="text-2xl font-semibold">{formatCurrencyBDT(product.price)}</span>
             <AddToCartButton product={product} />
           </div>
 
@@ -46,7 +47,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 <div className="font-medium">Delivery Info</div>
                 <div className="text-gray-600">
                   <div>Delivery Time: Inside Dhaka: 2–3 working days · Outside Dhaka: 3–7 working days</div>
-                  <div>Shipping Charge: Inside Dhaka $70.00 · Outside Dhaka $130.00</div>
+                  <div>Shipping Charge: Inside Dhaka {formatCurrencyBDT(70)} · Outside Dhaka {formatCurrencyBDT(130)}</div>
                 </div>
               </li>
               <li className="space-y-2">

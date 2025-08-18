@@ -1,5 +1,6 @@
 "use client"
 import Link from 'next/link'
+import { formatCurrencyBDT } from '@/lib/currency'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCart } from '@/lib/cart'
@@ -59,17 +60,17 @@ export default function SuccessPage() {
             {order.items.map(({ product, qty }) => (
               <li key={product.id} className="flex items-center justify-between py-2">
                 <span className="truncate mr-2">{product.name} × {qty}</span>
-                <span>${(product.price * qty).toFixed(2)}</span>
+                <span>{formatCurrencyBDT(product.price * qty)}</span>
               </li>
             ))}
           </ul>
           <div className="border-t pt-2 text-sm space-y-1">
-            <div className="flex justify-between"><span>Subtotal</span><span>${order.subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrencyBDT(order.subtotal)}</span></div>
             {order.discount && order.discount > 0 ? (
-              <div className="flex justify-between text-green-700"><span>Discount{order.couponCode ? ` (${order.couponCode})` : ''}</span><span>- ${order.discount.toFixed(2)}</span></div>
+              <div className="flex justify-between text-green-700"><span>Discount{order.couponCode ? ` (${order.couponCode})` : ''}</span><span>- {formatCurrencyBDT(order.discount)}</span></div>
             ) : null}
-            <div className="flex justify-between"><span>Shipping</span><span>{order.shipping === 0 ? 'Free' : `$${order.shipping.toFixed(2)}`}</span></div>
-            <div className="flex justify-between font-semibold"><span>Total</span><span>${order.total.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Shipping</span><span>{order.shipping === 0 ? 'Free' : formatCurrencyBDT(order.shipping)}</span></div>
+            <div className="flex justify-between font-semibold"><span>Total</span><span>{formatCurrencyBDT(order.total)}</span></div>
           </div>
         </div>
       )}

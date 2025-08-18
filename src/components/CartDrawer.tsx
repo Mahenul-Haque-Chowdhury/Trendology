@@ -1,5 +1,6 @@
 "use client"
 import { useCart } from '@/lib/cart'
+import { formatCurrencyBDT } from '@/lib/currency'
 import { useRouter } from 'next/navigation'
 
 export default function CartDrawer() {
@@ -32,7 +33,7 @@ export default function CartDrawer() {
               <div key={product.id} className="flex items-center justify-between gap-3 border rounded-lg p-3">
                 <div className="min-w-0">
                   <div className="font-medium truncate">{product.name}</div>
-                  <div className="text-sm text-gray-600">${product.price.toFixed(2)}</div>
+                  <div className="text-sm text-gray-600">{formatCurrencyBDT(product.price)}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button className="btn btn-ghost px-2" aria-label={`Decrease ${product.name} quantity`} onClick={() => update(product.id, qty - 1)}>-</button>
@@ -45,7 +46,7 @@ export default function CartDrawer() {
           )}
         </div>
         <footer className="p-4 border-t flex items-center justify-between">
-          <div className="font-semibold">Total: ${total.toFixed(2)}</div>
+            <div className="font-semibold">Total: {formatCurrencyBDT(total)}</div>
           <div className="flex gap-2">
             <button className="btn btn-ghost" onClick={clear}>Clear</button>
             <button className="btn btn-primary" onClick={() => { setOpen(false); router.push('/checkout') }}>Checkout</button>

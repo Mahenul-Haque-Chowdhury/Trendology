@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
+import { formatCurrencyBDT } from '@/lib/currency'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { useCatalog } from '@/lib/catalog'
 
@@ -139,7 +140,7 @@ export default function AdminPage() {
         <div className="flex items-center gap-3">
           <Link href="/admin/products" className="text-sm text-brand hover:underline">Manage Products</Link>
           <Link href="/admin/db" className="text-sm text-brand hover:underline">DB Check</Link>
-          <div className="text-sm text-gray-600">Total Sales: ${totalSales.toFixed(2)}</div>
+          <div className="text-sm text-gray-600">Total Sales: {formatCurrencyBDT(totalSales)}</div>
         </div>
       </header>
 
@@ -181,12 +182,12 @@ export default function AdminPage() {
                         {o.items.map((it) => (
                           <li key={it.product.id} className="flex justify-between gap-2">
                             <span className="truncate">{it.product.name} × {it.qty}</span>
-                            <span>${(it.product.price * it.qty).toFixed(2)}</span>
+                            <span>{formatCurrencyBDT(it.product.price * it.qty)}</span>
                           </li>
                         ))}
                       </ul>
                     </td>
-                    <td className="p-2 font-medium">${o.total.toFixed(2)}</td>
+                    <td className="p-2 font-medium">{formatCurrencyBDT(o.total)}</td>
                     <td className="p-2">{o.payment.method.toUpperCase()}{o.payment.txid ? ` · ${o.payment.txid}` : ''}</td>
                     <td className="p-2">
                       <select

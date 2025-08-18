@@ -1,5 +1,6 @@
 "use client"
 import Link from 'next/link'
+import { formatCurrencyBDT } from '@/lib/currency'
 import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 import type { Order } from '@/lib/types'
@@ -163,7 +164,7 @@ export default function OrdersPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">${o.total.toFixed(2)}</span>
+                    <span className="font-medium">{formatCurrencyBDT(o.total)}</span>
                     <StatusBadge status={o.status} />
                   </div>
                 </div>

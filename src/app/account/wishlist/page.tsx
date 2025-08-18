@@ -1,6 +1,7 @@
 "use client"
 import { useAuth } from '@/lib/auth'
 import Link from 'next/link'
+import { formatCurrencyBDT } from '@/lib/currency'
 import Image from 'next/image'
 import { useWishlist } from '@/lib/wishlist'
 import { useCart } from '@/lib/cart'
@@ -105,7 +106,7 @@ export default function WishlistPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="font-medium group-hover:underline truncate">{product.name}</div>
-                      <div className="text-sm text-gray-500">${product.price.toFixed(2)}</div>
+                      <div className="text-sm text-gray-500">{formatCurrencyBDT(product.price)}</div>
                     </div>
                   </Link>
                 </div>

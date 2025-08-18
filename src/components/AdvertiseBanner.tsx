@@ -18,7 +18,7 @@ const slides: Slide[] = [
   },
   {
     title: 'Free delivery on orders 50+',
-    subtitle: 'Enjoy fast, free delivery on eligible items—no coupon needed.',
+  subtitle: 'Enjoy fast, free delivery on eligible items—no coupon needed.',
     cta: { label: 'See deals', href: '/category/decor' },
     gradientFrom: 'from-emerald-600',
     gradientTo: 'to-emerald-700',

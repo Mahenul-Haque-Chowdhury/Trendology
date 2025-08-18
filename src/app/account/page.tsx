@@ -1,5 +1,6 @@
 "use client"
 import Link from 'next/link'
+import { formatCurrencyBDT } from '@/lib/currency'
 import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 import type { Order } from '@/lib/types'
@@ -109,7 +110,7 @@ export default function AccountPage() {
                   <div className="font-medium">Order #{o.id}</div>
                   <div className="text-sm">{new Date(o.createdAt).toLocaleDateString()}</div>
                 </div>
-                <div className="text-sm text-gray-600">{o.items.length} item(s) · ${o.total.toFixed(2)} · {o.status}</div>
+                <div className="text-sm text-gray-600">{o.items.length} item(s) · {formatCurrencyBDT(o.total)} · {o.status}</div>
               </li>
             ))}
           </ul>

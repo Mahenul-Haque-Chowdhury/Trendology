@@ -2,6 +2,7 @@
 import { useCatalog } from '@/lib/catalog'
 import { CATEGORIES } from '@/lib/categories'
 import { useEffect, useMemo, useState } from 'react'
+import { formatCurrencyBDT } from '@/lib/currency'
 import type { Product } from '@/lib/products'
 import ImageUploader from '@/components/ImageUploader'
 import GalleryUploader from '@/components/GalleryUploader'
@@ -253,7 +254,7 @@ export default function AdminProductsPage() {
                   <div className="text-xs text-gray-500 truncate">ID: {p.id}</div>
                 </div>
               </div>
-              <div className="text-sm text-gray-600 truncate">{p.category} · ${p.price.toFixed(2)} · {p.active === false ? 'Hidden' : 'Active'}</div>
+              <div className="text-sm text-gray-600 truncate">{p.category} · {formatCurrencyBDT(p.price)} · {p.active === false ? 'Hidden' : 'Active'}</div>
               <div className="flex items-center gap-2 text-sm">
                 <label className="inline-flex items-center gap-2">
                   <input type="checkbox" checked={p.active !== false} onChange={(e) => update({ ...p, active: e.target.checked })} /> Active
