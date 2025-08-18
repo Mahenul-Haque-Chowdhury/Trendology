@@ -13,7 +13,6 @@ export const CATEGORIES: Category[] = [
   { slug: 'womens', label: 'Womens', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=400&auto=format&fit=crop' },
   { slug: 'baby-items', label: 'Baby Items', image: 'https://images.unsplash.com/photo-1585513588894-315370ba5c47?q=80&w=400&auto=format&fit=crop' },
   { slug: 'sunglass', label: 'Sunglass', image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=400&auto=format&fit=crop' },
-  { slug: 'phone', label: 'Phone', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=400&auto=format&fit=crop' },
   { slug: 'fitness', label: 'Fitness', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400&auto=format&fit=crop' },
   { slug: 'watches', label: 'Watches', image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=400&auto=format&fit=crop' },
   { slug: 'food-items', label: 'Food Items', image: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=400&auto=format&fit=crop' },

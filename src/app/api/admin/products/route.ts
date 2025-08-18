@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // Force Node runtime to ensure cookie-based Supabase SSR works reliably on Vercel
 export const runtime = 'nodejs'
 import { createClient } from '@supabase/supabase-js'
-import { getServerSupabaseUser, isUserAdmin } from '@/lib/adminAuth'
+import { getRequestSupabaseUser, isUserAdmin } from '@/lib/adminAuth'
 
 const TABLE = 'inventory'
 
@@ -13,10 +13,10 @@ function getServiceClient() {
   return createClient(url, key, { auth: { persistSession: false } })
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     if ((process.env.ADMIN_AUTH_MODE || '').toLowerCase() === 'supabase') {
-      const user = await getServerSupabaseUser()
+  const user = await getRequestSupabaseUser(req as any)
       if (!isUserAdmin(user)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
     const client = getServiceClient()
@@ -32,7 +32,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     if ((process.env.ADMIN_AUTH_MODE || '').toLowerCase() === 'supabase') {
-      const user = await getServerSupabaseUser()
+  const user = await getRequestSupabaseUser(req)
       if (!isUserAdmin(user)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
     const client = getServiceClient()

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { getServerSupabaseUser, isUserAdmin } from '@/lib/adminAuth'
+import { getRequestSupabaseUser, isUserAdmin } from '@/lib/adminAuth'
 
 export const runtime = 'nodejs'
 
-export async function GET() {
+export async function GET(req: Request) {
   const mode = (process.env.ADMIN_AUTH_MODE || '').toLowerCase()
   const emails = (process.env.ADMIN_EMAILS || '')
   let user: any = null
@@ -11,7 +11,7 @@ export async function GET() {
   let error: string | null = null
   try {
     if (mode === 'supabase') {
-      user = await getServerSupabaseUser()
+  user = await getRequestSupabaseUser(req as any)
       admin = isUserAdmin(user)
     }
   } catch (e: any) {

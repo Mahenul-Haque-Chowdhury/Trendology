@@ -66,7 +66,14 @@ export default function GalleryUploader({
         const fd = new FormData()
         fd.append('file', file)
         fd.append('folder', folder)
-        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+        let headers: Record<string, string> | undefined
+        try {
+          const supabase = (await import('@/lib/supabase')).getSupabaseClient()
+          const sess = await supabase?.auth.getSession()
+          const token = sess?.data?.session?.access_token
+          if (token) headers = { Authorization: `Bearer ${token}` }
+        } catch {}
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd, headers })
         const out = await res.json()
         if (!out.ok) throw new Error(out.error || 'Upload failed')
         results.push({ url: out.url as string, path: out.path as string })

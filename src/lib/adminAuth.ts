@@ -1,5 +1,7 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function getServerSupabaseUser() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -30,4 +32,24 @@ export function isUserAdmin(user: any) {
   // Optional role flag in user metadata
   const role = (user.user_metadata?.role || '').toString().toLowerCase()
   return role === 'admin'
+}
+
+// Prefer reading the Authorization bearer token from the request when available (client explicitly forwards session).
+export async function getRequestSupabaseUser(req: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anon) return null
+  try {
+    const auth = req.headers.get('authorization') || req.headers.get('Authorization')
+    if (auth && /^Bearer\s+/.test(auth)) {
+      const supabase = createClient(url, anon, {
+        auth: { persistSession: false },
+        global: { headers: { Authorization: auth } },
+      })
+      const { data } = await supabase.auth.getUser()
+      if (data?.user) return data.user
+    }
+  } catch {}
+  // Fallback to cookie-based lookup
+  return getServerSupabaseUser()
 }

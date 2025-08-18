@@ -22,7 +22,15 @@ export default function AdminProductsPage() {
     let ignore = false
     async function fetchCount() {
       try {
-        const res = await fetch('/api/admin/products')
+        // Forward Supabase session access token in Authorization header for SSR routes
+        let headers: Record<string, string> | undefined
+        try {
+          const supabase = (await import('@/lib/supabase')).getSupabaseClient()
+          const sess = await supabase?.auth.getSession()
+          const token = sess?.data?.session?.access_token
+          if (token) headers = { Authorization: `Bearer ${token}` }
+        } catch {}
+        const res = await fetch('/api/admin/products', { headers })
         const json = await res.json()
         if (!ignore && json?.ok) {
           setCount(Array.isArray(json.items) ? json.items.length : null)
@@ -155,7 +163,7 @@ export default function AdminProductsPage() {
                       type="button"
                       className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-6 h-6 text-xs"
                       title="Remove"
-                      onClick={() => {
+                      onClick={async () => {
                         const next = gallery.filter((_, i) => i !== idx)
                         setGallery(next)
                         const el = (document.querySelector('input[name=\"images\"]') as HTMLInputElement | null)
@@ -163,7 +171,15 @@ export default function AdminProductsPage() {
                         // Try deleting from storage (best effort)
                         try {
                           const path = new URL(g).pathname.split('/').slice(3).join('/') // /storage/v1/object/public/<bucket>/... -> path
-                          fetch('/api/admin/upload', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path }) })
+                          let headers: Record<string, string> = { 'Content-Type': 'application/json' }
+                          try {
+                            const mod = await import('@/lib/supabase')
+                            const supabase = mod.getSupabaseClient()
+                            const sess = await supabase?.auth.getSession()
+                            const token = sess?.data?.session?.access_token
+                            if (token) headers.Authorization = `Bearer ${token}`
+                          } catch {}
+                          fetch('/api/admin/upload', { method: 'DELETE', headers, body: JSON.stringify({ path }) })
                         } catch {}
                       }}
                     >
