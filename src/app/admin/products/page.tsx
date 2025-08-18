@@ -1,5 +1,6 @@
 "use client"
 import { useCatalog } from '@/lib/catalog'
+import { CATEGORIES } from '@/lib/categories'
 import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/lib/products'
 import ImageUploader from '@/components/ImageUploader'
@@ -7,7 +8,7 @@ import GalleryUploader from '@/components/GalleryUploader'
 import AdminHelpBanner from '@/components/AdminHelpBanner'
 
 export default function AdminProductsPage() {
-  const { products, add, update, remove, categories } = useCatalog()
+  const { products, add, update, remove } = useCatalog()
   const [editing, setEditing] = useState<Product | null>(null)
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<string | 'all'>('all')
@@ -91,8 +92,8 @@ export default function AdminProductsPage() {
           <input name="price" placeholder="Price" type="number" step="0.01" defaultValue={editing?.price} className="border rounded-md px-3 py-2" required />
           <input name="category" placeholder="Category" defaultValue={editing?.category} list="categories" className="border rounded-md px-3 py-2" required />
           <datalist id="categories">
-            {categories.map((c) => (
-              <option key={c} value={c} />
+            {CATEGORIES.map((c) => (
+              <option key={c.slug} value={c.slug} />
             ))}
           </datalist>
           <input name="tags" placeholder="Tags (comma separated)" defaultValue={editing?.tags.join(', ')} className="border rounded-md px-3 py-2 sm:col-span-2" />
@@ -213,7 +214,7 @@ export default function AdminProductsPage() {
             <input className="border rounded-md px-3 py-2" placeholder="Search…" value={query} onChange={(e) => setQuery(e.target.value)} />
             <select className="border rounded-md px-3 py-2" value={category} onChange={(e) => setCategory(e.target.value as any)}>
               <option value="all">All categories</option>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
             </select>
             <label className="inline-flex items-center gap-2 text-sm">
               <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} />

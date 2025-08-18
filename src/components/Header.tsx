@@ -7,6 +7,7 @@ import { products } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useCatalog } from '@/lib/catalog'
+import { CATEGORIES } from '@/lib/categories'
 import Image from 'next/image'
 
 export default function Header() {
@@ -14,7 +15,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const { products: items } = useCatalog()
-  const categories = useMemo(() => Array.from(new Set(items.map((p) => p.category))).sort(), [items])
+  const categories = useMemo(() => CATEGORIES.map((c) => c.slug), [])
   const { user, logout } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -266,16 +267,16 @@ export default function Header() {
                 })()}
               {open && (
                 <div id="category-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
-                  {categories.map((c) => (
+      {CATEGORIES.map((c) => (
                       <Link
-                        key={c}
-                        href={`/category/${c}`}
-                        role="menuitem"
-                        aria-current={pathname === `/category/${c}` ? 'page' : undefined}
-                        className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c}` ? 'bg-brand/5 text-brand font-medium' : ''}`}
+        key={c.slug}
+        href={`/category/${c.slug}`}
+        role="menuitem"
+        aria-current={pathname === `/category/${c.slug}` ? 'page' : undefined}
+        className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c.slug}` ? 'bg-brand/5 text-brand font-medium' : ''}`}
                         onClick={() => setOpen(false)}
                       >
-                        {c.charAt(0).toUpperCase() + c.slice(1)}
+        {c.label}
                       </Link>
                   ))}
                 </div>
@@ -464,15 +465,15 @@ export default function Header() {
             <details className="px-2 py-2">
               <summary className="cursor-pointer select-none">Categories</summary>
               <div className="mt-2 ml-3 space-y-1 max-h-60 overflow-auto pr-2">
-                {categories.map((c) => (
+        {CATEGORIES.map((c) => (
           <Link
-            key={c}
-            href={`/category/${c}`}
-            aria-current={pathname === `/category/${c}` ? 'page' : undefined}
-            className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c}` ? 'bg-gray-100 text-brand font-medium' : ''}`}
+      key={c.slug}
+      href={`/category/${c.slug}`}
+      aria-current={pathname === `/category/${c.slug}` ? 'page' : undefined}
+      className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c.slug}` ? 'bg-gray-100 text-brand font-medium' : ''}`}
             onClick={closeMobileMenu}
           >
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
+          {c.label}
                   </Link>
                 ))}
               </div>
