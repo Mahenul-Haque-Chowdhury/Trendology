@@ -63,14 +63,10 @@ export default function AdvertiseBanner() {
   const go = (dir: 1 | -1) => setIndex((i) => (i + dir + slides.length) % slides.length)
 
   return (
-    <section
-      className="relative"
-      aria-roledescription="carousel"
-      aria-label="Promotions"
-    >
-      {/* Floating container */}
+    <section className="relative -mx-2 sm:-mx-3 md:-mx-4" aria-roledescription="carousel" aria-label="Promotions">
+      {/* Full-bleed container */}
       <div
-        className={`relative overflow-hidden rounded-2xl ${overlayBgClass(slides[index]?.gradientTo)} text-white shadow-2xl ring-1 ring-black/5 translate-y-0 md:-translate-y-1 will-change-transform min-h-[240px] sm:min-h-[320px]`}
+        className={`relative overflow-hidden ${overlayBgClass(slides[index]?.gradientTo)} text-white will-change-transform min-h-[240px] sm:min-h-[320px]`}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -133,7 +129,7 @@ export default function AdvertiseBanner() {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.7a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L11.59 11 7.3 6.7a1 1 0 0 1 0-1.4z"/></svg>
           </button>
         </div>
-      </div>
+  </div>
     </section>
   )
 }

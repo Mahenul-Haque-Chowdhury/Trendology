@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="border-t mt-10">
-      <div className="container mx-auto px-4 py-8 text-sm text-gray-600 grid grid-cols-1 sm:grid-cols-3 gap-6">
+  <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-8 text-sm text-gray-600 grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div>
           <div className="font-semibold text-gray-900">AamarDokan</div>
           <p className="mt-2 max-w-sm">A clean, fast shopping experience built with Next.js and Tailwind CSS.</p>

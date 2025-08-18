@@ -54,8 +54,8 @@ export default function RootLayout({
           <Suspense fallback={<div className="h-16 sm:h-20" />}> 
             <Header />
           </Suspense>
-          <Suspense fallback={<main className="flex-1 container mx-auto px-4 py-8">Loading…</main>}>
-            <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
+          <Suspense fallback={<main className="flex-1 mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-6 sm:py-8">Loading…</main>}>
+            <main className="flex-1 mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-6 sm:py-8">{children}</main>
           </Suspense>
           <Footer />
           <CartDrawer />

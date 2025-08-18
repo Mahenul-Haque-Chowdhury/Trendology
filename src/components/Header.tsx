@@ -14,6 +14,7 @@ export default function Header() {
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
+  const [catOpen, setCatOpen] = useState(false)
   const { products: items } = useCatalog()
   const categories = useMemo(() => CATEGORIES.map((c) => c.slug), [])
   const { user, logout } = useAuth()
@@ -24,6 +25,7 @@ export default function Header() {
   const [activeIndex, setActiveIndex] = useState(-1)
   const pathname = usePathname()
   const userMenuRef = useRef<HTMLDivElement | null>(null)
+  const catMenuRef = useRef<HTMLDivElement | null>(null)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const modalRef = useRef<HTMLDivElement | null>(null)
   const cancelBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -62,7 +64,6 @@ export default function Header() {
   useEffect(() => {
     if (!showSignOutModal) return
     // Save previously focused element
-    previouslyFocusedRef.current = (document.activeElement as HTMLElement) || null
     // Prevent body scroll while modal open
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -72,7 +73,6 @@ export default function Header() {
     function onKeyDown(e: KeyboardEvent) {
       if (!modalRef.current) return
       if (e.key === 'Escape') {
-        e.preventDefault()
         closeSignOutModal()
         return
       }
@@ -134,21 +134,30 @@ export default function Header() {
   // Close user menu on outside click or Escape
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (!userOpen) return
-      const el = userMenuRef.current
-      if (el && e.target instanceof Node && !el.contains(e.target)) setUserOpen(false)
+      // user menu
+      if (userOpen) {
+        const el = userMenuRef.current
+        if (el && e.target instanceof Node && !el.contains(e.target)) setUserOpen(false)
+      }
+      // categories menu
+      if (catOpen) {
+        const el2 = catMenuRef.current
+        if (el2 && e.target instanceof Node && !el2.contains(e.target)) setCatOpen(false)
+      }
     }
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setUserOpen(false) }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { setUserOpen(false); setCatOpen(false) }
+    }
     document.addEventListener('mousedown', onDocClick)
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('mousedown', onDocClick); document.removeEventListener('keydown', onKey) }
-  }, [userOpen])
+  }, [userOpen, catOpen])
 
   return (
     <header className="sticky top-0 z-40">
       {/* Promo bar */}
       <div className="bg-accent text-gray-900 text-xs sm:text-sm">
-        <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2">
+        <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-2 flex items-center justify-center gap-2">
           <span className="font-medium">Free delivery on orders over $50</span>
           <span className="underline underline-offset-2 opacity-70 cursor-not-allowed" aria-disabled="true">Join now</span>
         </div>
@@ -156,13 +165,48 @@ export default function Header() {
 
       {/* Main header */}
       <div className="border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
-  <div className="container mx-auto px-4 h-16 sm:h-20 flex items-center gap-4">
+  <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 h-16 sm:h-20 flex items-center gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <Link href="/" className="shrink-0 font-extrabold text-2xl sm:text-3xl text-brand tracking-tight focus-visible:ring-2 focus-visible:ring-brand">
               AamarDokan
             </Link>
             {/* Search */}
             <form onSubmit={submitSearch} className="hidden md:flex items-center gap-2 flex-1 min-w-0">
+              {/* Categories dropdown (left of search) */}
+              <div className="relative" ref={catMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setCatOpen((v) => !v)}
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm hover:bg-gray-50 focus:border-brand focus:ring-2 focus:ring-brand"
+                  aria-haspopup="menu"
+                  aria-expanded={catOpen}
+                  aria-controls="category-menu"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  <span className="hidden lg:inline">Categories</span>
+                  <svg className={`transition-transform ${catOpen ? 'rotate-180' : ''}`} width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+                </button>
+                {/* Animated dropdown */}
+                <div
+                  id="category-menu"
+                  role="menu"
+                  className={`absolute z-50 mt-2 w-56 origin-top-left rounded-md border bg-white shadow-lg transition-all duration-150 ${catOpen ? 'opacity-100 scale-100 translate-y-0' : 'pointer-events-none opacity-0 scale-95 -translate-y-1'}`}
+                >
+                  <div className="max-h-80 overflow-auto py-1">
+                    {CATEGORIES.map((c) => (
+                      <Link
+                        key={c.slug}
+                        href={`/category/${c.slug}`}
+                        role="menuitem"
+                        className="block px-3 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setCatOpen(false)}
+                      >
+                        {c.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
               <div className="relative flex-1 min-w-0">
                 <input
                   ref={desktopInputRef}
@@ -235,78 +279,36 @@ export default function Header() {
             </form>
           </div>
 
-          {/* Right-side actions */}
-          <nav className="flex items-center gap-3 sm:gap-4 text-sm relative">
-            {(() => {
-              const activeProducts = pathname === '/' || pathname.startsWith('/products') || pathname.startsWith('/category')
-              return (
-                <Link
-                  href="/#products"
-                  aria-current={activeProducts ? 'page' : undefined}
-                  className={`hidden sm:inline inline-block pb-0.5 ${activeProducts ? 'text-brand font-semibold border-b-2 border-brand' : 'hover:text-brand-dark'}`}
-                >
-                  Products
-                </Link>
-              )
-            })()}
-            <div className="relative hidden sm:block">
-                {(() => {
-                  const activeCategories = pathname.startsWith('/category/')
-                  return (
-                    <button
-                      className={`${activeCategories ? 'text-brand font-semibold border-b-2 border-brand inline-block pb-0.5' : 'hover:text-brand-dark'}`}
-                      onClick={() => setOpen((s) => !s)}
-                      aria-haspopup="menu"
-                      aria-expanded={open}
-                      aria-controls="category-menu"
-                      aria-current={activeCategories ? 'page' : undefined}
-                    >
-                      Categories ▾
-                    </button>
-                  )
-                })()}
-              {open && (
-                <div id="category-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
-      {CATEGORIES.map((c) => (
-                      <Link
-        key={c.slug}
-        href={`/category/${c.slug}`}
-        role="menuitem"
-        aria-current={pathname === `/category/${c.slug}` ? 'page' : undefined}
-        className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c.slug}` ? 'bg-brand/5 text-brand font-medium' : ''}`}
-                        onClick={() => setOpen(false)}
-                      >
-        {c.label}
-                      </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+          {/* Right-side actions: icons only (wishlist, cart, profile) */}
+          <nav className="flex items-center gap-2 sm:gap-3 text-sm relative">
+            {/* Icons only for wishlist and cart */}
             <div className="flex items-center gap-1">
-              {/* Combined profile icon + greeting */}
+              <WishlistButton />
+              <CartButton />
+            </div>
+            {/* Profile icon at the far right */}
+            <div className="flex items-center">
               <div className="relative" ref={userMenuRef}>
                 {user ? (
                   <button
-                    className="rounded-md border px-2 sm:px-3 py-1 hover:bg-gray-50 inline-flex items-center gap-1.5"
+                    className="rounded-md border p-2 hover:bg-gray-50 inline-flex items-center"
                     onClick={() => setUserOpen((v) => !v)}
                     aria-haspopup="menu"
                     aria-expanded={userOpen}
                     aria-controls="user-menu"
+                    aria-label="Account"
                     title="Account"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span className="hidden sm:inline">{`Hi, ${user.name.split(' ')[0]}`}</span>
-                    <span className="hidden sm:inline" aria-hidden>▾</span>
                   </button>
                 ) : (
                   <button
-                    className="rounded-md border px-2 sm:px-3 py-1 hover:bg-gray-50 inline-flex items-center gap-1.5"
+                    className="rounded-md border p-2 hover:bg-gray-50 inline-flex items-center"
                     onClick={() => router.push('/account')}
                     aria-label="Account"
                     title="Account"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span className="hidden sm:inline">Account</span>
                   </button>
                 )}
                 {user && userOpen && (
@@ -327,11 +329,6 @@ export default function Header() {
                   </div>
                 )}
               </div>
-              {/* Tight wishlist + cart spacing */}
-              <div className="flex items-center gap-0.5">
-                <WishlistButton />
-                <CartButton />
-              </div>
             </div>
             {/* Mobile hamburger */}
             <button
@@ -346,7 +343,7 @@ export default function Header() {
         </div>
 
         {/* Mobile search */}
-        <div className="container mx-auto px-4 pb-3 md:hidden">
+  <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 pb-3 md:hidden">
           <form onSubmit={submitSearch} className="flex items-center gap-2">
             <div className="relative flex-1">
               <input
