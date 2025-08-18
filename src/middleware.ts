@@ -6,7 +6,8 @@ export function middleware(req: NextRequest) {
 	if (!pathname.startsWith('/admin')) return NextResponse.next()
 
 	// Allow Supabase-auth mode (role-based) to bypass Basic Auth.
-	const mode = (process.env.ADMIN_AUTH_MODE || '').toLowerCase()
+	// Note: Middleware runs at the Edge; prefer NEXT_PUBLIC_ env as a build-time constant fallback.
+	const mode = (process.env.ADMIN_AUTH_MODE || process.env.NEXT_PUBLIC_ADMIN_AUTH_MODE || '').toLowerCase()
 	if (mode === 'supabase') {
 		return NextResponse.next()
 	}

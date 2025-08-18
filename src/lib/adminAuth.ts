@@ -10,8 +10,12 @@ export async function getServerSupabaseUser() {
   const supabase = createServerClient(url, anon, {
     cookies: {
       get: (name: string) => cookieStore.get(name)?.value,
-      set: () => {},
-      remove: () => {},
+      set: (name: string, value: string, options: any) => {
+        try { cookieStore.set(name, value, options) } catch {}
+      },
+      remove: (name: string, options: any) => {
+        try { cookieStore.set(name, '', { ...options, maxAge: 0 }) } catch {}
+      },
     },
   } as any)
   const { data } = await supabase.auth.getUser()

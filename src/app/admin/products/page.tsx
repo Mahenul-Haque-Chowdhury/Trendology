@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/lib/products'
 import ImageUploader from '@/components/ImageUploader'
 import GalleryUploader from '@/components/GalleryUploader'
+import AdminHelpBanner from '@/components/AdminHelpBanner'
 
 export default function AdminProductsPage() {
   const { products, add, update, remove, categories } = useCatalog()
@@ -12,6 +13,7 @@ export default function AdminProductsPage() {
   const [category, setCategory] = useState<string | 'all'>('all')
   const [onlyActive, setOnlyActive] = useState(false)
   const [count, setCount] = useState<number | null>(null)
+  const [apiError, setApiError] = useState<{ code?: number; message?: string } | null>(null)
   const [mainImage, setMainImage] = useState<string>(editing?.image || '')
   const [gallery, setGallery] = useState<string[]>(editing?.images || [])
 
@@ -21,7 +23,12 @@ export default function AdminProductsPage() {
       try {
         const res = await fetch('/api/admin/products')
         const json = await res.json()
-        if (!ignore && json?.ok) setCount(Array.isArray(json.items) ? json.items.length : null)
+        if (!ignore && json?.ok) {
+          setCount(Array.isArray(json.items) ? json.items.length : null)
+          setApiError(null)
+        } else if (!ignore) {
+          setApiError({ code: res.status, message: json?.error || 'Request failed' })
+        }
       } catch {}
     }
     fetchCount()
@@ -75,6 +82,7 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Product Admin</h1>
+  {apiError && <AdminHelpBanner code={apiError.code} message={apiError.message} />}
 
       <section className="card p-4">
         <h2 className="text-lg font-semibold mb-3">{editing ? 'Edit Product' : 'Add Product'}</h2>

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+// Force Node runtime to ensure cookie-based Supabase SSR works reliably on Vercel
+export const runtime = 'nodejs'
 import { createClient } from '@supabase/supabase-js'
 import { getServerSupabaseUser, isUserAdmin } from '@/lib/adminAuth'
 
