@@ -73,7 +73,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
 
           {/* Actions: desktop shows wishlist + button inline; mobile shows full-width button */}
-          <div className="mt-3 sm:mt-0 flex items-center gap-2 w-full sm:w-auto sm:flex-nowrap">
+          <div className="mt-3 sm:mt-0 flex items-center gap-2 w-full sm:w-auto sm:flex-nowrap min-w-0">
             <button
               className={`hidden sm:inline-flex rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
               aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -91,7 +91,7 @@ export default function ProductCard({ product }: { product: Product }) {
               {/* Heart icon */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
             </button>
-            <button className="btn btn-primary flex-1 sm:flex-none w-full sm:w-auto h-10" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
+            <button className="btn btn-primary flex-1 sm:flex-none w-full sm:w-auto sm:max-w-[180px] sm:shrink-0 h-10 max-w-full" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
               Add to cart
             </button>
           </div>
