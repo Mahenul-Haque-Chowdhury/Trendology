@@ -27,7 +27,7 @@ export default function GalleryUploader({
   const [progress, setProgress] = useState<number[]>([])
   const [errors, setErrors] = useState<string[]>([])
 
-  async function compressImage(file: File): Promise<File> {
+  const compressImage = useCallback(async (file: File): Promise<File> => {
     if (!compress) return file
     if (!file.type.startsWith('image/')) return file
     const img = document.createElement('img')
@@ -49,7 +49,7 @@ export default function GalleryUploader({
     ctx.drawImage(el, 0, 0, width, height)
     const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b as Blob), 'image/webp', quality))
     return new File([blob], file.name.replace(/\.[^.]+$/,'') + '.webp', { type: 'image/webp' })
-  }
+  }, [compress, maxSize, quality])
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const list = Array.from(files).slice(0, maxFiles)
@@ -83,7 +83,7 @@ export default function GalleryUploader({
       }
     }
     if (results.length) onUploaded(results)
-  }, [folder, maxFiles, onUploaded])
+  }, [compressImage, folder, maxFiles, onUploaded])
 
   return (
     <div>
