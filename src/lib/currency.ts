@@ -1,17 +1,19 @@
 export function formatCurrencyBDT(amount: number) {
+  // Always render the Taka symbol on the LEFT, with locale digits/grouping.
+  const n = Number.isFinite(amount) ? amount : 0
   const opts: Intl.NumberFormatOptions = {
-    style: 'currency',
-    currency: 'BDT',
-    currencyDisplay: 'symbol',
+    style: 'decimal',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: true,
   }
-  for (const locale of ['bn-BD', 'en-BD']) {
+  for (const locale of ['bn-BD', 'en-BD', 'en-IN']) {
     try {
-      return new Intl.NumberFormat(locale, opts).format(amount)
+      const num = new Intl.NumberFormat(locale, opts).format(n)
+      return `৳${num}`
     } catch {}
   }
-  const fixed = (Number.isFinite(amount) ? amount : 0).toFixed(2)
+  const fixed = n.toFixed(2)
   return `৳${fixed}`
 }
 
