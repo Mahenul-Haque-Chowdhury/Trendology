@@ -47,14 +47,14 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="ml-1 text-xs text-gray-500">({count || Math.max(12, product.tags.length * 23)})</span>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-        <div className="mt-4 sm:flex sm:items-end sm:justify-between">
-          {/* Price + mobile wishlist on same row */}
-          <div className="flex items-center justify-between sm:block w-full sm:w-auto">
-            <div className="leading-none h-10 sm:h-12 flex flex-col justify-end">
-              <div className="text-lg sm:text-xl font-extrabold tracking-tight whitespace-nowrap">{formatCurrencyBDT(product.price)}</div>
+        {/* Footer row: price + wishlist on the left, Add to cart on the right */}
+        <div className="mt-4 flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="leading-none h-10 sm:h-12 flex flex-col justify-end min-w-0">
+              <div className="text-lg sm:text-xl font-extrabold tracking-tight whitespace-nowrap truncate">{formatCurrencyBDT(product.price)}</div>
             </div>
             <button
-      className={`ml-2 rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'} sm:hidden`}
+              className={`rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
               aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               onClick={async () => {
                 try {
@@ -71,30 +71,9 @@ export default function ProductCard({ product }: { product: Product }) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
             </button>
           </div>
-
-          {/* Actions: desktop shows wishlist + button inline; mobile shows full-width button */}
-          <div className="mt-3 sm:mt-0 flex items-center gap-2 w-full sm:w-auto sm:flex-nowrap min-w-0">
-            <button
-              className={`hidden sm:inline-flex rounded-full p-2 border ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
-              aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-              onClick={async () => {
-                try {
-                  await wishlist.toggle(product)
-                } catch (e: any) {
-                  if (String(e.message) === 'LOGIN_REQUIRED') {
-                    alert('Please sign in to use wishlist.')
-                  }
-                }
-              }}
-              title={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              {/* Heart icon */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z"/></svg>
-            </button>
-            <button className="btn btn-primary flex-1 sm:flex-none w-full sm:w-auto sm:max-w-[180px] sm:shrink-0 h-10 max-w-full" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
-              Add to cart
-            </button>
-          </div>
+          <button className="btn btn-primary btn-sm shrink-0 w-[112px] sm:w-[128px] h-10" onClick={() => add(product)} aria-label={`Add ${product.name} to cart`}>
+            Add to cart
+          </button>
         </div>
       </div>
     </article>
