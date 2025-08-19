@@ -1,44 +1,96 @@
 "use client"
 import Link from 'next/link'
-import CartButton from './CartButton'
-import WishlistButton from './WishlistButton'
+import Image from 'next/image'
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
-import { products } from '@/lib/products'
+import { useSearchParams, useRouter } from 'next/navigation'
+import {
+  Search, User, Menu, X, ChevronDown, Grid3x3
+} from 'lucide-react'
+
+// Dummy/Placeholder components and hooks - replace with your actual implementations
+import type { Product } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useCatalog } from '@/lib/catalog'
 import { CATEGORIES } from '@/lib/categories'
-import Image from 'next/image'
 import { formatCurrencyBDT } from '@/lib/currency'
+import CartButton from './CartButton' // Assuming these are separate components
+import WishlistButton from './WishlistButton'
+
+// Reusable Search Suggestions Component to avoid duplication
+type SearchSuggestionsProps = {
+  suggestions: Product[]
+  activeIndex: number
+  close: () => void
+}
+
+function SearchSuggestions({ suggestions, activeIndex, close }: SearchSuggestionsProps) {
+  return (
+    <div
+      className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg overflow-hidden"
+      role="listbox"
+      // Prevent the input from losing focus when a suggestion is clicked
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      <ul className="max-h-80 overflow-auto divide-y">
+        {suggestions.map((p, idx) => (
+          <li key={p.id} role="option" aria-selected={idx === activeIndex}>
+            <Link
+              href={`/products/${p.id}`}
+              className={`flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 outline-none ${idx === activeIndex ? 'bg-gray-50' : ''}`}
+              onClick={close}
+            >
+              {p.image ? (
+                <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden bg-gray-100">
+                  <Image src={p.image} alt={p.name} fill className="object-cover" sizes="48px" />
+                </div>
+              ) : (
+                <div className="w-12 h-12 shrink-0 rounded bg-gray-100" />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium truncate">{p.name}</div>
+                <div className="text-xs text-gray-500 truncate">{p.category} • {formatCurrencyBDT(p.price)}</div>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 
 export default function Header() {
-  const [open, setOpen] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [userOpen, setUserOpen] = useState(false)
-  const [catOpen, setCatOpen] = useState(false)
+  // UI State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
+  const [showSignOutModal, setShowSignOutModal] = useState(false)
+  
+  // Data & Hooks
   const { products: items } = useCatalog()
-  const categories = useMemo(() => CATEGORIES.map((c) => c.slug), [])
   const { user, logout } = useAuth()
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const [q, setQ] = useState('')
+  const searchParams = useSearchParams()
+
+  // Search State
+  const [query, setQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
-  const pathname = usePathname()
+
+  // Refs for managing focus and clicks
   const userMenuRef = useRef<HTMLDivElement | null>(null)
   const catMenuRef = useRef<HTMLDivElement | null>(null)
-  const [showSignOutModal, setShowSignOutModal] = useState(false)
   const modalRef = useRef<HTMLDivElement | null>(null)
-  const cancelBtnRef = useRef<HTMLButtonElement | null>(null)
-  const confirmBtnRef = useRef<HTMLButtonElement | null>(null)
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null)
   const desktopInputRef = useRef<HTMLInputElement | null>(null)
   const mobileInputRef = useRef<HTMLInputElement | null>(null)
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
 
+  // Memoized search suggestions
   const suggestions = useMemo(() => {
-    const term = q.trim().toLowerCase()
-    if (term.length < 2) return [] as typeof items
+    const term = query.trim().toLowerCase()
+    if (term.length < 2) return []
     return items
       .filter((p) =>
         (p.name && p.name.toLowerCase().includes(term)) ||
@@ -47,471 +99,317 @@ export default function Header() {
         (p.description && p.description.toLowerCase().includes(term))
       )
       .slice(0, 8)
-  }, [q, items])
+  }, [query, items])
 
-  const closeSignOutModal = useCallback(() => {
-    setShowSignOutModal(false)
-    // restore focus to the previously focused element
-    const prev = previouslyFocusedRef.current
-    if (prev) setTimeout(() => prev.focus(), 0)
-  }, [])
+  // Handlers
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const params = new URLSearchParams(Array.from(searchParams.entries()))
+    if (query) params.set('q', query)
+    else params.delete('q')
+    router.push(`/?${params.toString()}#products`)
+    setShowSuggestions(false)
+    if (mobileSearchOpen) setMobileSearchOpen(false)
+  }
 
-  const confirmSignOut = useCallback(async () => {
+  const handleSignOut = useCallback(async () => {
     setShowSignOutModal(false)
     await logout()
   }, [logout])
 
-  // Focus management and keyboard handling for modal
+  const closeSignOutModal = useCallback(() => {
+    setShowSignOutModal(false)
+    previouslyFocusedRef.current?.focus()
+  }, [])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!suggestions.length) return
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setShowSuggestions(true)
+        setActiveIndex((prev) => (prev + 1) % suggestions.length)
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setShowSuggestions(true)
+        setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length)
+        break
+      case 'Enter':
+        if (activeIndex > -1 && suggestions[activeIndex]) {
+          e.preventDefault()
+          router.push(`/products/${suggestions[activeIndex].id}`)
+          setShowSuggestions(false)
+          if (mobileSearchOpen) setMobileSearchOpen(false)
+        } else {
+          handleSearchSubmit()
+        }
+        break
+      case 'Escape':
+        setShowSuggestions(false)
+        break
+    }
+  }
+
+  // Effect: Initialize search query from URL
+  useEffect(() => {
+    setQuery(searchParams.get('q') ?? '')
+  }, [searchParams])
+
+  // Effect: Handle outside clicks for dropdown menus
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuOpen && userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+      if (categoryMenuOpen && catMenuRef.current && !catMenuRef.current.contains(e.target as Node)) {
+        setCategoryMenuOpen(false)
+      }
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setUserMenuOpen(false)
+        setCategoryMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [userMenuOpen, categoryMenuOpen])
+
+  // Effect: Focus management for sign-out modal
   useEffect(() => {
     if (!showSignOutModal) return
-    // Save previously focused element
-    // Prevent body scroll while modal open
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    // Focus the cancel button initially
-    setTimeout(() => cancelBtnRef.current?.focus(), 0)
 
-    function onKeyDown(e: KeyboardEvent) {
-      if (!modalRef.current) return
-      if (e.key === 'Escape') {
-        closeSignOutModal()
-        return
-      }
-      if (e.key === 'Enter') {
-        // Confirm with Enter
-        e.preventDefault()
-        confirmSignOut()
-        return
-      }
-      if (e.key === 'Tab') {
-        // Trap focus within modal
-        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const list = Array.from(focusables).filter((el) => !el.hasAttribute('disabled'))
-        if (list.length === 0) return
-        const first = list[0]
-        const last = list[list.length - 1]
-        const active = document.activeElement as HTMLElement
-        if (!e.shiftKey && active === last) {
+    previouslyFocusedRef.current = document.activeElement as HTMLElement
+    const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    if (!focusableElements) return
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    firstElement?.focus()
+
+    const handleTabKeyPress = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus()
           e.preventDefault()
-          first.focus()
-        } else if (e.shiftKey && active === first) {
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus()
           e.preventDefault()
-          last.focus()
         }
       }
     }
-    document.addEventListener('keydown', onKeyDown)
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSignOutModal()
+    }
+
+    document.addEventListener('keydown', handleTabKeyPress)
+    document.addEventListener('keydown', handleEscape)
     return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = prevOverflow
+      document.removeEventListener('keydown', handleTabKeyPress)
+      document.removeEventListener('keydown', handleEscape)
     }
-  }, [showSignOutModal, closeSignOutModal, confirmSignOut])
+  }, [showSignOutModal, closeSignOutModal])
 
-  // Initialize from URL once
+  // Effect: Focus input when mobile search opens
   useEffect(() => {
-    const initial = searchParams.get('q') ?? ''
-    setQ(initial)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Close mobile drawer and restore focus to its toggle before hiding, to avoid aria-hidden focus issues
-  const closeMobileMenu = useCallback(() => {
-    mobileMenuButtonRef.current?.focus()
-    setMobileOpen(false)
-  }, [])
-
-  function submitSearch(e?: React.FormEvent) {
-    if (e) e.preventDefault()
-    const params = new URLSearchParams(Array.from(searchParams.entries()))
-    if (q) params.set('q', q)
-    else params.delete('q')
-    const next = `/?${params.toString()}#products`
-    router.push(next)
-  setShowSuggestions(false)
-  }
-
-  // Close user menu on outside click or Escape
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      // user menu
-      if (userOpen) {
-        const el = userMenuRef.current
-        if (el && e.target instanceof Node && !el.contains(e.target)) setUserOpen(false)
-      }
-      // categories menu
-      if (catOpen) {
-        const el2 = catMenuRef.current
-        if (el2 && e.target instanceof Node && !el2.contains(e.target)) setCatOpen(false)
-      }
+    if (mobileSearchOpen) {
+      setTimeout(() => mobileInputRef.current?.focus(), 100)
     }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setUserOpen(false); setCatOpen(false) }
-    }
-    document.addEventListener('mousedown', onDocClick)
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDocClick); document.removeEventListener('keydown', onKey) }
-  }, [userOpen, catOpen])
-
+  }, [mobileSearchOpen])
+  
   return (
     <header className="sticky top-0 z-40">
       {/* Promo bar */}
-      <div className="bg-accent text-gray-900 text-xs sm:text-sm">
-        <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-2 flex items-center justify-center gap-2">
-          <span className="font-medium">Free delivery on orders over ৳50</span>
-          <span className="underline underline-offset-2 opacity-70 cursor-not-allowed" aria-disabled="true">Join now</span>
+      <div className="bg-amber-300 text-gray-900 text-xs sm:text-sm">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-2 text-center">
+          <span className="font-medium">Free delivery on orders over ৳5000!</span>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
-  <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 h-16 sm:h-20 flex items-center gap-4">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <Link href="/" className="shrink-0 font-extrabold text-2xl sm:text-3xl text-brand tracking-tight focus-visible:ring-2 focus-visible:ring-brand">
+      <div className="border-b bg-white/80 backdrop-blur-md">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu Toggle */}
+            <button
+              ref={mobileMenuButtonRef}
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden btn-icon"
+              aria-label="Open menu"
+            >
+              <Menu size={22} />
+            </button>
+            <Link href="/" className="shrink-0 font-extrabold text-2xl sm:text-3xl text-brand tracking-tight focus-visible:ring-2 focus-visible:ring-brand rounded-sm">
               AamarDokan
             </Link>
-            {/* Search */}
-            <form onSubmit={submitSearch} className="hidden md:flex items-center gap-2 flex-1 min-w-0">
-              {/* Categories dropdown (left of search) */}
+          </div>
+
+          {/* Desktop Search */}
+          <div className="hidden md:flex flex-1 max-w-2xl">
+            <form onSubmit={handleSearchSubmit} className="flex items-center w-full">
               <div className="relative" ref={catMenuRef}>
                 <button
                   type="button"
-                  onClick={() => setCatOpen((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm hover:bg-gray-50 focus:border-brand focus:ring-2 focus:ring-brand"
-                  aria-haspopup="menu"
-                  aria-expanded={catOpen}
-                  aria-controls="category-menu"
+                  onClick={() => setCategoryMenuOpen((v) => !v)}
+                  className="inline-flex items-center gap-2 h-11 rounded-l-md border border-gray-300 bg-gray-50 px-4 shadow-sm hover:bg-gray-100 focus:border-brand focus:ring-2 focus:ring-brand z-10"
+                  aria-haspopup="menu" aria-expanded={categoryMenuOpen}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                  <span className="hidden lg:inline">Categories</span>
-                  <svg className={`transition-transform ${catOpen ? 'rotate-180' : ''}`} width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+                  <Grid3x3 size={18} />
+                  <span className="hidden lg:inline text-sm font-medium">Categories</span>
+                  <ChevronDown size={16} className={`transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
-                {/* Animated dropdown */}
                 <div
-                  id="category-menu"
                   role="menu"
-                  className={`absolute z-50 mt-2 w-56 origin-top-left rounded-md border bg-white shadow-lg transition-all duration-150 ${catOpen ? 'opacity-100 scale-100 translate-y-0' : 'pointer-events-none opacity-0 scale-95 -translate-y-1'}`}
+                  className={`absolute z-20 mt-2 w-56 origin-top-left rounded-md border bg-white shadow-xl transition-all duration-150 ${categoryMenuOpen ? 'opacity-100 scale-100' : 'pointer-events-none opacity-0 scale-95'}`}
                 >
                   <div className="max-h-80 overflow-auto py-1">
                     {CATEGORIES.map((c) => (
-                      <Link
-                        key={c.slug}
-                        href={`/category/${c.slug}`}
-                        role="menuitem"
-                        className="block px-3 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setCatOpen(false)}
-                      >
-                        {c.label}
-                      </Link>
+                      <Link key={c.slug} href={`/category/${c.slug}`} role="menuitem"
+                        className="block px-4 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setCategoryMenuOpen(false)}
+                      >{c.label}</Link>
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="relative flex-1 min-w-0">
+              <div className="relative flex-1">
                 <input
                   ref={desktopInputRef}
-                  value={q}
-                  onChange={(e) => { setQ(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
                   onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
-                  onKeyDown={(e) => {
-                    if (!suggestions.length) return
-                    if (e.key === 'ArrowDown') {
-                      e.preventDefault()
-                      setShowSuggestions(true)
-                      setActiveIndex((i) => (i + 1) % suggestions.length)
-                    } else if (e.key === 'ArrowUp') {
-                      e.preventDefault()
-                      setShowSuggestions(true)
-                      setActiveIndex((i) => (i - 1 + suggestions.length) % suggestions.length)
-                    } else if (e.key === 'Enter') {
-                      if (activeIndex >= 0 && suggestions[activeIndex]) {
-                        e.preventDefault()
-                        router.push(`/products/${suggestions[activeIndex].id}`)
-                        setShowSuggestions(false)
-                      }
-                    } else if (e.key === 'Escape') {
-                      setShowSuggestions(false)
-                    }
-                  }}
-                  aria-label="Search products"
-                  placeholder="Search for products, categories, tags"
-                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search products..."
+                  className="w-full h-11 border-y border-r border-gray-300 bg-white px-4 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand -ml-px"
                 />
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
-                  {/* Search icon */}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={20} />
                 </span>
                 {showSuggestions && suggestions.length > 0 && (
-                  <div
-                    className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg overflow-hidden"
-                    role="listbox"
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    <ul className="max-h-80 overflow-auto divide-y">
-                      {suggestions.map((p, idx) => (
-                        <li key={p.id} role="option" aria-selected={idx === activeIndex}>
-                          <Link
-                            href={`/products/${p.id}`}
-                            className={`flex items-center gap-3 px-3 py-2 hover:bg-gray-50 ${idx === activeIndex ? 'bg-gray-50' : ''}`}
-                            onClick={() => setShowSuggestions(false)}
-                          >
-                            {/* Optional thumbnail; fallback to text-only if no image */}
-                            {p.image ? (
-                              <div className="relative w-10 h-10 shrink-0 rounded overflow-hidden bg-gray-100">
-                                <Image src={p.image} alt={p.name} fill className="object-cover" sizes="40px" />
-                              </div>
-                            ) : (
-                              <div className="w-10 h-10 shrink-0 rounded bg-gray-100" />
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <div className="text-sm font-medium truncate">{p.name}</div>
-                              <div className="text-xs text-gray-500 truncate">{p.category} • {formatCurrencyBDT(p.price)}</div>
-                            </div>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <SearchSuggestions suggestions={suggestions} activeIndex={activeIndex} close={() => setShowSuggestions(false)} />
                 )}
               </div>
-              <button type="submit" className="btn btn-primary shrink-0">Search</button>
+              <button type="submit" className="btn btn-primary rounded-l-none h-11 shrink-0">Search</button>
             </form>
           </div>
 
-          {/* Right-side actions: icons only (wishlist, cart, profile) */}
-          <nav className="flex items-center gap-2 sm:gap-3 text-sm relative">
-            {/* Icons only for wishlist and cart */}
-            <div className="flex items-center gap-1">
-              <WishlistButton />
-              <CartButton />
-            </div>
-            {/* Profile icon at the far right */}
-            <div className="flex items-center">
-              <div className="relative" ref={userMenuRef}>
-                {user ? (
-                  <button
-                    className="rounded-md border p-2 hover:bg-gray-50 inline-flex items-center"
-                    onClick={() => setUserOpen((v) => !v)}
-                    aria-haspopup="menu"
-                    aria-expanded={userOpen}
-                    aria-controls="user-menu"
-                    aria-label="Account"
-                    title="Account"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  </button>
-                ) : (
-                  <button
-                    className="rounded-md border p-2 hover:bg-gray-50 inline-flex items-center"
-                    onClick={() => router.push('/account')}
-                    aria-label="Account"
-                    title="Account"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  </button>
-                )}
-                {user && userOpen && (
-                  <div id="user-menu" role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-md p-2 z-50">
-                    <Link href="/account/profile" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
-                      Manage your Profile
-                    </Link>
-                    <Link href="/account/orders" role="menuitem" className="block px-2 py-1 rounded hover:bg-gray-50" onClick={() => setUserOpen(false)}>
-                      My Orders
-                    </Link>
-                    <button
-                      role="menuitem"
-                      className="block w-full text-left px-2 py-1 rounded hover:bg-gray-50 text-red-600"
-                      onClick={() => { setUserOpen(false); setShowSignOutModal(true) }}
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Mobile hamburger */}
+          {/* Right-side actions */}
+          <nav className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile Search Toggle */}
             <button
-              className="sm:hidden ml-1 rounded-md border px-2 py-1 hover:bg-gray-50"
-              aria-label="Open menu"
-              onClick={() => setMobileOpen(true)}
-              ref={mobileMenuButtonRef}
+              onClick={() => setMobileSearchOpen(true)}
+              className="md:hidden btn-icon"
+              aria-label="Search"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              <Search size={22} />
             </button>
-          </nav>
-        </div>
-
-        {/* Mobile search */}
-  <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 pb-3 md:hidden">
-          <form onSubmit={submitSearch} className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <input
-                ref={mobileInputRef}
-                value={q}
-                onChange={(e) => { setQ(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
-                onKeyDown={(e) => {
-                  if (!suggestions.length) return
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault()
-                    setShowSuggestions(true)
-                    setActiveIndex((i) => (i + 1) % suggestions.length)
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault()
-                    setShowSuggestions(true)
-                    setActiveIndex((i) => (i - 1 + suggestions.length) % suggestions.length)
-                  } else if (e.key === 'Enter') {
-                    if (activeIndex >= 0 && suggestions[activeIndex]) {
-                      e.preventDefault()
-                      router.push(`/products/${suggestions[activeIndex].id}`)
-                      setShowSuggestions(false)
-                    }
-                  } else if (e.key === 'Escape') {
-                    setShowSuggestions(false)
-                  }
-                }}
-                aria-label="Search products"
-                placeholder="Search products"
-                className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
-              />
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </span>
-              {showSuggestions && suggestions.length > 0 && (
-                <div
-                  className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg overflow-hidden"
-                  role="listbox"
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  <ul className="max-h-80 overflow-auto divide-y">
-                    {suggestions.map((p, idx) => (
-                      <li key={p.id} role="option" aria-selected={idx === activeIndex}>
-                        <Link
-                          href={`/products/${p.id}`}
-                          className={`flex items-center gap-3 px-3 py-2 hover:bg-gray-50 ${idx === activeIndex ? 'bg-gray-50' : ''}`}
-                          onClick={() => setShowSuggestions(false)}
-                        >
-                          {p.image ? (
-                            <div className="relative w-10 h-10 shrink-0 rounded overflow-hidden bg-gray-100">
-                              <Image src={p.image} alt={p.name} fill className="object-cover" sizes="40px" />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 shrink-0 rounded bg-gray-100" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium truncate">{p.name}</div>
-                            <div className="text-xs text-gray-500 truncate">{p.category} • {formatCurrencyBDT(p.price)}</div>
-                          </div>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+            <WishlistButton />
+            <CartButton />
+            <div className="relative" ref={userMenuRef}>
+              {user ? (
+                <button className="btn-icon" onClick={() => setUserMenuOpen((v) => !v)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label="Account">
+                  <User size={22} />
+                </button>
+              ) : (
+                <Link href="/account" className="btn-icon" aria-label="Account">
+                  <User size={22} />
+                </Link>
+              )}
+              {user && userMenuOpen && (
+                <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-xl p-2 z-20">
+                  <p className="px-2 py-1 text-sm text-gray-500">Hi, {user.name.split(' ')[0]}</p>
+                  <hr className="my-1"/>
+                  <Link href="/account/profile" role="menuitem" className="menu-item" onClick={() => setUserMenuOpen(false)}>My Profile</Link>
+                  <Link href="/account/orders" role="menuitem" className="menu-item" onClick={() => setUserMenuOpen(false)}>My Orders</Link>
+                  <button role="menuitem" className="menu-item text-red-600 w-full text-left"
+                    onClick={() => { setUserMenuOpen(false); setShowSignOutModal(true) }}
+                  >Sign Out</button>
                 </div>
               )}
             </div>
-            <button type="submit" className="btn btn-primary">Search</button>
-          </form>
+          </nav>
         </div>
       </div>
 
       {/* Mobile drawer */}
-    <div className={`fixed inset-0 z-50 sm:hidden ${mobileOpen ? '' : 'pointer-events-none'}`} aria-hidden={!mobileOpen}>
-        <div
-          className={`absolute inset-0 bg-black/40 transition-opacity ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
-      onClick={closeMobileMenu}
-        />
-        <aside
-          className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
-          aria-label="Mobile navigation"
-        >
+      <div className={`fixed inset-0 z-50 md:hidden ${mobileMenuOpen ? '' : 'pointer-events-none'}`} aria-hidden={!mobileMenuOpen}>
+        <div className={`absolute inset-0 bg-black/50 transition-opacity ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMobileMenuOpen(false)}/>
+        <aside className={`absolute left-0 top-0 h-full w-80 max-w-[calc(100vw-3rem)] bg-white shadow-xl transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <header className="p-4 border-b flex items-center justify-between">
-            <span className="font-semibold">Menu</span>
-      <button className="text-gray-600 hover:text-black" aria-label="Close menu" onClick={closeMobileMenu}>✕</button>
+            <span className="font-semibold text-lg">Menu</span>
+            <button className="btn-icon -mr-2" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)}><X size={24}/></button>
           </header>
-          <nav className="p-4 space-y-2 text-sm">
-            {user && (
+          <nav className="p-4 space-y-2">
+            {user ? (
               <>
-                <div className="px-2 py-2 flex items-center justify-between">
-                  <span className="text-gray-600">Hi, {user.name.split(' ')[0]}</span>
-                  <button
-                    className="text-red-600 font-medium hover:underline"
-          onClick={() => { closeMobileMenu(); setShowSignOutModal(true) }}
-                  >
-                    Sign out
-                  </button>
-                </div>
-        <Link href="/account/profile" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>Manage your Profile</Link>
-  <Link href="/account/orders" className="block px-2 py-2 rounded hover:bg-gray-50" onClick={closeMobileMenu}>My Orders</Link>
+                <Link href="/account/profile" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>My Profile</Link>
+                <Link href="/account/orders" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>My Orders</Link>
               </>
+            ) : (
+              <Link href="/account" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Sign In / Register</Link>
             )}
-  {(() => {
-    const activeProducts = pathname === '/' || pathname.startsWith('/products') || pathname.startsWith('/category')
-    return (
-      <Link
-        href="/#products"
-        aria-current={activeProducts ? 'page' : undefined}
-        className={`block px-2 py-2 rounded hover:bg-gray-50 ${activeProducts ? 'bg-gray-100 text-brand font-medium' : ''}`}
-        onClick={closeMobileMenu}
-      >
-        Products
-      </Link>
-    )
-  })()}
-            <details className="px-2 py-2">
-              <summary className="cursor-pointer select-none">Categories</summary>
-              <div className="mt-2 ml-3 space-y-1 max-h-60 overflow-auto pr-2">
-        {CATEGORIES.map((c) => (
-          <Link
-      key={c.slug}
-      href={`/category/${c.slug}`}
-      aria-current={pathname === `/category/${c.slug}` ? 'page' : undefined}
-      className={`block px-2 py-1 rounded hover:bg-gray-50 ${pathname === `/category/${c.slug}` ? 'bg-gray-100 text-brand font-medium' : ''}`}
-            onClick={closeMobileMenu}
-          >
-          {c.label}
-                  </Link>
+             <hr/>
+            <details className="group">
+              <summary className="mobile-menu-item flex justify-between cursor-pointer select-none">Categories <ChevronDown size={20} className="group-open:rotate-180 transition-transform"/></summary>
+              <div className="mt-2 ml-4 space-y-1 border-l pl-4">
+                {CATEGORIES.map((c) => (
+                  <Link key={c.slug} href={`/category/${c.slug}`} className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>{c.label}</Link>
                 ))}
               </div>
             </details>
-            {!user && (
-        <Link
-          href="/account"
-          aria-current={pathname.startsWith('/account') ? 'page' : undefined}
-          className={`block px-2 py-2 rounded hover:bg-gray-50 ${pathname.startsWith('/account') ? 'bg-gray-100 text-brand font-medium' : ''}`}
-          onClick={closeMobileMenu}
-        >
-          Account
-        </Link>
-            )}
+            {user && <button onClick={() => { setMobileMenuOpen(false); setShowSignOutModal(true) }} className="mobile-menu-item text-red-600 w-full text-left mt-6">Sign Out</button>}
           </nav>
         </aside>
       </div>
+      
+      {/* Mobile Search Overlay */}
+      {mobileSearchOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setMobileSearchOpen(false)}>
+          <div className="absolute top-0 left-0 right-0 p-4 bg-white border-b" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  ref={mobileInputRef}
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search products..."
+                  className="w-full h-11 rounded-md border border-gray-300 bg-white px-4 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
+                />
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Search size={20} /></span>
+                {showSuggestions && suggestions.length > 0 && (
+                  <SearchSuggestions suggestions={suggestions} activeIndex={activeIndex} close={() => setMobileSearchOpen(false)} />
+                )}
+              </div>
+              <button type="button" className="btn-icon" aria-label="Close search" onClick={() => setMobileSearchOpen(false)}><X size={24}/></button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Sign out confirmation modal */}
       {showSignOutModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center" aria-hidden={!showSignOutModal}>
-          <div className="absolute inset-0 bg-black/40" onClick={closeSignOutModal} />
-          <div
-            ref={modalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="signout-title"
-            aria-describedby="signout-desc"
-            className="relative bg-white rounded-lg shadow-xl w-[90vw] max-w-sm mx-auto p-5"
-          >
-            <h2 id="signout-title" className="text-lg font-semibold mb-1">Sign out</h2>
-            <p id="signout-desc" className="text-sm text-gray-600 mb-4">Are you sure you want to sign out?</p>
-            <div className="flex items-center justify-end gap-2">
-              <button ref={cancelBtnRef} className="btn btn-sm" onClick={closeSignOutModal}>Cancel</button>
-              <button
-                ref={confirmBtnRef}
-                className="btn btn-sm btn-primary bg-red-600 hover:bg-red-700 border-red-600"
-                onClick={confirmSignOut}
-              >
-                Sign out
-              </button>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="signout-title">
+          <div className="fixed inset-0 bg-black/50" onClick={closeSignOutModal} />
+          <div ref={modalRef} className="relative bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h2 id="signout-title" className="text-lg font-semibold mb-2">Sign Out</h2>
+            <p className="text-sm text-gray-600 mb-6">Are you sure you want to sign out?</p>
+            <div className="flex justify-end gap-3">
+              <button className="btn" onClick={closeSignOutModal}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleSignOut}>Sign Out</button>
             </div>
           </div>
         </div>
@@ -519,4 +417,3 @@ export default function Header() {
     </header>
   )
 }
-

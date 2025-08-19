@@ -1,8 +1,9 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
-import Link from 'next/link'
+import { User, Mail, Phone, Home, CheckCircle2, AlertTriangle, Edit, X } from 'lucide-react'
 
 type Profile = {
   id: string
@@ -14,200 +15,255 @@ type Profile = {
   country?: string | null
 }
 
+// Skeleton component for the initial loading state
+const ProfileSkeleton = () => (
+  <div className="card p-6 sm:p-8 space-y-6 animate-pulse">
+    <div className="flex items-center justify-between">
+      <div className="h-8 w-40 bg-gray-200 rounded"></div>
+      <div className="h-10 w-24 bg-gray-200 rounded-md"></div>
+    </div>
+    <div className="space-y-4 pt-4 border-t border-gray-200">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+          <div className="h-5 w-20 bg-gray-200 rounded mb-2"></div>
+          <div className="h-10 w-full bg-gray-200 rounded-md"></div>
+        </div>
+        <div>
+          <div className="h-5 w-20 bg-gray-200 rounded mb-2"></div>
+          <div className="h-10 w-full bg-gray-200 rounded-md"></div>
+        </div>
+        <div>
+          <div className="h-5 w-20 bg-gray-200 rounded mb-2"></div>
+          <div className="h-10 w-full bg-gray-200 rounded-md"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
+// Component for when the user is not logged in
+const LoggedOutView = () => (
+  <div className="max-w-md mx-auto card p-8 text-center space-y-4">
+    <h1 className="text-2xl font-bold">My Profile</h1>
+    <p className="text-gray-600">Please sign in to view and manage your profile.</p>
+    <div className="flex gap-3 justify-center pt-2">
+      <Link href="/account/login" className="btn btn-primary">Sign In</Link>
+      <Link href="/account/register" className="btn">Create Account</Link>
+    </div>
+  </div>
+)
+
 export default function ProfilePage() {
   const { user, updateDisplayName } = useAuth()
   const supa = isSupabaseConfigured() ? getSupabaseClient() : null
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [initialProfile, setInitialProfile] = useState<Profile | null>(null)
+
+  // UI State
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [editing, setEditing] = useState(false)
+  
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
     const u = user
-    async function load() {
+    async function loadProfile() {
+      setLoading(true)
       setErr(null)
+      
       if (!supa) {
-        // demo mode: use basic info from user only
-        setProfile({ id: u.id, email: u.email, name: u.name })
+        // Demo mode: use basic info from user only
+        const demoProfile = { id: u.id, email: u.email, name: u.name, phone: '', address: '', city: '', country: '' }
+        setProfile(demoProfile)
+        setInitialProfile(demoProfile)
+        setLoading(false)
         return
       }
-      const client = supa!
-      const tableMissing = (m?: string | null) =>
-        !!m && (m.includes("schema cache") || m.toLowerCase().includes("not find the table") || m.toLowerCase().includes("relation") && m.toLowerCase().includes("does not exist"))
-      async function loadFrom(table: string) {
-        return await client
-          .from(table)
-          .select('id,email,name,phone,address,city,country')
-          .eq('id', u.id)
-          .maybeSingle()
-      }
-      let data: any = null; let error: any = null
-      // try user_details first, then profiles
-      let res = await loadFrom('user_details')
-      if (res.error || !res.data) {
-        res = await loadFrom('profiles')
-      }
-      data = res.data; error = res.error
-      if (error && !data) {
-        if (tableMissing(error.message)) {
-          // Soft fallback: DB not set up yet. Use session data and inform the user.
-          setMsg('Database tables not found. Run the Supabase setup SQL to enable profile storage. Using session data for now.')
-          setProfile({ id: u.id, email: u.email, name: u.name, phone: '', address: '', city: '', country: '' })
-          return
+      
+      // Database fetch logic
+      const client = supa
+      try {
+        const loadFrom = (table: string) => client.from(table).select('id,email,name,phone,address,city,country').eq('id', u.id).maybeSingle()
+        
+        let { data, error } = await loadFrom('user_details')
+        if (error || !data) {
+          ({ data, error } = await loadFrom('profiles'))
         }
-        setErr(error.message)
-        return
+
+        if (error && !data) {
+          const tableMissing = error.message.toLowerCase().includes("relation") && error.message.toLowerCase().includes("does not exist")
+          if (tableMissing) {
+            setMsg('Database tables not found. Run the Supabase setup SQL to enable profile storage. Using session data for now.')
+            const fallbackProfile = { id: u.id, email: u.email, name: u.name, phone: '', address: '', city: '', country: '' }
+            setProfile(fallbackProfile)
+            setInitialProfile(fallbackProfile)
+            return
+          }
+          throw error
+        }
+
+        // Merge DB data with auth session defaults and any pending local data
+        let pendingLocal: any = null
+        try {
+          const raw = localStorage.getItem('storefront.user_details.pending')
+          pendingLocal = raw ? JSON.parse(raw) : null
+        } catch {}
+
+        const merged = {
+          id: u.id,
+          email: data?.email ?? u.email,
+          name: data?.name ?? u.name,
+          phone: data?.phone ?? pendingLocal?.phone ?? (u as any)?.user_metadata?.phone ?? (u as any)?.phone ?? '',
+          address: data?.address ?? '',
+          city: data?.city ?? '',
+          country: data?.country ?? '',
+        }
+        setProfile(merged)
+        setInitialProfile(merged) // Save initial state for cancellation
+
+        // Cache for checkout fallback and clear pending cache
+        localStorage.setItem(`storefront.user_details.${u.id}`, JSON.stringify(merged))
+        localStorage.removeItem('storefront.user_details.pending')
+      } catch (e: any) {
+        setErr(e.message)
+      } finally {
+        setLoading(false)
       }
-  // Merge with auth session defaults so form is prefilled after signup
-  let pendingLocal: any = null
-  try { if (typeof window !== 'undefined') { const raw = localStorage.getItem('storefront.user_details.pending'); pendingLocal = raw ? JSON.parse(raw) : null } } catch {}
-  const merged = {
-        id: u.id,
-        email: data?.email ?? u.email,
-        name: data?.name ?? u.name,
-        phone: data?.phone ?? pendingLocal?.phone ?? (u as any)?.user_metadata?.phone ?? (u as any)?.phone ?? '',
-        address: data?.address ?? '',
-        city: data?.city ?? '',
-        country: data?.country ?? '',
-  }
-  setProfile(merged)
-  // cache for checkout fallback
-  try {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`storefront.user_details.${u.id}`, JSON.stringify(merged))
-      // Clear pending cache after first read
-      localStorage.removeItem('storefront.user_details.pending')
     }
-  } catch {}
-    }
-    load()
+    loadProfile()
   }, [user, supa])
 
-  if (!user) {
-    return (
-      <div className="max-w-md mx-auto card p-6 text-center space-y-3">
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <p>Please sign in to manage your profile.</p>
-        <div className="flex gap-2 justify-center">
-          <Link href="/account/login" className="btn btn-primary">Sign In</Link>
-          <Link href="/account/register" className="btn">Create Account</Link>
-        </div>
-      </div>
-    )
+  const handleCancel = () => {
+    setProfile(initialProfile) // Revert changes
+    setEditing(false)
+    setMsg(null)
+    setErr(null)
   }
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!user) return
+
     setMsg(null); setErr(null); setBusy(true)
     const fd = new FormData(e.currentTarget)
+    
+    const payload = {
+      id: user.id,
+      email: String(fd.get('email') || ''),
+      name: String(fd.get('name') || ''),
+      phone: String(fd.get('phone') || ''),
+    }
+
     try {
       if (!supa) {
         setMsg('Profile saved locally for demo (won’t persist).')
-        setBusy(false)
+        setEditing(false)
         return
       }
-  // Only update basic info here; addresses are managed in Addressbook
-  const payload = {
-        id: user!.id,
-        email: String(fd.get('email') || ''),
-        name: String(fd.get('name') || ''),
-        phone: String(fd.get('phone') || ''),
-      }
-      // Prefer user_details; if missing, fallback to profiles
-      const client2 = supa!
-      async function saveTo(table: string) {
-        return await client2.from(table).upsert(payload, { onConflict: 'id' })
-      }
+
+      const saveTo = (table: string) => supa.from(table).upsert(payload, { onConflict: 'id' })
       let { error } = await saveTo('user_details')
-      if (error) {
-        const alt = await saveTo('profiles')
-        error = alt.error
+      if (error) { // Fallback to 'profiles' table
+        ({ error } = await saveTo('profiles'))
       }
-      if (error) {
-        if (error.message && (error.message.includes('schema cache') || error.message.toLowerCase().includes('not find the table'))) {
-          setMsg('Profile saved locally. To persist, run the Supabase SQL in SUPABASE_SQL_FOR_YOUR_TABLES.sql (creates profiles & user_details).')
-          setProfile(payload)
-          return
-        }
-        throw error
-      }
-  setMsg('Profile updated')
-  // Preserve any existing address fields locally while updating core fields
-  setProfile((prev) => ({ ...(prev || { id: user!.id, email: payload.email }), ...payload }))
-  // reflect change in header immediately
-  if (payload.name) updateDisplayName(payload.name)
-  // update local cache for checkout prefill
-  try {
-    if (typeof window !== 'undefined') {
-      const merged = { ...(profile || {}), ...payload }
-      localStorage.setItem(`storefront.user_details.${user!.id}`, JSON.stringify(merged))
-    }
-  } catch {}
+      
+      if (error) throw error
+
+      setMsg('Your profile has been updated successfully.')
+      const updatedProfile = { ...(profile as Profile), ...payload }
+      setProfile(updatedProfile)
+      setInitialProfile(updatedProfile)
+      if (payload.name) updateDisplayName(payload.name)
+
+      // Update local cache for checkout prefill
+      localStorage.setItem(`storefront.user_details.${user.id}`, JSON.stringify(updatedProfile))
+      setEditing(false)
+
     } catch (e: any) {
-      setErr(e?.message || 'Failed to save profile')
-    } finally { setBusy(false) }
+      setErr(e?.message || 'Failed to save profile. Please try again.')
+    } finally {
+      setBusy(false)
+    }
   }
+  
+  if (loading) return <ProfileSkeleton />
+  if (!user) return <LoggedOutView />
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-4 sm:gap-6">
-      <div className="card p-6 space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-xl sm:text-2xl font-bold">My Profile</h1>
-          <button className="btn" type="button" onClick={() => setEditing((v) => !v)}>{editing ? 'Close' : 'Edit Profile'}</button>
-        </div>
-      {msg && <p className="text-sm text-green-700">{msg}</p>}
-      {err && <p className="text-sm text-red-600">{err}</p>}
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Full Name</label>
-            <input name="name" defaultValue={profile?.name || user?.name || ''} className="border rounded-md px-3 py-2 w-full" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Email</label>
-            <input name="email" type="email" defaultValue={profile?.email || user?.email || ''} className="border rounded-md px-3 py-2 w-full" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Phone</label>
-            <input name="phone" defaultValue={profile?.phone || ''} className="border rounded-md px-3 py-2 w-full" />
-          </div>
-          <div className="sm:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="block text-sm font-medium">Addresses</div>
-                <p className="text-xs text-gray-500">Manage your shipping addresses in the Addressbook.</p>
-              </div>
-              <Link href="/account/address" className="btn flex items-center gap-2">
-                <span className="text-lg leading-none">+</span>
-                <span>Go to Addressbook</span>
-              </Link>
+    <div className="max-w-3xl mx-auto">
+      <div className="card p-6 sm:p-8 space-y-6">
+        <form onSubmit={handleSubmit} ref={formRef}>
+          {/* Card Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">My Profile</h1>
+            <div className="flex items-center gap-3">
+              {editing ? (
+                <>
+                  <button className="btn" type="button" onClick={handleCancel} disabled={busy}>Cancel</button>
+                  <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save Changes'}</button>
+                </>
+              ) : (
+                <button className="btn btn-primary" type="button" onClick={() => setEditing(true)}>
+                  <Edit size={16} className="mr-2" />
+                  Edit Profile
+                </button>
+              )}
             </div>
           </div>
-        </div>
-        <div className="flex gap-2 items-center justify-end sm:justify-start sticky bottom-3 sm:static bg-white/70 sm:bg-transparent backdrop-blur sm:backdrop-blur-0 p-2 sm:p-0 rounded-md">
-          <button className="btn btn-primary w-full sm:w-auto" disabled={busy}>{busy ? 'Saving…' : 'Save Profile'}</button>
-        </div>
-      </form>
+          
+          {/* Notifications */}
+          <div className="pt-4">
+            {msg && <div className="alert-success"><CheckCircle2 size={20} /><span>{msg}</span></div>}
+            {err && <div className="alert-danger"><AlertTriangle size={20} /><span>{err}</span></div>}
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4 pt-6 border-t">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+              <div className="form-group">
+                <label htmlFor="name" className="form-label">Full Name</label>
+                <div className="form-control-wrapper">
+                  <User size={18} className="form-control-icon" />
+                  <input id="name" name="name" defaultValue={profile?.name || ''} className="form-input pl-10" disabled={!editing} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="email" className="form-label">Email Address</label>
+                <div className="form-control-wrapper">
+                  <Mail size={18} className="form-control-icon" />
+                  <input id="email" name="email" type="email" defaultValue={profile?.email || ''} className="form-input pl-10" disabled={!editing} />
+                </div>
+              </div>
+              <div className="form-group sm:col-span-2">
+                <label htmlFor="phone" className="form-label">Phone Number</label>
+                <div className="form-control-wrapper">
+                  <Phone size={18} className="form-control-icon" />
+                  <input id="phone" name="phone" defaultValue={profile?.phone || ''} className="form-input pl-10" disabled={!editing} />
+                </div>
+              </div>
+            </div>
+
+            {/* Address Book Section */}
+            <div className="pt-4 !mt-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50 p-4 rounded-lg border">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 flex items-center gap-2"><Home size={18} /> Address Book</h3>
+                    <p className="text-sm text-gray-500 mt-1">Manage your saved shipping and billing addresses.</p>
+                  </div>
+                  <Link href="/account/address" className="btn shrink-0 w-full sm:w-auto">Go to Address Book</Link>
+                </div>
+            </div>
+          </div>
+        </form>
       </div>
-      {/* Side summary card (moves below form on mobile) */}
-      <aside className="card p-6 space-y-3 h-max order-first lg:order-none">
-        <h2 className="text-lg font-semibold">Account Info</h2>
-        <div>
-          <div className="text-sm text-gray-500">Name</div>
-          <div className="font-medium">{profile?.name || user?.name}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Email</div>
-          <div className="font-medium break-all">{profile?.email || user?.email}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Phone</div>
-          <div className="font-medium">{profile?.phone || '-'}</div>
-        </div>
-        <div className="text-sm text-gray-500">Use the Edit Profile button to update your details.</div>
-      </aside>
     </div>
   )
 }

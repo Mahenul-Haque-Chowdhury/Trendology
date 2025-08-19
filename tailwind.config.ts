@@ -36,6 +36,7 @@ export default {
           DEFAULT: '#1E6BD6',
           dark: '#1554A8',
         },
+        ring: '#1E6BD6',
         // Accent palette for highlights and secondary CTAs
         accent: {
           50: '#FFF8E1',
