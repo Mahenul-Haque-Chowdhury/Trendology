@@ -1,23 +1,33 @@
 export default function Footer() {
+  const year = new Date().getFullYear()
   return (
-    <footer className="border-t mt-10">
-  <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-8 text-sm text-gray-600 grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div>
-          <div className="font-semibold text-gray-900">AamarDokan</div>
-          <p className="mt-2 max-w-sm">A clean, fast shopping experience built with Next.js and Tailwind CSS.</p>
+    <footer className="mt-10 border-t border-gray-200 bg-white">
+      <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-8">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+          <div className="space-y-2">
+            <div className="text-base font-semibold">AamarDokan</div>
+            <p className="text-gray-600">Quality products at fair prices. Fast checkout and delivery.</p>
+          </div>
+          <div className="space-y-2">
+            <div className="font-medium">Support</div>
+            <ul className="space-y-1 text-gray-600">
+              <li><a className="link" href="/privacy-policy">Privacy Policy</a></li>
+              <li><a className="link" href="/terms">Terms & Conditions</a></li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <div className="font-medium">Contact</div>
+            <ul className="space-y-1 text-gray-600">
+              <li>Email: support@aamardokan.example</li>
+              <li>Hours: 9am–9pm</li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <div className="font-medium">Follow</div>
+            <p className="text-gray-600">Facebook • Instagram • X</p>
+          </div>
         </div>
-        <div className="sm:justify-self-center">
-          <ul className="space-y-2">
-            <li><a className="hover:text-gray-900" href="#products">Products</a></li>
-            <li><a className="hover:text-gray-900" href="/account">Account</a></li>
-            <li><a className="hover:text-gray-900" href="/privacy-policy">Privacy Policy</a></li>
-            <li><a className="hover:text-gray-900" href="/terms">Terms &amp; Conditions</a></li>
-          </ul>
-        </div>
-        <div className="sm:justify-self-end">
-          <p className="opacity-80">Next.js · TypeScript · Tailwind CSS</p>
-          <p className="mt-2">© {new Date().getFullYear()} AamarDokan By <a href="https://arnob.life/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">Arnob</a></p>
-        </div>
+        <div className="mt-8 text-gray-500 text-xs">© {year} AamarDokan. All rights reserved.</div>
       </div>
     </footer>
   )
