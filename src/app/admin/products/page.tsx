@@ -7,9 +7,71 @@ import AdminHelpBanner from '@/components/AdminHelpBanner'
 import Modal from '@/components/Modal'
 import ProductForm, { type ProductFormValues } from '@/components/admin/ProductForm'
 import ProductTable from '@/components/admin/ProductTable'
+import { useAuth } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function AdminProductsPage() {
+  const { user } = useAuth()
+  // FORCE ADMIN UI for testing (set to true to always show grid assignment buttons)
+  const isAdmin = true
   const { products, add, update, remove } = useCatalog()
+  // Grid assignments state (must be after products is defined)
+  const [gridAssignments, setGridAssignments] = useState<Record<string, string[]>>({})
+  useEffect(() => {
+    let ignore = false
+    async function fetchGrids() {
+      const { data } = await supabase.from('home_grids').select('product_id, grid')
+      if (!ignore && data) {
+        const map: Record<string, string[]> = {}
+        for (const row of data) {
+          if (!map[row.product_id]) map[row.product_id] = []
+          map[row.product_id].push(row.grid)
+        }
+        setGridAssignments(map)
+      }
+    }
+    fetchGrids()
+    return () => { ignore = true }
+  }, [products])
+
+  async function handleToggleGrid(product: Product, grid: string, assign: boolean) {
+    try {
+      console.log('Toggling grid:', { productId: product.id, grid, assign })
+      let result
+      if (assign) {
+        result = await supabase.from('home_grids').upsert([
+          { product_id: product.id, grid }
+        ], { onConflict: 'product_id,grid' })
+      } else {
+        result = await supabase.from('home_grids').delete().eq('product_id', product.id).eq('grid', grid)
+      }
+      if (result.error) {
+        console.error('Supabase error:', result.error)
+        alert('Failed to update grid assignment: ' + result.error.message)
+        return
+      }
+      // Always refetch assignments from backend for consistency
+      const { data, error } = await supabase.from('home_grids').select('product_id, grid')
+      if (error) {
+        console.error('Supabase fetch error:', error)
+        alert('Failed to fetch updated grid assignments: ' + error.message)
+        return
+      }
+      const map: Record<string, string[]> = {}
+      for (const row of data || []) {
+        if (!map[row.product_id]) map[row.product_id] = []
+        map[row.product_id].push(row.grid)
+      }
+      setGridAssignments(map)
+    } catch (err) {
+      console.error('JS error:', err)
+      alert('Failed to update grid assignment. Please try again.')
+    }
+  }
   const [editing, setEditing] = useState<Product | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -69,7 +131,7 @@ export default function AdminProductsPage() {
     if (editing) {
       await update({ ...editing, ...data })
     } else {
-      await add(data)
+      await add({ ...data, created_at: new Date().toISOString() })
     }
     closeModal()
   }
@@ -105,6 +167,9 @@ export default function AdminProductsPage() {
           onEdit={openEdit}
           onDelete={(id) => remove(id)}
           onToggleActive={(p, active) => update({ ...p, active })}
+          gridAssignments={gridAssignments}
+          onToggleGrid={handleToggleGrid}
+          isAdmin={isAdmin}
         />
       </section>
 

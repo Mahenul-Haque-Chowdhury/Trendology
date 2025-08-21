@@ -14,5 +14,5 @@ export default function CatalogGrid() {
       </div>
     )
   }
-  return <ProductGrid products={products} showTags={false} />
+  return <ProductGrid products={products} />
 }

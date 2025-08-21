@@ -67,31 +67,6 @@ export default function CheckoutPage() {
   const discount = appliedCoupon?.discount ?? 0
   const grandTotal = Math.max(0, subtotal + shipping - discount)
 
-  function validateCoupon(codeRaw: string) {
-    const code = codeRaw.trim().toUpperCase()
-    if (!code) return null as null | { code: string; discount: number; freeShip?: boolean }
-    // Simple demo rules; replace with server validation if needed
-    const rules: Record<string, { type: 'percent' | 'fixed' | 'freeship'; value?: number; min?: number }> = {
-      SAVE10: { type: 'percent', value: 10, min: 50 }, // 10% off orders >= 50 BDT
-      WELCOME5: { type: 'fixed', value: 5, min: 20 }, // 5 BDT off orders >= 20 BDT
-      FREESHIP: { type: 'freeship' }, // Free shipping
-    }
-    const rule = rules[code]
-    if (!rule) return null
-    const minOk = (rule.min ?? 0) <= subtotal
-    if (!minOk) return null
-    if (rule.type === 'freeship') return { code, discount: 0, freeShip: true }
-    if (rule.type === 'fixed') return { code, discount: Math.min(subtotal, Math.max(0, rule.value || 0)) }
-    if (rule.type === 'percent') return { code, discount: Math.min(subtotal, (Math.max(0, rule.value || 0) / 100) * subtotal) }
-    return null
-  }
-
-  function onApplyCoupon(e: React.FormEvent) {
-    e.preventDefault()
-    const res = validateCoupon(couponInput)
-    setAppliedCoupon(res)
-  }
-
   useEffect(() => {
     if (!user) return
     const u = user
@@ -188,6 +163,42 @@ export default function CheckoutPage() {
     } catch {}
   }, [user?.id, addresses])
 
+  // If not logged in, block checkout and show login prompt
+  if (hydrated && !user) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Checkout</h1>
+        <p className="text-gray-600">You must be logged in to place an order.</p>
+        <Link href="/account/login?redirect=/checkout" className="btn btn-primary w-max">Login to Continue</Link>
+      </div>
+    )
+  }
+
+  function validateCoupon(codeRaw: string) {
+    const code = codeRaw.trim().toUpperCase()
+    if (!code) return null as null | { code: string; discount: number; freeShip?: boolean }
+    // Simple demo rules; replace with server validation if needed
+    const rules: Record<string, { type: 'percent' | 'fixed' | 'freeship'; value?: number; min?: number }> = {
+      SAVE10: { type: 'percent', value: 10, min: 50 }, // 10% off orders >= 50 BDT
+      WELCOME5: { type: 'fixed', value: 5, min: 20 }, // 5 BDT off orders >= 20 BDT
+      FREESHIP: { type: 'freeship' }, // Free shipping
+    }
+    const rule = rules[code]
+    if (!rule) return null
+    const minOk = (rule.min ?? 0) <= subtotal
+    if (!minOk) return null
+    if (rule.type === 'freeship') return { code, discount: 0, freeShip: true }
+    if (rule.type === 'fixed') return { code, discount: Math.min(subtotal, Math.max(0, rule.value || 0)) }
+    if (rule.type === 'percent') return { code, discount: Math.min(subtotal, (Math.max(0, rule.value || 0) / 100) * subtotal) }
+    return null
+  }
+
+  function onApplyCoupon(e: React.FormEvent) {
+    e.preventDefault()
+    const res = validateCoupon(couponInput)
+    setAppliedCoupon(res)
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
   setIsSubmitting(true)
@@ -229,6 +240,7 @@ export default function CheckoutPage() {
         payment_method: paymentMethod,
         txid: txid || null,
         status: paymentMethod === 'cod' ? 'pending' : 'paid',
+        created_at: new Date().toISOString(),
         items: items.map((it) => ({
           product_id: isUuid(String(it.product.id)) ? String(it.product.id) : null,
           qty: it.qty,
@@ -299,6 +311,7 @@ export default function CheckoutPage() {
       const order: Order = {
         id: orderCode,
         createdAt: Date.now(),
+        created_at: new Date().toISOString(),
         customer: {
           fullName: String(formData.get('fullName') || ''),
           email: String(formData.get('email') || ''),

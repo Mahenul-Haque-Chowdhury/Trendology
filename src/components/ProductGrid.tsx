@@ -4,7 +4,7 @@ import ProductCard from './ProductCard'
 import type { Product } from '@/lib/products'
 import { useSearchParams } from 'next/navigation'
 
-export default function ProductGrid({ products, showTags = true }: { products: Product[]; showTags?: boolean }) {
+export default function ProductGrid({ products }: { products: Product[] }) {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState('')
   // Initialize from global q param and update when it changes
@@ -12,16 +12,7 @@ export default function ProductGrid({ products, showTags = true }: { products: P
     const q = searchParams.get('q') ?? ''
     setQuery(q)
   }, [searchParams])
-  const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc'>('relevance')
-  const prices = useMemo(() => {
-    if (!products || products.length === 0) return { min: 0, max: 0 }
-    const vals = products.map((p) => p.price)
-    return { min: Math.min(...vals), max: Math.max(...vals) }
-  }, [products])
-  const [minPrice, setMinPrice] = useState<number | ''>('')
-  const [maxPrice, setMaxPrice] = useState<number | ''>('')
-  const tags = useMemo(() => Array.from(new Set(products.flatMap((p) => p.tags))).sort(), [products])
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'oldest' | 'name-asc' | 'name-desc'>('relevance')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -29,43 +20,22 @@ export default function ProductGrid({ products, showTags = true }: { products: P
       ? products.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
       : products
 
-    if (minPrice !== '') list = list.filter((p) => p.price >= minPrice)
-    if (maxPrice !== '') list = list.filter((p) => p.price <= maxPrice)
-
-    if (selectedTags.length > 0) list = list.filter((p) => selectedTags.every((t) => p.tags.includes(t)))
-
     if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price)
     if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price)
+    if (sort === 'newest') list = [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    if (sort === 'oldest') list = [...list].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    if (sort === 'name-asc') list = [...list].sort((a, b) => a.name.localeCompare(b.name))
+    if (sort === 'name-desc') list = [...list].sort((a, b) => b.name.localeCompare(a.name))
+
 
     return list
-  }, [products, query, sort, minPrice, maxPrice, selectedTags])
+  }, [products, query, sort])
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="flex-1 flex flex-col sm:flex-row gap-3">
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="inline-flex items-center border border-brand rounded-md bg-brand text-white font-semibold text-sm px-3 py-2">Price Range</span>
-            <input
-              type="number"
-              min={prices.min}
-              max={prices.max || undefined}
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value === '' ? '' : Number(e.target.value))}
-              placeholder={`Min ${prices.min}`}
-              className="w-24 sm:w-28 border rounded-md px-2 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
-            />
-            <span className="text-gray-500">-</span>
-            <input
-              type="number"
-              min={prices.min}
-              max={prices.max || undefined}
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value === '' ? '' : Number(e.target.value))}
-              placeholder={`Max ${prices.max}`}
-              className="w-24 sm:w-28 border rounded-md px-2 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
-            />
-          </div>
+      <div className="flex flex-row items-center justify-between gap-2">
+        <div className="flex-1 flex flex-row gap-2 items-center">
+          <div className="text-sm text-gray-600 py-2">{filtered.length} product{filtered.length === 1 ? '' : 's'}</div>
         </div>
         <select
           value={sort}
@@ -75,31 +45,12 @@ export default function ProductGrid({ products, showTags = true }: { products: P
           <option value="relevance">Sort: Relevance</option>
           <option value="price-asc">Sort: Price (Low to High)</option>
           <option value="price-desc">Sort: Price (High to Low)</option>
+          <option value="newest">Sort: Newest</option>
+          <option value="oldest">Sort: Oldest</option>
+          <option value="name-asc">Sort: Name (A-Z)</option>
+          <option value="name-desc">Sort: Name (Z-A)</option>
         </select>
       </div>
-
-  {showTags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {tags.map((t) => {
-            const checked = selectedTags.includes(t)
-            return (
-              <label key={t} className={`border rounded-full px-3 py-1 text-sm cursor-pointer ${checked ? 'bg-brand text-white border-brand' : ''}`}>
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={checked}
-                  onChange={(e) =>
-                    setSelectedTags((prev) => (e.target.checked ? [...prev, t] : prev.filter((x) => x !== t)))
-                  }
-                />
-        {t}
-              </label>
-            )
-          })}
-        </div>
-      )}
-
-  <div className="text-sm text-gray-600">{filtered.length} product{filtered.length === 1 ? '' : 's'}</div>
 
   {filtered.length === 0 ? (
         <p className="text-gray-600">No products match your search.</p>

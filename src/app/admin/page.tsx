@@ -60,6 +60,7 @@ function useOrders(products: ReturnType<typeof useCatalog>['products']) {
                 total: Number(r.total || 0),
                 payment: { method: String(r.payment_method || 'cod') as any, txid: r.txid || undefined },
                 status: (r.status || 'pending') as OrderStatus,
+                created_at: r.created_at,
               }
             })
             if (!cancelled) setOrders(mapped)

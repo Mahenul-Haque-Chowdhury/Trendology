@@ -36,4 +36,5 @@ export type Order = {
   shippedAt?: number
   deliveredAt?: number
   status: OrderStatus
+  created_at: string
 }

@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
       images: Array.isArray(body.images) ? body.images : [],
       category: String(body.category || 'misc'),
       tags: Array.isArray(body.tags) ? body.tags : [],
+      created_at: new Date().toISOString(),
       active: body.active === false ? false : true,
     }
     const { data, error } = await client.from(TABLE).insert(row).select('*').single()

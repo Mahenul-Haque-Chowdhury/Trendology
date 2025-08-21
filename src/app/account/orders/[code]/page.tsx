@@ -70,6 +70,7 @@ export default function OrderDetailsPage() {
           shippedAt: r.shipped_at ? new Date(r.shipped_at).getTime() : undefined,
           deliveredAt: r.delivered_at ? new Date(r.delivered_at).getTime() : undefined,
           status: (r.status || 'pending') as any,
+          created_at: r.created_at,
         })
         return
       }

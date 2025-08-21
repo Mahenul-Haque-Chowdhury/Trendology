@@ -19,6 +19,7 @@ type OrderInput = {
   payment_method: 'cod' | 'bkash' | 'rocket' | 'nagad'
   txid?: string | null
   status: 'pending' | 'paid' | 'shipped' | 'cancelled'
+  created_at: string
   items: OrderItemInput[]
 }
 
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
       payment_method: body.payment_method!,
       txid: body.txid ?? null,
       status: body.status!,
+      created_at: body.created_at ?? new Date().toISOString(),
       // Temporary: persist phone and coupon details inside admin_notes if dedicated columns aren't present
       admin_notes: [
         body.phone ? `Phone: ${body.phone}` : null,

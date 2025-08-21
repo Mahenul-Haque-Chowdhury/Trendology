@@ -9,6 +9,7 @@ export type Product = {
   images?: string[]
   category: string
   tags: string[]
+  created_at: string
   // Whether the product is visible/available in the store (from Supabase inventory.active)
   active?: boolean
 }

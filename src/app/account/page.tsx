@@ -51,7 +51,7 @@ export default function AccountPage() {
               },
               // Build a dummy items array for count display
               items: Array.from({ length: counts[r.id] || 0 }, () => ({
-                product: { id: 'unknown', name: 'Item', description: '', price: 0, image: '', images: [], category: 'misc', tags: [] },
+                product: { id: 'unknown', name: 'Item', description: '', price: 0, image: '', images: [], category: 'misc', tags: [], created_at: '' },
                 qty: 1,
               })),
               subtotal: Number(r.subtotal || 0),
@@ -59,6 +59,7 @@ export default function AccountPage() {
               total: Number(r.total || 0),
               payment: { method: String(r.payment_method || 'cod') as any, txid: r.txid || undefined },
               status: (r.status || 'pending') as any,
+              created_at: r.created_at,
             }))
             setOrders(mapped)
             return

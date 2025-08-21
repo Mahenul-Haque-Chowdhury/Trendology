@@ -52,6 +52,7 @@ export function useCatalog() {
               images: Array.isArray(d.images) ? d.images : [],
               category: d.category ?? 'misc',
               tags: Array.isArray(d.tags) ? d.tags : [],
+              created_at: d.created_at,
               active: typeof d.active === 'boolean' ? d.active : true,
             }))
           )
@@ -178,6 +179,7 @@ async function loadProductsFromSupabase(setItems: (p: Product[]) => void) {
         images: Array.isArray(d.images) ? d.images : [],
         category: d.category ?? 'misc',
         tags: Array.isArray(d.tags) ? d.tags : [],
+        created_at: d.created_at,
         active: typeof d.active === 'boolean' ? d.active : true,
       }))
     )

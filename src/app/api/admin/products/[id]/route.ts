@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!client) return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 500 })
     const body = await req.json()
     const updates: any = {}
-    for (const k of ['name','description','price','image','images','category','tags','active']) {
+    for (const k of ['name','description','price','image','images','category','tags','active','created_at']) {
       if (k in body) updates[k] = body[k]
     }
     const { data, error } = await client.from(TABLE).update(updates).eq('id', params.id).select('*').single()

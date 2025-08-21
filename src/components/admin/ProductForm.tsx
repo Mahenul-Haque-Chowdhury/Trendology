@@ -45,6 +45,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
       images: images.filter(Boolean),
       category: category.trim(),
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+      created_at: product?.created_at ?? new Date().toISOString(),
     })
   }
 

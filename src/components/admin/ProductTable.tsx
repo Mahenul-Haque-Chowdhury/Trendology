@@ -14,9 +14,14 @@ export type ProductTableProps = {
   onEdit: (product: Product) => void
   onDelete: (id: string) => void
   onToggleActive: (product: Product, active: boolean) => void
+  gridAssignments: Record<string, string[]> // productId -> grid[]
+  onToggleGrid: (product: Product, grid: string, assigned: boolean) => void
+  isAdmin?: boolean
 }
 
-export default function ProductTable({ products, onEdit, onDelete, onToggleActive }: ProductTableProps) {
+const GRIDS = ["bestsellers", "new", "budget", "premium"] as const;
+
+export default function ProductTable({ products, onEdit, onDelete, onToggleActive, gridAssignments, onToggleGrid, isAdmin }: ProductTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm text-left text-gray-500">
@@ -26,6 +31,7 @@ export default function ProductTable({ products, onEdit, onDelete, onToggleActiv
             <th scope="col" className="px-6 py-3">Category</th>
             <th scope="col" className="px-6 py-3">Price</th>
             <th scope="col" className="px-6 py-3">Status</th>
+            <th scope="col" className="px-6 py-3">Homepage Grids</th>
             <th scope="col" className="px-6 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -66,6 +72,35 @@ export default function ProductTable({ products, onEdit, onDelete, onToggleActiv
                     {p.active !== false ? 'Active' : 'Hidden'}
                   </span>
                 </label>
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex flex-wrap gap-2">
+                  {isAdmin ? (
+                    GRIDS.map((grid) => {
+                      const assigned = (gridAssignments && gridAssignments[p.id]?.includes(grid)) || false
+                      return (
+                        <button
+                          key={grid}
+                          className={`px-2 py-1 rounded text-xs font-semibold border ${assigned ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} transition`}
+                          onClick={() => onToggleGrid(p, grid, !assigned)}
+                          type="button"
+                          title={assigned ? `Remove from ${grid}` : `Add to ${grid}`}
+                        >
+                          {grid === 'bestsellers' ? 'Best Sellers' : grid.charAt(0).toUpperCase() + grid.slice(1)}
+                        </button>
+                      )
+                    })
+                  ) : (
+                    GRIDS.map((grid) => {
+                      const assigned = (gridAssignments && gridAssignments[p.id]?.includes(grid)) || false
+                      return assigned ? (
+                        <span key={grid} className="px-2 py-1 rounded text-xs font-semibold border bg-gray-200 text-gray-700 border-gray-300">
+                          {grid === 'bestsellers' ? 'Best Sellers' : grid.charAt(0).toUpperCase() + grid.slice(1)}
+                        </span>
+                      ) : null
+                    })
+                  )}
+                </div>
               </td>
               <td className="px-6 py-4">
                 <div className="flex items-center justify-end gap-2">

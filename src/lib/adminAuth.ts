@@ -3,53 +3,31 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export async function getServerSupabaseUser() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !anon) return null
-  // Use cookie-based auth for server components & routes
+// Get a Supabase user from a Next.js request, if one is available.
+// This is used in API routes to protect them.
+export async function getRequestSupabaseUser(req: NextRequest) {
   const cookieStore = cookies()
-  const supabase = createServerClient(url, anon, {
-    cookies: {
-      get: (name: string) => cookieStore.get(name)?.value,
-      set: (name: string, value: string, options: any) => {
-        try { cookieStore.set(name, value, options) } catch {}
-      },
-      remove: (name: string, options: any) => {
-        try { cookieStore.set(name, '', { ...options, maxAge: 0 }) } catch {}
-      },
-    },
-  } as any)
-  const { data } = await supabase.auth.getUser()
-  return data.user ?? null
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { get: (name) => cookieStore.get(name)?.value } },
+  )
+  const { data, error } = await supabase.auth.getUser()
+  if (error) {
+    // A "user not found" error is normal if the user is not logged in.
+    // We only want to log other, unexpected errors.
+    if (!error.message.includes('user not found')) {
+      console.warn('getRequestSupabaseUser error:', error)
+    }
+    return null
+  }
+  return data.user
 }
 
+// Universal admin check for both client and server
 export function isUserAdmin(user: any) {
   if (!user) return false
-  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
-  const email = String(user.email || '').toLowerCase()
-  if (adminEmails.length > 0 && adminEmails.includes(email)) return true
-  // Optional role flag in user metadata
-  const role = (user.user_metadata?.role || '').toString().toLowerCase()
+  // Accept both user_metadata.role (Supabase user object) and role (custom user object)
+  const role = (user.user_metadata?.role || (user.role ? user.role : '')).toString().toLowerCase()
   return role === 'admin'
-}
-
-// Prefer reading the Authorization bearer token from the request when available (client explicitly forwards session).
-export async function getRequestSupabaseUser(req: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !anon) return null
-  try {
-    const auth = req.headers.get('authorization') || req.headers.get('Authorization')
-    if (auth && /^Bearer\s+/.test(auth)) {
-      const supabase = createClient(url, anon, {
-        auth: { persistSession: false },
-        global: { headers: { Authorization: auth } },
-      })
-      const { data } = await supabase.auth.getUser()
-      if (data?.user) return data.user
-    }
-  } catch {}
-  // Fallback to cookie-based lookup
-  return getServerSupabaseUser()
 }

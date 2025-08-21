@@ -48,48 +48,50 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   )
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-6">
-      {/* Desktop sidebar */}
-      <aside className="card p-4 h-max sticky top-4 hidden lg:block">
-        <h2 className="text-lg font-semibold mb-3">Manage My Account</h2>
-        <nav className="space-y-1">
-          {link('/account/profile', 'My Profile')}
-          {link('/account/address', 'Address Book')}
-        </nav>
-        <h2 className="text-lg font-semibold my-3">Orders</h2>
-        <nav className="space-y-1">
-          {link('/account/orders', 'My Orders')}
-          {link('/account/returns', 'My Returns')}
-          {link('/account/cancellations', 'My Cancellations')}
-        </nav>
-        <h2 className="text-lg font-semibold my-3">Lists</h2>
-        <nav className="space-y-1">
-          {link('/account/wishlist', 'My Wishlist')}
-        </nav>
-        <h2 className="text-lg font-semibold my-3">Wallet</h2>
-        <nav className="space-y-1">
-          {link('/account/wallet', 'AamarWallet')}
-        </nav>
-      </aside>
+    <div className="flex justify-center w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-6 w-full max-w-6xl">
+        {/* Desktop sidebar */}
+        <aside className="card p-4 h-max sticky top-4 hidden lg:block lg:ml-8">
+          <h2 className="text-lg font-semibold mb-3">Manage My Account</h2>
+          <nav className="space-y-1">
+            {link('/account/profile', 'My Profile')}
+            {link('/account/address', 'Address Book')}
+          </nav>
+          <h2 className="text-lg font-semibold my-3">Orders</h2>
+          <nav className="space-y-1">
+            {link('/account/orders', 'My Orders')}
+            {link('/account/returns', 'My Returns')}
+            {link('/account/cancellations', 'My Cancellations')}
+          </nav>
+          <h2 className="text-lg font-semibold my-3">Lists</h2>
+          <nav className="space-y-1">
+            {link('/account/wishlist', 'My Wishlist')}
+          </nav>
+          <h2 className="text-lg font-semibold my-3">Wallet</h2>
+          <nav className="space-y-1">
+            {link('/account/wallet', 'AamarWallet')}
+          </nav>
+        </aside>
 
-      {/* Content area */}
-      <section>
-        {/* Mobile: sticky, horizontally scrollable pill nav with all account links */}
-        <div className="lg:hidden sticky top-2 z-10">
-          <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 rounded-md border px-2 py-2 overflow-x-auto">
-            <nav className="flex gap-2 min-w-0">
-              {pill('/account/profile', 'Profile')}
-              {pill('/account/address', 'Address')}
-              {pill('/account/orders', 'Orders')}
-              {pill('/account/wishlist', 'Wishlist')}
-              {pill('/account/returns', 'Returns')}
-              {pill('/account/cancellations', 'Cancellations')}
-              {pill('/account/wallet', 'Wallet')}
-            </nav>
+        {/* Content area */}
+        <section>
+          {/* Mobile: sticky, horizontally scrollable pill nav with all account links */}
+          <div className="lg:hidden sticky top-2 z-10">
+            <div className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 rounded-md border px-2 py-2 overflow-x-auto">
+              <nav className="flex gap-2 min-w-0">
+                {pill('/account/profile', 'Profile')}
+                {pill('/account/address', 'Address')}
+                {pill('/account/orders', 'Orders')}
+                {pill('/account/wishlist', 'Wishlist')}
+                {pill('/account/returns', 'Returns')}
+                {pill('/account/cancellations', 'Cancellations')}
+                {pill('/account/wallet', 'Wallet')}
+              </nav>
+            </div>
           </div>
-        </div>
-        <div className="mt-3 lg:mt-0">{children}</div>
-      </section>
+          <div className="mt-3 lg:mt-0">{children}</div>
+        </section>
+      </div>
     </div>
   )
 }

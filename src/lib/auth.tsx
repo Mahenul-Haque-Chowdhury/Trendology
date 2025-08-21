@@ -6,6 +6,7 @@ export type User = {
   id: string
   name: string
   email: string
+  created_at: string
   password?: string // Demo-only fallback
 }
 
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }: { data: { session: import('@supabase/supabase-js').Session | null } }) => {
       const u = data.session?.user
       if (u) {
-        setUser({ id: u.id, name: (u.user_metadata?.name as string) || u.email!, email: u.email! })
+        setUser({ id: u.id, name: (u.user_metadata?.name as string) || u.email!, email: u.email!, created_at: new Date().toISOString() })
         ensureProfile(u)
       }
     })
@@ -87,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ) => {
       const u = session?.user
       if (u) {
-        setUser({ id: u.id, name: (u.user_metadata?.name as string) || u.email!, email: u.email! })
+        setUser({ id: u.id, name: (u.user_metadata?.name as string) || u.email!, email: u.email!, created_at: new Date().toISOString() })
         ensureProfile(u)
       } else {
         setUser(null)
@@ -107,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const users = loadUsers()
       if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) return { ok: false, message: 'Email already registered' }
-      const newUser: User = { id: 'U-' + Date.now().toString(36), name, email, password }
+      const newUser: User = { id: 'U-' + Date.now().toString(36), name, email, password, created_at: new Date().toISOString() }
       const next = [...users, newUser]
       saveUsers(next)
       saveSession(newUser.id)
