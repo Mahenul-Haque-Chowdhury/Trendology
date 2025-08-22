@@ -78,14 +78,18 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
     <div className="relative w-full max-w-full overflow-hidden">
       <Swiper
         modules={[Autoplay, Pagination, Navigation]}
-        spaceBetween={30}
+        // responsive spacing: no extra gap on small screens to avoid overflow
+        breakpoints={{
+          0: { spaceBetween: 0 },
+          640: { spaceBetween: 30 },
+        }}
         slidesPerView={1}
         loop={true}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         navigation={true}
         className="deals-slider"
-      > 
+      >
         {slides.map((slide, index) => {
           const styles = themeStyles[slide.theme];
           return (
@@ -141,6 +145,16 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
           .deals-slider .swiper-button-prev:after {
             font-size: 14px !important;
           }
+        }
+        /* Prevent slide overflow on small screens */
+        .deals-slider,
+        .deals-slider .swiper-wrapper,
+        .deals-slider .swiper-slide {
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .deals-slider .swiper-slide {
+          width: 100% !important;
         }
       `}</style>
     </div>

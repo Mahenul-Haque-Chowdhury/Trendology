@@ -71,7 +71,10 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
     <div className="relative w-full max-w-full overflow-hidden">
       <Swiper
         modules={[Autoplay, Pagination, Navigation]}
-        spaceBetween={30}
+        breakpoints={{
+          0: { spaceBetween: 0 },
+          640: { spaceBetween: 30 },
+        }}
         slidesPerView={1}
         loop={true}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
@@ -134,6 +137,16 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
           .season-slider .swiper-button-prev:after {
             font-size: 14px !important;
           }
+        }
+        /* Prevent slide overflow on small screens */
+        .season-slider,
+        .season-slider .swiper-wrapper,
+        .season-slider .swiper-slide {
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .season-slider .swiper-slide {
+          width: 100% !important;
         }
       `}</style>
     </div>
