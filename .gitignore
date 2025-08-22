@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Dependencies
 /node_modules
 
@@ -21,3 +22,45 @@ pnpm-debug.log*
 # Editor
 .vscode
 .DS_Store
+=======
+# macOS
+.DS_Store
+
+# Node/Next.js (root or subfolders)
+node_modules/
+.next/
+out/
+*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# VS Code
+.vscode/
+
+# Yarn/NPM/PNPM
+pnpm-lock.yaml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+**/node_modules/
+**/.next/
+**/out/
+
+# TypeScript build info
+**/*.tsbuildinfo
+
+# Local data caches
+.next/cache/
+
+# Supabase local config
+.supabase/
+
+# Ignore local images if any temp dirs
+/tmp/
+
+>>>>>>> 16e4c39 (Update: push latest changes to GitHub)
