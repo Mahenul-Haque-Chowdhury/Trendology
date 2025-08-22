@@ -8,20 +8,21 @@ import Modal from '@/components/Modal'
 import ProductForm, { type ProductFormValues } from '@/components/admin/ProductForm'
 import ProductTable from '@/components/admin/ProductTable'
 import { useAuth } from '@/lib/auth'
-import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { getSupabaseClient } from '@/lib/supabase'
 
 export default function AdminProductsPage() {
   const { user } = useAuth()
+  const supabase = getSupabaseClient()
+  
   // FORCE ADMIN UI for testing (set to true to always show grid assignment buttons)
   const isAdmin = true
   const { products, add, update, remove } = useCatalog()
   // Grid assignments state (must be after products is defined)
   const [gridAssignments, setGridAssignments] = useState<Record<string, string[]>>({})
+  
   useEffect(() => {
+    if (!supabase) return
+
     let ignore = false
     async function fetchGrids() {
       const { data } = await supabase.from('home_grids').select('product_id, grid')
@@ -36,16 +37,18 @@ export default function AdminProductsPage() {
     }
     fetchGrids()
     return () => { ignore = true }
-  }, [products])
+  }, [products, supabase])
 
   async function handleToggleGrid(product: Product, grid: string, assign: boolean) {
+    if (!supabase) return alert('Supabase client not available')
     try {
       console.log('Toggling grid:', { productId: product.id, grid, assign })
       let result
       if (assign) {
-        result = await supabase.from('home_grids').upsert([
-          { product_id: product.id, grid }
-        ], { onConflict: 'product_id,grid' })
+        result = await supabase.from('home_grids').upsert(
+          { product_id: product.id, grid },
+          { onConflict: 'product_id,grid' }
+        )
       } else {
         result = await supabase.from('home_grids').delete().eq('product_id', product.id).eq('grid', grid)
       }
@@ -81,13 +84,13 @@ export default function AdminProductsPage() {
   const [apiError, setApiError] = useState<{ code?: number; message?: string } | null>(null)
 
   useEffect(() => {
+    if (!supabase) return;
     let ignore = false
     async function fetchCount() {
       try {
         let headers: Record<string, string> | undefined
         try {
-          const supabase = (await import('@/lib/supabase')).getSupabaseClient()
-          const sess = await supabase?.auth.getSession()
+          const sess = await supabase.auth.getSession()
           const token = sess?.data?.session?.access_token
           if (token) headers = { Authorization: `Bearer ${token}` }
         } catch {}
@@ -103,7 +106,7 @@ export default function AdminProductsPage() {
     }
     fetchCount()
     return () => { ignore = true }
-  }, [])
+  }, [supabase])
 
   const filtered = useMemo(() => {
     let list = products

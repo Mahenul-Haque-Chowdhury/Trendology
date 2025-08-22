@@ -262,7 +262,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setCategoryMenuOpen((v) => !v)}
-                  className="inline-flex items-center gap-2 h-11 rounded-l-md border border-gray-300 bg-gray-50 px-4 shadow-sm hover:bg-gray-100 focus:border-brand focus:ring-2 focus:ring-brand z-10"
+                  className="inline-flex items-center gap-2 h-11 rounded-l-md border border-gray-300 bg-gray-50 px-3 lg:px-4 shadow-sm hover:bg-gray-100 focus:border-brand focus:ring-2 focus:ring-brand z-10"
                   aria-haspopup="menu" aria-expanded={categoryMenuOpen}
                 >
                   <Grid3x3 size={18} />
@@ -331,9 +331,9 @@ export default function Header() {
                 <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-xl p-2 z-20">
                   <p className="px-2 py-1 text-sm text-gray-500">Hi, {user.name.split(' ')[0]}</p>
                   <hr className="my-1"/>
-                  <Link href="/account/profile" role="menuitem" className="menu-item" onClick={() => setUserMenuOpen(false)}>My Profile</Link>
-                  <Link href="/account/orders" role="menuitem" className="menu-item" onClick={() => setUserMenuOpen(false)}>My Orders</Link>
-                  <button role="menuitem" className="menu-item text-red-600 w-full text-left"
+                  <Link href="/account/profile" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>My Profile</Link>
+                  <Link href="/account/orders" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>My Orders</Link>
+                  <button role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 text-red-600"
                     onClick={() => { setUserMenuOpen(false); setShowSignOutModal(true) }}
                   >Sign Out</button>
                 </div>
@@ -354,22 +354,22 @@ export default function Header() {
           <nav className="p-4 space-y-2">
             {user ? (
               <>
-                <Link href="/account/profile" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>My Profile</Link>
-                <Link href="/account/orders" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>My Orders</Link>
+                <Link href="/account/profile" className="block w-full px-4 py-3 text-base text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>My Profile</Link>
+                <Link href="/account/orders" className="block w-full px-4 py-3 text-base text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>My Orders</Link>
               </>
             ) : (
-              <Link href="/account" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Sign In / Register</Link>
+              <Link href="/account" className="block w-full px-4 py-3 text-base text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Sign In / Register</Link>
             )}
              <hr/>
             <details className="group">
-              <summary className="mobile-menu-item flex justify-between cursor-pointer select-none">Categories <ChevronDown size={20} className="group-open:rotate-180 transition-transform"/></summary>
+              <summary className="block w-full px-4 py-3 text-base text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 flex justify-between cursor-pointer select-none">Categories <ChevronDown size={20} className="group-open:rotate-180 transition-transform"/></summary>
               <div className="mt-2 ml-4 space-y-1 border-l pl-4">
                 {CATEGORIES.map((c) => (
-                  <Link key={c.slug} href={`/category/${c.slug}`} className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>{c.label}</Link>
+                  <Link key={c.slug} href={`/category/${c.slug}`} className="block w-full px-4 py-3 text-base text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>{c.label}</Link>
                 ))}
               </div>
             </details>
-            {user && <button onClick={() => { setMobileMenuOpen(false); setShowSignOutModal(true) }} className="mobile-menu-item text-red-600 w-full text-left mt-6">Sign Out</button>}
+            {user && <button onClick={() => { setMobileMenuOpen(false); setShowSignOutModal(true) }} className="block w-full px-4 py-3 text-base text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 text-red-600 mt-6">Sign Out</button>}
           </nav>
         </aside>
       </div>

@@ -6,13 +6,11 @@ import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 
-// Import Swiper styles (ensure you've run `npm install swiper`)
+// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-// 1. TYPE DEFINITION (Previously in its own file)
-// A more robust and reusable type definition for any themed slide
 interface ThemedSlide {
   title: string;
   subtitle: string;
@@ -20,11 +18,9 @@ interface ThemedSlide {
     label: string;
     href: string; 
   };
-  theme: 'rose' | 'amber' | 'sky'; // Abstract theme keys
+  theme: 'rose' | 'amber' | 'sky';
 }
 
-// 2. DATA (Previously in its own file)
-// The specific data for this banner instance
 const dealsSlides: ThemedSlide[] = [
   {
     title: 'Mega Deals Week',
@@ -46,8 +42,6 @@ const dealsSlides: ThemedSlide[] = [
   },
 ];
 
-// 3. GENERIC BANNER IMPLEMENTATION (Previously the UI component)
-// Centralized style mapping. To add a new theme, you only need to add it here.
 const themeStyles = {
   rose: {
     gradient: 'from-rose-600 to-rose-700',
@@ -63,20 +57,20 @@ const themeStyles = {
   },
 };
 
-// This is the core UI logic
+// This is the core UI logic with improved responsiveness
 function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' | 'sm' }) {
   const sizeClasses = {
     lg: {
-      container: 'min-h-[280px] md:min-h-[320px] p-8 md:p-12',
-      title: 'text-3xl md:text-4xl',
-      subtitle: 'text-lg',
-      cta: 'px-6 py-3 text-md',
+      container: 'min-h-[280px] md:min-h-[320px] p-6 sm:p-8 md:p-12',
+      title: 'text-2xl sm:text-3xl md:text-4xl',
+      subtitle: 'text-base sm:text-lg',
+      cta: 'px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-md',
     },
     sm: {
-      container: 'min-h-[140px] p-4',
-      title: 'text-xl',
-      subtitle: 'text-sm',
-      cta: 'px-3 py-2 text-xs',
+      container: 'min-h-[140px] p-4 sm:p-5',
+      title: 'text-lg sm:text-xl',
+      subtitle: 'text-xs sm:text-sm',
+      cta: 'px-3 py-1.5 sm:px-3 sm:py-2 text-xs',
     },
   };
 
@@ -97,9 +91,9 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
           return (
             <SwiperSlide key={index}>
               <div
-                className={`items-center w-full max-w-full h-full rounded-xl text-white bg-gradient-to-br ${styles.gradient} ${sizeClasses[size].container}`}
+                className={`flex flex-col justify-center w-full h-full rounded-xl text-white bg-gradient-to-br ${styles.gradient} ${sizeClasses[size].container}`}
               >
-                <div className="max-w-md space-y-4">
+                <div className="max-w-md space-y-3 sm:space-y-4">
                   <h2 className={`font-bold tracking-tight ${sizeClasses[size].title}`}>
                     {slide.title}
                   </h2>
@@ -121,27 +115,39 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
       <style jsx global>{`
         .deals-slider .swiper-button-next,
         .deals-slider .swiper-button-prev {
-          width: 28px;
-          height: 28px;
-          min-width: 28px;
-          min-height: 28px;
+          width: 24px;
+          height: 24px;
+          min-width: 24px;
+          min-height: 24px;
           border-radius: 9999px;
           background: rgba(255,255,255,0.85);
           color: #222;
           box-shadow: 0 1px 4px 0 rgba(0,0,0,0.07);
-          font-size: 14px;
+          font-size: 12px;
         }
         .deals-slider .swiper-button-next:after,
         .deals-slider .swiper-button-prev:after {
-          font-size: 14px !important;
+          font-size: 12px !important;
+        }
+        @media (min-width: 640px) {
+          .deals-slider .swiper-button-next,
+          .deals-slider .swiper-button-prev {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            min-height: 28px;
+          }
+          .deals-slider .swiper-button-next:after,
+          .deals-slider .swiper-button-prev:after {
+            font-size: 14px !important;
+          }
         }
       `}</style>
     </div>
   );
 }
 
-
-// 4. FINAL EXPORTED COMPONENT (The "Deals" specific banner)
+// FINAL EXPORTED COMPONENT
 export default function AdvertiseBannerDeals({ size = 'sm' }: { size?: 'lg' | 'sm' }) {
   return <AdvertiseBanner slides={dealsSlides} size={size} />;
 }

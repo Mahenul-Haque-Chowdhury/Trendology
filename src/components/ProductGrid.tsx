@@ -40,7 +40,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          className="w-full md:w-56 border rounded-md px-3 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
+          className="w-auto md:w-56 border rounded-md px-3 py-2 focus:border-brand focus:ring-2 focus:ring-brand"
         >
           <option value="relevance">Sort: Relevance</option>
           <option value="price-asc">Sort: Price (Low to High)</option>
@@ -55,7 +55,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
   {filtered.length === 0 ? (
         <p className="text-gray-600">No products match your search.</p>
       ) : (
-  <div className="grid gap-4 sm:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+  <div className="grid gap-4 sm:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {filtered.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

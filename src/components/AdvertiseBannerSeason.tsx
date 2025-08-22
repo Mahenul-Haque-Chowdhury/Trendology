@@ -15,9 +15,9 @@ import 'swiper/css/navigation';
 interface ThemedSlide {
   title: string;
   subtitle: string;
-  cta: { 
+  cta: {
     label: string;
-    href: string; 
+    href: string;
   };
   theme: 'sky' | 'teal'; // Themes for this banner
 }
@@ -50,20 +50,20 @@ const themeStyles = {
   },
 };
 
-// The core UI logic
+// The core UI logic with improved responsiveness
 function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' | 'sm' }) {
   const sizeClasses = {
     lg: {
-      container: 'min-h-[280px] md:min-h-[320px] p-8 md:p-12',
-      title: 'text-3xl md:text-4xl',
-      subtitle: 'text-lg',
-      cta: 'px-6 py-3 text-md',
+      container: 'min-h-[280px] md:min-h-[320px] p-6 sm:p-8 md:p-12',
+      title: 'text-2xl sm:text-3xl md:text-4xl',
+      subtitle: 'text-base sm:text-lg',
+      cta: 'px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-md',
     },
     sm: {
-      container: 'min-h-[140px] p-4',
-      title: 'text-xl',
-      subtitle: 'text-sm',
-      cta: 'px-3 py-2 text-xs',
+      container: 'min-h-[140px] p-4 sm:p-5',
+      title: 'text-lg sm:text-xl',
+      subtitle: 'text-xs sm:text-sm',
+      cta: 'px-3 py-1.5 sm:px-3 sm:py-2 text-xs',
     },
   };
 
@@ -84,9 +84,9 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
           return (
             <SwiperSlide key={index}>
               <div
-                className={`items-center w-full max-w-full h-full rounded-xl text-white bg-gradient-to-br ${styles.gradient} ${sizeClasses[size].container}`}
+                className={`flex flex-col justify-center w-full h-full rounded-xl text-white bg-gradient-to-br ${styles.gradient} ${sizeClasses[size].container}`}
               >
-                <div className="max-w-md space-y-4">
+                <div className="max-w-md space-y-3 sm:space-y-4">
                   <h2 className={`font-bold tracking-tight ${sizeClasses[size].title}`}>
                     {slide.title}
                   </h2>
@@ -108,19 +108,32 @@ function AdvertiseBanner({ slides, size }: { slides: ThemedSlide[]; size: 'lg' |
       <style jsx global>{`
         .season-slider .swiper-button-next,
         .season-slider .swiper-button-prev {
-          width: 28px;
-          height: 28px;
-          min-width: 28px;
-          min-height: 28px;
+          width: 24px;
+          height: 24px;
+          min-width: 24px;
+          min-height: 24px;
           border-radius: 9999px;
           background: rgba(255,255,255,0.85);
           color: #222;
           box-shadow: 0 1px 4px 0 rgba(0,0,0,0.07);
-          font-size: 14px;
+          font-size: 12px;
         }
         .season-slider .swiper-button-next:after,
         .season-slider .swiper-button-prev:after {
-          font-size: 14px !important;
+          font-size: 12px !important;
+        }
+        @media (min-width: 640px) {
+          .season-slider .swiper-button-next,
+          .season-slider .swiper-button-prev {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            min-height: 28px;
+          }
+          .season-slider .swiper-button-next:after,
+          .season-slider .swiper-button-prev:after {
+            font-size: 14px !important;
+          }
         }
       `}</style>
     </div>
