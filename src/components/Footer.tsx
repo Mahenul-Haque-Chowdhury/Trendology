@@ -54,21 +54,27 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      {/* App download and copyright */}
-  <div className="max-w-7xl mx-auto px-4 mt-10 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-6">
-        <div className="flex items-center gap-2">
-          <span>Experience AamarDokan App on your mobile:</span>
-          <a href="#" className="ml-2">
-            <img src="/google-play-badge.png" alt="Google Play" className="h-8" />
-          </a>
-          <a href="#" className="ml-2">
-            <img src="/app-store-badge.png" alt="App Store" className="h-8" />
-          </a>
+      {/* Developer Details */}
+          <div className="max-w-7xl mx-auto px-4 mt-10 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-6">
+          <div className="flex items-center gap-2">
+            <span>
+              User Friendly E-commerce Site by{" "}
+              <a 
+                href="https://arnob.life" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:underline"
+              >
+                Arnob
+              </a>
+            </span>
+          </div>
+          <div className="text-xs text-gray-500 mt-2 md:mt-0">
+            © 2025 AamarDokan Ltd | All rights reserved
+          </div>
+
         </div>
-        <div className="text-xs text-gray-500 mt-2 md:mt-0">
-          © 2025 AamarDokan Ltd | All rights reserved
-        </div>
-      </div>
+
     </footer>
   );
 }

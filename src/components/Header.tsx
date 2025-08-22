@@ -271,7 +271,7 @@ export default function Header() {
                 </button>
                 <div
                   role="menu"
-                  className={`absolute z-20 mt-2 w-56 origin-top-left rounded-md border bg-white shadow-xl transition-all duration-150 ${categoryMenuOpen ? 'opacity-100 scale-100' : 'pointer-events-none opacity-0 scale-95'}`}
+                  className={`absolute z-20 mt-2 w-56 origin-top-left rounded-md border bg-white shadow-xl transition-all duration-200 ease-out ${categoryMenuOpen ? 'opacity-100 scale-100 translate-y-0' : 'pointer-events-none opacity-0 scale-95 translate-y-1'}`}
                 >
                   <div className="max-h-80 overflow-auto py-1">
                     {CATEGORIES.map((c) => (
