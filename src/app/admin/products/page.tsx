@@ -43,16 +43,17 @@ export default function AdminProductsPage() {
 
   async function handleToggleGrid(product: Product, grid: string, assign: boolean) {
     if (!supabase) return alert('Supabase client not available')
+    const client = supabase
     try {
       console.log('Toggling grid:', { productId: product.id, grid, assign })
       let result
       if (assign) {
-        result = await supabase.from('home_grids').upsert(
+        result = await client.from('home_grids').upsert(
           { product_id: product.id, grid },
           { onConflict: 'product_id,grid' }
         )
       } else {
-        result = await supabase.from('home_grids').delete().eq('product_id', product.id).eq('grid', grid)
+        result = await client.from('home_grids').delete().eq('product_id', product.id).eq('grid', grid)
       }
       if (result.error) {
         console.error('Supabase error:', result.error)
@@ -60,7 +61,7 @@ export default function AdminProductsPage() {
         return
       }
       // Always refetch assignments from backend for consistency
-      const { data, error } = await supabase.from('home_grids').select('product_id, grid')
+      const { data, error } = await client.from('home_grids').select('product_id, grid')
       if (error) {
         console.error('Supabase fetch error:', error)
         alert('Failed to fetch updated grid assignments: ' + error.message)
