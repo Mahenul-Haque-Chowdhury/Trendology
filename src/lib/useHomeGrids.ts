@@ -28,17 +28,19 @@ export function useHomeGrids() {
       return
     }
 
+    const client = supabase
+
     let ignore = false
     async function fetchGridsData() {
       setLoading(true)
       try {
-        const { data: products, error: pError } = await supabase.from('inventory').select('*').eq('active', true)
+        const { data: products, error: pError } = await client.from('inventory').select('*').eq('active', true)
 
         if (pError) {
           console.error("Error fetching products:", pError)
         }
         
-        const { data: gridLinks, error: gError } = await supabase.from('home_grids').select('product_id, grid')
+  const { data: gridLinks, error: gError } = await client.from('home_grids').select('product_id, grid')
 
         if (gError) {
           console.error("Error fetching grid assignments:", gError)

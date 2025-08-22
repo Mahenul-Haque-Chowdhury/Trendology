@@ -23,9 +23,11 @@ export default function AdminProductsPage() {
   useEffect(() => {
     if (!supabase) return
 
+    const client = supabase
+
     let ignore = false
     async function fetchGrids() {
-      const { data } = await supabase.from('home_grids').select('product_id, grid')
+      const { data } = await client.from('home_grids').select('product_id, grid')
       if (!ignore && data) {
         const map: Record<string, string[]> = {}
         for (const row of data) {
@@ -84,13 +86,14 @@ export default function AdminProductsPage() {
   const [apiError, setApiError] = useState<{ code?: number; message?: string } | null>(null)
 
   useEffect(() => {
-    if (!supabase) return;
-    let ignore = false
+  if (!supabase) return;
+  const client = supabase
+  let ignore = false
     async function fetchCount() {
       try {
         let headers: Record<string, string> | undefined
         try {
-          const sess = await supabase.auth.getSession()
+      const sess = await client.auth.getSession()
           const token = sess?.data?.session?.access_token
           if (token) headers = { Authorization: `Bearer ${token}` }
         } catch {}
