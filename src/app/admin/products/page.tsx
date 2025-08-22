@@ -12,7 +12,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 
 export default function AdminProductsPage() {
   const { user } = useAuth()
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient()!
   
   // FORCE ADMIN UI for testing (set to true to always show grid assignment buttons)
   const isAdmin = true
