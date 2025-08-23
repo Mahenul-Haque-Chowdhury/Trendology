@@ -15,7 +15,7 @@ type WishlistState = {
   clearLocal: () => void
 }
 
-const Key = 'storefront.wishlist.v1'
+const Key = 'trendology.wishlist.v1'
 const Ctx = createContext<WishlistState | null>(null)
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
@@ -43,6 +43,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         return
       }
       try {
+        // Migrate legacy key (one-time)
+        try {
+          const legacy = localStorage.getItem(`storefront.wishlist.v1:${user.id}`)
+          if (legacy && !localStorage.getItem(`${Key}:${user.id}`)) {
+            localStorage.setItem(`${Key}:${user.id}`, legacy)
+          }
+        } catch {}
         const raw = localStorage.getItem(`${Key}:${user.id}`)
         const parsed = raw ? (JSON.parse(raw) as WishlistItem[]) : []
         setItems(parsed)

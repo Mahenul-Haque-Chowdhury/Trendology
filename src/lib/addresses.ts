@@ -15,7 +15,7 @@ export type Address = {
   created_at?: string
 }
 
-const Key = 'storefront.addresses.v1'
+const Key = 'trendology.addresses.v1'
 
 // Module-level cache to dedupe fetches across Strict Mode double-invocation and multiple consumers.
 const addressCache = new Map<string, Address[]>()
@@ -65,6 +65,13 @@ export function useAddresses(userId?: string) {
           return (data as Address[]) || []
         }
         try {
+          // Legacy migration
+          try {
+            const legacy = localStorage.getItem(`storefront.addresses.v1:${userId}`)
+            if (legacy && !localStorage.getItem(`${Key}:${userId}`)) {
+              localStorage.setItem(`${Key}:${userId}`, legacy)
+            }
+          } catch {}
           const raw = localStorage.getItem(`${Key}:${userId}`)
           return raw ? (JSON.parse(raw) as Address[]) : []
         } catch { return [] as Address[] }

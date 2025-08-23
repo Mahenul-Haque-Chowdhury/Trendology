@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { products as seed, type Product } from './products'
 import { getSupabaseClient, isSupabaseConfigured } from './supabase'
 
-const Key = 'storefront.products.v1'
+const Key = 'trendology.products.v1'
 
 export function useCatalog() {
   const [items, setItems] = useState<Product[]>(seed)
@@ -63,6 +63,11 @@ export function useCatalog() {
   console.debug('[catalog] Using fallback seed/local products')
       if (typeof window === 'undefined') return
       try {
+        // Legacy migration
+        try {
+          const legacy = localStorage.getItem('storefront.products.v1')
+          if (legacy && !localStorage.getItem(Key)) localStorage.setItem(Key, legacy)
+        } catch {}
         const raw = localStorage.getItem(Key)
         const extra = raw ? (JSON.parse(raw) as Product[]) : []
         const byId = new Map<string, Product>()

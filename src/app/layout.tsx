@@ -9,8 +9,9 @@ import CartDrawer from '@/components/CartDrawer'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// TODO: Set production domain below before deploying (kept placeholder to avoid accidental SEO indexing under wrong host)
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.trendology.example'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.trendology.example'),
   title: {
     default: 'Trendology – A marketplace for everything',
     template: '%s · Trendology',
@@ -32,8 +33,10 @@ export const metadata: Metadata = {
     description: 'Shop across categories with fast checkout and a clean, modern experience at Trendology.',
     url: '/',
     siteName: 'Trendology',
+    // Provide PNG fallback (some scrapers ignore SVG). Keep existing SVG for modern clients.
     images: [
-      { url: '/og.svg', width: 1200, height: 630, alt: 'Trendology' },
+      { url: '/brand-og.png', width: 1200, height: 630, alt: 'Trendology' },
+      { url: '/og.svg', width: 1200, height: 630, alt: 'Trendology (SVG)' },
     ],
     locale: 'en_US',
     type: 'website',
@@ -42,7 +45,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Trendology – A marketplace for everything',
     description: 'Shop across categories with fast checkout and a clean, modern experience at Trendology.',
-    images: ['/og.svg'],
+  images: ['/brand-og.png'],
   },
 }
 
@@ -56,8 +59,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+  <html lang="en">
       <body className={`${inter.className} min-h-screen flex flex-col bg-white text-gray-900`}>
+    {/* Canonical link for SEO; Next injects head automatically */}
+    <link rel="canonical" href={(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.trendology.example') + '/'} />
         <Providers>
           <Suspense fallback={<div className="h-16 sm:h-20" />}> 
             <Header />

@@ -281,25 +281,25 @@ export default function Header() {
 
           {/* Desktop Search (unified rounded) */}
           <div className="hidden md:flex flex-1 min-w-0 basis-[55%]">
-            <form onSubmit={handleSearchSubmit} className="relative flex w-full items-stretch group">
+            <form onSubmit={handleSearchSubmit} className="relative flex w-full items-stretch group" role="search" aria-label="Site">
               <div className="flex w-full rounded-full border border-gray-300 bg-white shadow-sm focus-within:ring-2 focus-within:ring-brand focus-within:border-brand overflow-visible">
                 {/* Categories button */}
                 <div className="relative" ref={catMenuRef}>
                   <button
                     type="button"
                     onClick={() => setCategoryMenuOpen(v => !v)}
-                    className="inline-flex items-center gap-2 h-12 pl-5 pr-4 lg:pr-5 text-[15px] bg-gray-50 hover:bg-gray-100 focus:outline-none border-r border-gray-200"
+                    className="inline-flex items-center gap-2 h-12 pl-5 pr-4 lg:pr-5 text-[15px] rounded-l-full focus:outline-none border-r border-gray-200 hover:bg-gray-50/70"
                     aria-haspopup="menu" aria-expanded={categoryMenuOpen}
                   >
                     <Grid3x3 size={18} />
                     <span className="hidden lg:inline text-sm font-medium">Categories</span>
                     <ChevronDown size={16} className={`transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
+                  {categoryMenuOpen && (
                   <div
                     role="menu"
                     data-open={categoryMenuOpen ? 'true' : 'false'}
                     className="absolute z-50 mt-2 w-60 origin-top-left rounded-lg border bg-white shadow-xl ring-1 ring-black/5 focus:outline-none overflow-hidden pointer-events-auto"
-                    style={{ visibility: categoryMenuOpen ? 'visible' : 'hidden' }}
                   >
                     <div className="max-h-80 overflow-auto py-2 divide-y divide-gray-100">
                       <div className="py-1">
@@ -315,9 +315,9 @@ export default function Header() {
                       </div>
                     </div>
                   </div>
+                  )}
                   <style jsx>{`
-                    [data-open='false'] {opacity:0; transform: translateY(4px) scale(.98); transition: opacity .18s ease, transform .22s cubic-bezier(.22,.65,.35,1);} 
-                    [data-open='true'] {opacity:1; transform: translateY(0) scale(1); transition: opacity .25s ease, transform .28s cubic-bezier(.16,.84,.44,1);} 
+                    details summary::-webkit-details-marker { display: none; }
                     @media (prefers-reduced-motion: reduce) { [data-open='false'],[data-open='true'] {transition: none; transform:none;} }
                   `}</style>
                 </div>

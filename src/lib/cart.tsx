@@ -27,7 +27,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
-      const raw = localStorage.getItem('storefront.cart.v1')
+      // Migrate legacy key
+      const legacy = localStorage.getItem('storefront.cart.v1')
+      if (legacy && !localStorage.getItem('trendology.cart.v1')) {
+        localStorage.setItem('trendology.cart.v1', legacy)
+      }
+      const raw = localStorage.getItem('trendology.cart.v1')
       let parsed = raw ? (JSON.parse(raw) as CartItem[]) : []
       if (!parsed || !Array.isArray(parsed)) {
         const m = document.cookie.match(/(?:^|; )cart=([^;]*)/)
@@ -48,7 +53,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined' || !hydrated) return
     try {
-      localStorage.setItem('storefront.cart.v1', JSON.stringify(items))
+  localStorage.setItem('trendology.cart.v1', JSON.stringify(items))
       // Cookie fallback (7 days)
       const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()
       document.cookie = `cart=${encodeURIComponent(JSON.stringify(items))}; path=/; expires=${expires}`

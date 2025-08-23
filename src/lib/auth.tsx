@@ -10,8 +10,9 @@ export type User = {
   password?: string // Demo-only fallback
 }
 
-const UsersKey = 'storefront.users.v1'
-const SessionKey = 'storefront.session.v1'
+// Unified brand storage keys (migrate from legacy 'storefront.*').
+const UsersKey = 'trendology.users.v1'
+const SessionKey = 'trendology.session.v1'
 
 type AuthState = {
   user: User | null
@@ -23,20 +24,36 @@ type AuthState = {
 
 const AuthCtx = createContext<AuthState | null>(null)
 
+function migrateLegacy() {
+  try {
+    const map: [string, string][] = [
+      ['storefront.users.v1', UsersKey],
+      ['storefront.session.v1', SessionKey],
+    ]
+    for (const [oldKey, newKey] of map) {
+      const oldVal = localStorage.getItem(oldKey)
+      if (oldVal && !localStorage.getItem(newKey)) {
+        localStorage.setItem(newKey, oldVal)
+      }
+    }
+  } catch {}
+}
 function loadUsers(): User[] {
-  try { const raw = localStorage.getItem(UsersKey); return raw ? JSON.parse(raw) : [] } catch { return [] }
+  try { migrateLegacy(); const raw = localStorage.getItem(UsersKey); return raw ? JSON.parse(raw) : [] } catch { return [] }
 }
 function saveUsers(users: User[]) { try { localStorage.setItem(UsersKey, JSON.stringify(users)) } catch {} }
-function loadSession(): string | null { try { return localStorage.getItem(SessionKey) } catch { return null } }
+function loadSession(): string | null { try { migrateLegacy(); return localStorage.getItem(SessionKey) } catch { return null } }
 function saveSession(id: string | null) { try { id ? localStorage.setItem(SessionKey, id) : localStorage.removeItem(SessionKey) } catch {} }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const useSupabase = isSupabaseConfigured()
+  const demoAuthEnabled = (process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH || '').toLowerCase() === 'true'
 
   useEffect(() => {
     if (!useSupabase) {
       if (typeof window === 'undefined') return
+      migrateLegacy()
       const id = loadSession()
       if (!id) return
       const found = loadUsers().find((u) => u.id === id)
@@ -100,12 +117,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const api: AuthState = useMemo(() => ({
     user,
     async register(name, email, password, phone) {
-      if (useSupabase) {
+  if (useSupabase) {
         const supabase = getSupabaseClient()!
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { name, phone } } })
         if (error) return { ok: false, message: error.message }
         return { ok: true }
       }
+  if (!demoAuthEnabled) return { ok: false, message: 'Email/password registration disabled' }
       const users = loadUsers()
       if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) return { ok: false, message: 'Email already registered' }
       const newUser: User = { id: 'U-' + Date.now().toString(36), name, email, password, created_at: new Date().toISOString() }
@@ -116,12 +134,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: true }
     },
     async login(email, password) {
-      if (useSupabase) {
+  if (useSupabase) {
         const supabase = getSupabaseClient()!
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) return { ok: false, message: error.message }
         return { ok: true }
       }
+  if (!demoAuthEnabled) return { ok: false, message: 'Password login disabled' }
       const users = loadUsers()
       const u = users.find((it) => it.email.toLowerCase() === email.toLowerCase() && it.password === password)
       if (!u) return { ok: false, message: 'Invalid credentials' }
