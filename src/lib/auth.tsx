@@ -16,6 +16,7 @@ const SessionKey = 'trendology.session.v1'
 
 type AuthState = {
   user: User | null
+  authReady: boolean
   register: (name: string, email: string, password: string, phone?: string) => Promise<{ ok: boolean; message?: string }>
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>
   logout: () => Promise<void>
@@ -47,6 +48,7 @@ function saveSession(id: string | null) { try { id ? localStorage.setItem(Sessio
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [authReady, setAuthReady] = useState(false)
   const useSupabase = isSupabaseConfigured()
   const demoAuthEnabled = (process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH || '').toLowerCase() === 'true'
 
@@ -55,9 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window === 'undefined') return
       migrateLegacy()
       const id = loadSession()
-      if (!id) return
-      const found = loadUsers().find((u) => u.id === id)
-      if (found) setUser(found)
+      if (id) {
+        const found = loadUsers().find((u) => u.id === id)
+        if (found) setUser(found)
+      }
+      setAuthReady(true)
       return
     }
     const supabase = getSupabaseClient()!
@@ -98,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ id: u.id, name: (u.user_metadata?.name as string) || u.email!, email: u.email!, created_at: new Date().toISOString() })
         ensureProfile(u)
       }
+      setAuthReady(true)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((
       _event: import('@supabase/supabase-js').AuthChangeEvent,
@@ -110,12 +115,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null)
       }
+      setAuthReady(true)
     })
     return () => { sub.subscription.unsubscribe() }
   }, [useSupabase])
 
   const api: AuthState = useMemo(() => ({
     user,
+    authReady,
     async register(name, email, password, phone) {
   if (useSupabase) {
         const supabase = getSupabaseClient()!
@@ -183,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setUser((prev) => (prev ? { ...prev, name } : prev))
     },
-  }), [user, useSupabase])
+  }), [user, useSupabase, authReady])
 
   return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>
 }

@@ -55,7 +55,7 @@ const LoggedOutView = () => (
 )
 
 export default function ProfilePage() {
-  const { user, updateDisplayName } = useAuth()
+  const { user, updateDisplayName, authReady } = useAuth()
   const supa = isSupabaseConfigured() ? getSupabaseClient() : null
   const [profile, setProfile] = useState<Profile | null>(null)
   const [initialProfile, setInitialProfile] = useState<Profile | null>(null)
@@ -195,7 +195,7 @@ export default function ProfilePage() {
     }
   }
   
-  if (loading) return <ProfileSkeleton />
+  if (!authReady || loading) return <ProfileSkeleton />
   if (!user) return <LoggedOutView />
 
   return (

@@ -9,7 +9,7 @@ import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 interface DisplayOrder extends Order { backendId?: string; code?: string }
 
 export default function AccountPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, authReady } = useAuth()
   const [orders, setOrders] = useState<DisplayOrder[]>([])
 
   useEffect(() => {
@@ -80,6 +80,14 @@ export default function AccountPage() {
     }
     load()
   }, [user])
+
+  if (!authReady) {
+    return <div className="max-w-md mx-auto card p-6 animate-pulse space-y-4">
+      <div className="h-6 w-40 bg-gray-200 rounded" />
+      <div className="h-10 w-full bg-gray-200 rounded" />
+      <div className="h-10 w-2/3 bg-gray-200 rounded" />
+    </div>
+  }
 
   if (!user) {
     return (
