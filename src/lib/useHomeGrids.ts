@@ -2,6 +2,7 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import type { Product } from './products'
+import { products as seed } from './products'
 
 export type HomeGridsData = {
   bestsellers: Product[]
@@ -23,7 +24,17 @@ export function useHomeGrids() {
   })
 
   useEffect(() => {
+    // If Supabase not configured, fall back to local seed data immediately
     if (!supabase) {
+      if (seed.length) {
+        setGrids({
+          bestsellers: seed.slice(0, 4),
+          new: seed.slice(0, 4),
+          budget: seed.filter(p => p.price < 3000),
+          premium: seed.filter(p => p.price >= 3000),
+          all: seed,
+        })
+      }
       setLoading(false)
       return
     }
@@ -34,7 +45,7 @@ export function useHomeGrids() {
     async function fetchGridsData() {
       setLoading(true)
       try {
-        const { data: products, error: pError } = await client.from('inventory').select('*').eq('active', true)
+  const { data: products, error: pError } = await client.from('inventory').select('*').eq('active', true)
 
         if (pError) {
           console.error("Error fetching products:", pError)
@@ -46,17 +57,18 @@ export function useHomeGrids() {
           console.error("Error fetching grid assignments:", gError)
         }
 
-        if (!ignore && products) {
-          const productMap = new Map(products.map(p => [p.id, p]))
+        if (!ignore) {
+          const source = (products && products.length > 0) ? products : seed
+          const productMap = new Map(source.map((p: any) => [p.id, p]))
           const newGrids: HomeGridsData = {
             bestsellers: [],
             new: [],
             budget: [],
             premium: [],
-            all: products,
+            all: source as any,
           }
 
-          if (gridLinks) {
+          if (gridLinks && products && products.length > 0) {
             for (const link of gridLinks) {
               const product = productMap.get(link.product_id)
               if (product) {
@@ -76,6 +88,13 @@ export function useHomeGrids() {
                 }
               }
             }
+          }
+          // Heuristic fill if using seed (no grid links available)
+          if (source === seed) {
+            if (newGrids.bestsellers.length === 0) newGrids.bestsellers = seed.slice(0, 4)
+            if (newGrids.new.length === 0) newGrids.new = seed.slice(0, 4)
+            if (newGrids.budget.length === 0) newGrids.budget = seed.filter(p => p.price < 3000)
+            if (newGrids.premium.length === 0) newGrids.premium = seed.filter(p => p.price >= 3000)
           }
           setGrids(newGrids)
         }
