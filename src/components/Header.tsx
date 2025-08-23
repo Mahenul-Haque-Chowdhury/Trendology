@@ -251,7 +251,7 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-0 shrink-0 focus-visible:ring-2 focus-visible:ring-brand rounded-sm group" aria-label="Trendology home">
               <span className="relative w-9 h-9 sm:w-11 sm:h-11 inline-flex items-center justify-center">
                 <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#D9C57F]/25 to-[#B79543]/10 scale-110 blur-sm opacity-0 group-hover:opacity-100 transition" />
-                <img src="/brand-icon.png" alt="Trendology logo" className="w-full h-full" loading="lazy" />
+                <Image src="/brand-icon.png" alt="Trendology logo" className="w-full h-full" loading="lazy" />
               </span>
               <span className="-ml-1 font-extrabold text-2xl sm:text-3xl tracking-tight text-[#C6AF5E] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-[#D9C57F] transition-colors dark:text-[#D9C57F]">
                 Trendology

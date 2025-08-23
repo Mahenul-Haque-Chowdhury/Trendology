@@ -15,8 +15,33 @@ export type Product = {
 }
 
 // Empty local seed; the app loads from Supabase.
-export const products: Product[] = []
+// Provide a small fallback sample so the grid isn't empty when Supabase is not set up.
+export const products: Product[] = [
+  {
+    id: 'sample-1',
+    name: 'Sample Wireless Headphones',
+    description: 'Lightweight on‑ear wireless headphones with long battery life.',
+    price: 2490,
+    image: '/brand-icon.png',
+    images: ['/brand-icon.png'],
+    category: 'electronics',
+    tags: ['audio', 'wireless'],
+    created_at: new Date().toISOString(),
+    active: true,
+  },
+  {
+    id: 'sample-2',
+    name: 'Sample Smart Watch',
+    description: 'Fitness tracking smart watch with heart rate monitor.',
+    price: 4590,
+    image: '/brand-icon.png',
+    images: ['/brand-icon.png'],
+    category: 'wearables',
+    tags: ['fitness', 'health'],
+    created_at: new Date().toISOString(),
+    active: true,
+  },
+]
 
-// If you ever want local sample data for offline dev, you can temporarily add
-// items here or use localStorage via the admin UI. Keeping this empty ensures
-// the UI reflects your Supabase inventory.
+// NOTE: Remove or empty this array once real products exist in Supabase so
+// the fallback doesn’t mask backend loading issues.
