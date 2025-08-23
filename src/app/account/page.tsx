@@ -6,9 +6,11 @@ import { useEffect, useState } from 'react'
 import type { Order } from '@/lib/types'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 
+interface DisplayOrder extends Order { backendId?: string; code?: string }
+
 export default function AccountPage() {
   const { user, logout } = useAuth()
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<DisplayOrder[]>([])
 
   useEffect(() => {
     if (!user) return
@@ -21,7 +23,7 @@ export default function AccountPage() {
           const { data: rows, error } = await supabase
             .from('orders')
             .select('*')
-            .or(`user_id.eq.${u.id},email.eq.${u.email}`)
+            .or(`user_id.eq.${u.id},email.ilike.${u.email}`)
             .order('created_at', { ascending: false })
           if (!error && rows) {
             // Fetch item counts for these orders
@@ -38,8 +40,11 @@ export default function AccountPage() {
                 }
               }
             }
-      const mapped: Order[] = rows.map((r: any) => ({
-              id: r.id,
+  const mapped: DisplayOrder[] = rows.map((r: any) => ({
+      // Use human code or short suffix of UUID for consistent display
+      id: r.code || (typeof r.id === 'string' && r.id.includes('-') ? 'ORD-' + r.id.split('-').pop().toUpperCase() : r.id),
+      backendId: r.id,
+      code: r.code,
               createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
               customer: {
                 fullName: r.customer_name || '',
@@ -69,8 +74,8 @@ export default function AccountPage() {
       // Fallback to local demo orders
       try {
         const raw = localStorage.getItem('storefront.orders.v1')
-  const all: Order[] = raw ? JSON.parse(raw) : []
-  setOrders(all.filter((o) => o.customer.email.toLowerCase() === u.email.toLowerCase()))
+    const all: Order[] = raw ? JSON.parse(raw) : []
+  setOrders(all.filter((o) => o.customer.email.toLowerCase() === u.email.toLowerCase()).map(o => ({ ...o })))
       } catch {}
     }
     load()
@@ -90,33 +95,84 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Welcome, {user.name}</h1>
+    <div className="space-y-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Hi, {user.name || 'there'} 👋</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your orders, wishlist and profile details.</p>
+        </div>
         <div className="flex gap-2">
-          <Link href="/account/profile" className="btn">EditProfile</Link>
+          <Link href="/account/profile" className="btn">Profile</Link>
           <button className="btn" onClick={logout}>Sign Out</button>
         </div>
       </div>
 
-      <section className="card p-4">
-        <h2 className="text-lg font-semibold mb-3">My Orders ({orders.length})</h2>
+      {/* Stat cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60">
+          <div className="text-xs font-medium tracking-wide text-gray-500 mb-1">Orders</div>
+          <div className="text-2xl font-semibold">{orders.length}</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60">
+          <div className="text-xs font-medium tracking-wide text-gray-500 mb-1">Total Spent (approx)</div>
+          <div className="text-2xl font-semibold">{formatCurrencyBDT(orders.reduce((n,o)=>n+o.total,0))}</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60">
+          <div className="text-xs font-medium tracking-wide text-gray-500 mb-1">Last Order</div>
+          <div className="text-sm font-medium truncate max-w-[140px]">{orders[0]?.id || '—'}</div>
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <section className="card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Recent Orders</h2>
+          <Link href="/account/orders" className="text-sm font-medium text-blue-600 hover:underline">View all</Link>
+        </div>
         {orders.length === 0 ? (
-          <p className="text-gray-600">No orders yet.</p>
+          <p className="text-gray-600 dark:text-gray-400">No orders yet. Start shopping!</p>
         ) : (
-          <ul className="space-y-3">
-            {orders.map((o) => (
-              <li key={o.id} className="border rounded-md p-3">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">Order #{o.id}</div>
-                  <div className="text-sm">{new Date(o.createdAt).toLocaleDateString()}</div>
-                </div>
-                <div className="text-sm text-gray-600">{o.items.length} item(s) · {formatCurrencyBDT(o.total)} · {o.status}</div>
-              </li>
-            ))}
+          <ul className="divide-y divide-gray-200 dark:divide-gray-800 border border-gray-200 dark:border-gray-800 rounded-md overflow-hidden">
+            {orders.slice(0,5).map(o => {
+              const itemCount = o.items.length
+              return (
+                <li key={o.id} className="p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <span className="text-gray-500">#</span>
+                      <code className="font-mono text-[12px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">{o.id}</code>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">{o.status}</span>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 truncate">
+                      {itemCount} item{itemCount!==1 && 's'} · {formatCurrencyBDT(o.total)} · {new Date(o.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/account/orders/${encodeURIComponent((o as any).code || (o as any).backendId || o.id)}`} className="btn btn-xs btn-primary">Track</Link>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>
+
+      {/* Quick Links */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Link href="/account/wishlist" className="group rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+          <div className="text-sm font-semibold mb-1">Wishlist</div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">View saved items</p>
+        </Link>
+        <Link href="/account/profile" className="group rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+          <div className="text-sm font-semibold mb-1">Profile Details</div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">Update info & address</p>
+        </Link>
+        <Link href="/account/orders" className="group rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+          <div className="text-sm font-semibold mb-1">Full Order History</div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">All past purchases</p>
+        </Link>
+      </div>
     </div>
   )
 }
