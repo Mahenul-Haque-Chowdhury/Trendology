@@ -3,9 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import {
-  Search, User, Menu, X, ChevronDown, Grid3x3
-} from 'lucide-react'
+import { Search, User, Menu, X, ChevronDown, Grid3x3 } from 'lucide-react'
 
 // Dummy/Placeholder components and hooks - replace with your actual implementations
 import type { Product } from '@/lib/products'
@@ -13,8 +11,9 @@ import { useAuth } from '@/lib/auth'
 import { useCatalog } from '@/lib/catalog'
 import { CATEGORIES } from '@/lib/categories'
 import { formatCurrencyBDT } from '@/lib/currency'
-import CartButton from './CartButton' // Assuming these are separate components
+import CartButton from './CartButton'
 import WishlistButton from './WishlistButton'
+import ThemeToggle from './ThemeToggle'
 
 // Reusable Search Suggestions Component to avoid duplication
 type SearchSuggestionsProps = {
@@ -66,7 +65,7 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
-  
+
   // Data & Hooks
   const { products: items } = useCatalog()
   const { user, logout } = useAuth()
@@ -228,19 +227,18 @@ export default function Header() {
   }, [mobileSearchOpen])
   
   return (
-    <header className="sticky top-0 z-40">
+    <header className="sticky top-0 z-40 overflow-visible">
       {/* Promo bar */}
-      <div className="bg-amber-300 text-gray-900 text-xs sm:text-sm">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-2 text-center">
+      <div className="bg-amber-300 text-gray-900 text-xs sm:text-sm overflow-hidden">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-2 text-center min-w-0">
           <span className="font-medium">Free delivery on orders over ৳5000!</span>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="border-b bg-white/80 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-4">
+      <div className="border-b bg-white/80 dark:bg-surface-dark/70 backdrop-blur-md overflow-visible">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4 min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
             {/* Mobile Menu Toggle */}
             <button
               ref={mobileMenuButtonRef}
@@ -250,19 +248,25 @@ export default function Header() {
             >
               <Menu size={22} />
             </button>
-            <Link href="/" className="shrink-0 font-extrabold text-2xl sm:text-3xl text-brand tracking-tight focus-visible:ring-2 focus-visible:ring-brand rounded-sm">
-              AamarDokan
+            <Link href="/" className="flex items-center gap-0 shrink-0 focus-visible:ring-2 focus-visible:ring-brand rounded-sm group" aria-label="Trendology home">
+              <span className="relative w-9 h-9 sm:w-11 sm:h-11 inline-flex items-center justify-center">
+                <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#D9C57F]/25 to-[#B79543]/10 scale-110 blur-sm opacity-0 group-hover:opacity-100 transition" />
+                <img src="/brand-icon.png" alt="Trendology logo" className="w-full h-full" loading="lazy" />
+              </span>
+              <span className="-ml-1 font-extrabold text-2xl sm:text-3xl tracking-tight text-[#C6AF5E] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-[#D9C57F] transition-colors dark:text-[#D9C57F]">
+                Trendology
+              </span>
             </Link>
           </div>
 
           {/* Desktop Search */}
-          <div className="hidden md:flex flex-1 max-w-2xl">
+          <div className="hidden md:flex flex-1 max-w-2xl min-w-0">
             <form onSubmit={handleSearchSubmit} className="flex items-center w-full">
               <div className="relative" ref={catMenuRef}>
                 <button
                   type="button"
                   onClick={() => setCategoryMenuOpen((v) => !v)}
-                  className="inline-flex items-center gap-2 h-11 rounded-l-md border border-gray-300 bg-gray-50 px-3 lg:px-4 shadow-sm hover:bg-gray-100 focus:border-brand focus:ring-2 focus:ring-brand z-10"
+                  className="inline-flex items-center gap-2 h-11 rounded-l-md border border-gray-300 border-r-0 bg-gray-50 px-3 lg:px-4 shadow-sm hover:bg-gray-100 focus:border-brand focus:ring-2 focus:ring-brand z-10"
                   aria-haspopup="menu" aria-expanded={categoryMenuOpen}
                 >
                   <Grid3x3 size={18} />
@@ -271,19 +275,31 @@ export default function Header() {
                 </button>
                 <div
                   role="menu"
-                  className={`absolute z-20 mt-2 w-56 origin-top-left rounded-md border bg-white shadow-xl transition-all duration-200 ease-out ${categoryMenuOpen ? 'opacity-100 scale-100 translate-y-0' : 'pointer-events-none opacity-0 scale-95 translate-y-1'}`}
+                  data-open={categoryMenuOpen ? 'true' : 'false'}
+                  className="absolute z-50 mt-2 w-60 origin-top-left rounded-lg border bg-white shadow-xl ring-1 ring-black/5 focus:outline-none overflow-hidden pointer-events-auto"
+                  style={{ visibility: categoryMenuOpen ? 'visible' : 'hidden' }}
                 >
-                  <div className="max-h-80 overflow-auto py-1">
-                    {CATEGORIES.map((c) => (
-                      <Link key={c.slug} href={`/category/${c.slug}`} role="menuitem"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setCategoryMenuOpen(false)}
-                      >{c.label}</Link>
-                    ))}
+                  <div className="max-h-80 overflow-auto py-2 divide-y divide-gray-100">
+                    <div className="py-1">
+                      {CATEGORIES.map((c) => (
+                        <Link
+                          key={c.slug}
+                          href={`/category/${c.slug}`}
+                          role="menuitem"
+                          className="block px-4 py-2.5 text-[15px] leading-tight font-medium text-gray-700 hover:bg-gray-50 focus:bg-gray-50 transition-colors"
+                          onClick={() => setCategoryMenuOpen(false)}
+                        >{c.label}</Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
+                <style jsx>{`
+                  [data-open='false'] {opacity:0; transform: translateY(4px) scale(.98); transition: opacity .18s ease, transform .22s cubic-bezier(.22,.65,.35,1);} 
+                  [data-open='true'] {opacity:1; transform: translateY(0) scale(1); transition: opacity .25s ease, transform .28s cubic-bezier(.16,.84,.44,1);} 
+                  @media (prefers-reduced-motion: reduce) { [data-open='false'],[data-open='true'] {transition: none; transform:none;} }
+                `}</style>
               </div>
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <input
                   ref={desktopInputRef}
                   value={query}
@@ -292,7 +308,7 @@ export default function Header() {
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                   onKeyDown={handleKeyDown}
                   placeholder="Search products..."
-                  className="w-full h-11 border-y border-r border-gray-300 bg-white px-4 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand -ml-px"
+                  className="w-full h-11 border border-gray-300 border-l-0 bg-white px-4 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
                 />
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <Search size={20} />
@@ -306,7 +322,7 @@ export default function Header() {
           </div>
 
           {/* Right-side actions */}
-          <nav className="flex items-center gap-2 sm:gap-3">
+          <nav className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setMobileSearchOpen(true)}
@@ -317,25 +333,36 @@ export default function Header() {
             </button>
             <WishlistButton />
             <CartButton />
+            <ThemeToggle />
             <div className="relative" ref={userMenuRef}>
-              {user ? (
-                <button className="btn-icon" onClick={() => setUserMenuOpen((v) => !v)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label="Account">
-                  <User size={22} />
-                </button>
-              ) : (
-                <Link href="/account" className="btn-icon" aria-label="Account">
-                  <User size={22} />
-                </Link>
-              )}
-              {user && userMenuOpen && (
-                <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-xl p-2 z-20">
-                  <p className="px-2 py-1 text-sm text-gray-500">Hi, {user.name.split(' ')[0]}</p>
-                  <hr className="my-1"/>
-                  <Link href="/account/profile" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>My Profile</Link>
-                  <Link href="/account/orders" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>My Orders</Link>
-                  <button role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 text-red-600"
-                    onClick={() => { setUserMenuOpen(false); setShowSignOutModal(true) }}
-                  >Sign Out</button>
+              <button
+                className="btn-icon"
+                onClick={() => setUserMenuOpen(v => !v)}
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                aria-label={user ? 'Account menu' : 'Open account menu'}
+              >
+                <User size={22} />
+              </button>
+              {userMenuOpen && (
+                <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-xl p-2 z-50">
+                  {user ? (
+                    <>
+                      <p className="px-2 py-1 text-sm text-gray-500">Hi, {user.name.split(' ')[0]}</p>
+                      <hr className="my-1" />
+                      <Link href="/account/profile" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>My Profile</Link>
+                      <Link href="/account/orders" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>My Orders</Link>
+                      <button role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 text-red-600"
+                        onClick={() => { setUserMenuOpen(false); setShowSignOutModal(true) }}
+                      >Sign Out</button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="px-2 py-1 text-sm text-gray-500">Welcome</p>
+                      <hr className="my-1" />
+                      <Link href="/account" role="menuitem" className="block w-full px-3 py-2 text-sm text-left rounded-md hover:bg-gray-100 focus:bg-gray-100" onClick={() => setUserMenuOpen(false)}>Sign In / Register</Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -343,7 +370,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile drawer */}
+  {/* Mobile drawer */}
       <div className={`fixed inset-0 z-50 md:hidden ${mobileMenuOpen ? '' : 'pointer-events-none'}`} aria-hidden={!mobileMenuOpen}>
         <div className={`absolute inset-0 bg-black/50 transition-opacity ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMobileMenuOpen(false)}/>
         <aside className={`absolute left-0 top-0 h-full w-80 max-w-[calc(100vw-3rem)] bg-white shadow-xl transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -374,7 +401,7 @@ export default function Header() {
         </aside>
       </div>
       
-      {/* Mobile Search Overlay */}
+  {/* Mobile Search Overlay */}
       {mobileSearchOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setMobileSearchOpen(false)}>
           <div className="absolute top-0 left-0 right-0 p-4 bg-white border-b" onClick={(e) => e.stopPropagation()}>
@@ -400,7 +427,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* Sign out confirmation modal */}
+  {/* Sign out confirmation modal */}
       {showSignOutModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="signout-title">
           <div className="fixed inset-0 bg-black/50" onClick={closeSignOutModal} />
