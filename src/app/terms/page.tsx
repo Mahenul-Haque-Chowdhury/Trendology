@@ -2,9 +2,9 @@ export default function TermsPage() {
   return (
     <div className="container mx-auto px-4 py-8 prose max-w-3xl">
       <h1>Terms &amp; Conditions</h1>
-      <p>Welcome to AamarDokan!</p>
+  <p>Welcome to Trendology!</p>
       <p>
-        These Terms and Conditions (“Terms”) govern your use of our website, services, and products offered through AamarDokan (referred to as “we,” “our,” or “us”).
+  These Terms and Conditions (“Terms”) govern your use of our website, services, and products offered through Trendology (referred to as “we,” “our,” or “us”).
         By accessing or using our website, you agree to be bound by these Terms. If you do not agree, please do not use our website.
       </p>
       <hr />
@@ -62,7 +62,7 @@ export default function TermsPage() {
       <hr />
       <h2>8. Intellectual Property</h2>
       <ul>
-        <li>All content on AamarDokan (logos, images, product descriptions, graphics, etc.) is owned or licensed by us.</li>
+  <li>All content on Trendology (logos, images, product descriptions, graphics, etc.) is owned or licensed by us.</li>
         <li>You may not copy, reproduce, distribute, or exploit any content without prior written permission.</li>
       </ul>
       <hr />
@@ -73,7 +73,7 @@ export default function TermsPage() {
       <hr />
       <h2>10. Limitation of Liability</h2>
       <ul>
-        <li>AamarDokan shall not be liable for any direct, indirect, incidental, or consequential damages resulting from your use of our services.</li>
+  <li>Trendology shall not be liable for any direct, indirect, incidental, or consequential damages resulting from your use of our services.</li>
         <li>We do not guarantee uninterrupted, error-free, or secure access to our Website.</li>
       </ul>
       <hr />

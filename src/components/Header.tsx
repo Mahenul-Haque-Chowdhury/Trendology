@@ -4,16 +4,15 @@ import Image from 'next/image'
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Search, User, Menu, X, ChevronDown, Grid3x3 } from 'lucide-react'
+import { CATEGORIES } from '@/lib/categories'
 
 // Dummy/Placeholder components and hooks - replace with your actual implementations
 import type { Product } from '@/lib/products'
 import { useAuth } from '@/lib/auth'
 import { useCatalog } from '@/lib/catalog'
-import { CATEGORIES } from '@/lib/categories'
 import { formatCurrencyBDT } from '@/lib/currency'
 import CartButton from './CartButton'
 import WishlistButton from './WishlistButton'
-import ThemeToggle from './ThemeToggle'
 
 // Reusable Search Suggestions Component to avoid duplication
 type SearchSuggestionsProps = {
@@ -226,8 +225,22 @@ export default function Header() {
     }
   }, [mobileSearchOpen])
   
+  // Dynamic header height -> CSS variable for layout offset
+  const headerRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const setVar = () => {
+      if (headerRef.current) {
+        const h = headerRef.current.offsetHeight
+        document.documentElement.style.setProperty('--site-header-height', h + 'px')
+      }
+    }
+    setVar()
+    window.addEventListener('resize', setVar)
+    return () => window.removeEventListener('resize', setVar)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-40 overflow-visible">
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-40 overflow-visible">
       {/* Promo bar */}
       <div className="bg-amber-300 text-gray-900 text-xs sm:text-sm overflow-hidden">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-2 text-center min-w-0">
@@ -237,8 +250,8 @@ export default function Header() {
 
       {/* Main header */}
       <div className="border-b bg-white/80 dark:bg-surface-dark/70 backdrop-blur-md overflow-visible">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4 min-w-0">
-          <div className="flex items-center gap-4 min-w-0">
+        <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 shrink-0">
             {/* Mobile Menu Toggle */}
             <button
               ref={mobileMenuButtonRef}
@@ -248,88 +261,95 @@ export default function Header() {
             >
               <Menu size={22} />
             </button>
-            <Link href="/" className="flex items-center gap-0 shrink-0 focus-visible:ring-2 focus-visible:ring-brand rounded-sm group" aria-label="Trendology home">
-              <span className="relative w-9 h-9 sm:w-11 sm:h-11 inline-flex items-center justify-center">
+            <Link href="/" className="flex items-center gap-0 min-w-0 focus-visible:ring-2 focus-visible:ring-brand rounded-sm group" aria-label="Trendology home">
+              <span className="relative w-8 h-8 sm:w-11 sm:h-11 inline-flex items-center justify-center shrink-0">
                 <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#D9C57F]/25 to-[#B79543]/10 scale-110 blur-sm opacity-0 group-hover:opacity-100 transition" />
                 <Image
                   src="/brand-icon.png"
                   alt="Trendology logo"
                   fill
                   priority
-                  sizes="(max-width:640px) 36px, 44px"
+                  sizes="(max-width:640px) 32px, 44px"
                   className="object-contain"
                 />
               </span>
-              <span className="-ml-1 font-extrabold text-2xl sm:text-3xl tracking-tight text-[#C6AF5E] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-[#D9C57F] transition-colors dark:text-[#D9C57F]">
+              <span className="-ml-1 font-extrabold text-xl sm:text-3xl tracking-tight text-[#C6AF5E] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-[#D9C57F] transition-colors dark:text-[#D9C57F] whitespace-nowrap">
                 Trendology
               </span>
             </Link>
           </div>
 
-          {/* Desktop Search */}
-          <div className="hidden md:flex flex-1 max-w-2xl min-w-0">
-            <form onSubmit={handleSearchSubmit} className="flex items-center w-full">
-              <div className="relative" ref={catMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setCategoryMenuOpen((v) => !v)}
-                  className="inline-flex items-center gap-2 h-11 rounded-l-md border border-gray-300 border-r-0 bg-gray-50 px-3 lg:px-4 shadow-sm hover:bg-gray-100 focus:border-brand focus:ring-2 focus:ring-brand z-10"
-                  aria-haspopup="menu" aria-expanded={categoryMenuOpen}
-                >
-                  <Grid3x3 size={18} />
-                  <span className="hidden lg:inline text-sm font-medium">Categories</span>
-                  <ChevronDown size={16} className={`transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <div
-                  role="menu"
-                  data-open={categoryMenuOpen ? 'true' : 'false'}
-                  className="absolute z-50 mt-2 w-60 origin-top-left rounded-lg border bg-white shadow-xl ring-1 ring-black/5 focus:outline-none overflow-hidden pointer-events-auto"
-                  style={{ visibility: categoryMenuOpen ? 'visible' : 'hidden' }}
-                >
-                  <div className="max-h-80 overflow-auto py-2 divide-y divide-gray-100">
-                    <div className="py-1">
-                      {CATEGORIES.map((c) => (
-                        <Link
-                          key={c.slug}
-                          href={`/category/${c.slug}`}
-                          role="menuitem"
-                          className="block px-4 py-2.5 text-[15px] leading-tight font-medium text-gray-700 hover:bg-gray-50 focus:bg-gray-50 transition-colors"
-                          onClick={() => setCategoryMenuOpen(false)}
-                        >{c.label}</Link>
-                      ))}
+          {/* Desktop Search (unified rounded) */}
+          <div className="hidden md:flex flex-1 min-w-0 basis-[55%]">
+            <form onSubmit={handleSearchSubmit} className="relative flex w-full items-stretch group">
+              <div className="flex w-full rounded-full border border-gray-300 bg-white shadow-sm focus-within:ring-2 focus-within:ring-brand focus-within:border-brand overflow-visible">
+                {/* Categories button */}
+                <div className="relative" ref={catMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryMenuOpen(v => !v)}
+                    className="inline-flex items-center gap-2 h-12 pl-5 pr-4 lg:pr-5 text-[15px] bg-gray-50 hover:bg-gray-100 focus:outline-none border-r border-gray-200"
+                    aria-haspopup="menu" aria-expanded={categoryMenuOpen}
+                  >
+                    <Grid3x3 size={18} />
+                    <span className="hidden lg:inline text-sm font-medium">Categories</span>
+                    <ChevronDown size={16} className={`transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <div
+                    role="menu"
+                    data-open={categoryMenuOpen ? 'true' : 'false'}
+                    className="absolute z-50 mt-2 w-60 origin-top-left rounded-lg border bg-white shadow-xl ring-1 ring-black/5 focus:outline-none overflow-hidden pointer-events-auto"
+                    style={{ visibility: categoryMenuOpen ? 'visible' : 'hidden' }}
+                  >
+                    <div className="max-h-80 overflow-auto py-2 divide-y divide-gray-100">
+                      <div className="py-1">
+                        {CATEGORIES.map(c => (
+                          <Link
+                            key={c.slug}
+                            href={`/category/${c.slug}`}
+                            role="menuitem"
+                            className="block px-4 py-2.5 text-[15px] leading-tight font-medium text-gray-700 hover:bg-gray-50 focus:bg-gray-50 transition-colors"
+                            onClick={() => setCategoryMenuOpen(false)}
+                          >{c.label}</Link>
+                        ))}
+                      </div>
                     </div>
                   </div>
+                  <style jsx>{`
+                    [data-open='false'] {opacity:0; transform: translateY(4px) scale(.98); transition: opacity .18s ease, transform .22s cubic-bezier(.22,.65,.35,1);} 
+                    [data-open='true'] {opacity:1; transform: translateY(0) scale(1); transition: opacity .25s ease, transform .28s cubic-bezier(.16,.84,.44,1);} 
+                    @media (prefers-reduced-motion: reduce) { [data-open='false'],[data-open='true'] {transition: none; transform:none;} }
+                  `}</style>
                 </div>
-                <style jsx>{`
-                  [data-open='false'] {opacity:0; transform: translateY(4px) scale(.98); transition: opacity .18s ease, transform .22s cubic-bezier(.22,.65,.35,1);} 
-                  [data-open='true'] {opacity:1; transform: translateY(0) scale(1); transition: opacity .25s ease, transform .28s cubic-bezier(.16,.84,.44,1);} 
-                  @media (prefers-reduced-motion: reduce) { [data-open='false'],[data-open='true'] {transition: none; transform:none;} }
-                `}</style>
+                {/* Input */}
+                <div className="relative flex-1 min-w-0">
+                  <input
+                    ref={desktopInputRef}
+                    value={query}
+                    onChange={e => { setQuery(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Search products..."
+                    className="w-full h-12 bg-transparent px-5 pl-11 text-[15px] focus:outline-none"
+                  />
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Search size={22} />
+                  </span>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <SearchSuggestions suggestions={suggestions} activeIndex={activeIndex} close={() => setShowSuggestions(false)} />
+                  )}
+                </div>
+                {/* Submit */}
+                <button type="submit" className="px-7 h-12 text-[15px] font-medium bg-brand text-white hover:bg-brand/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-r-full">
+                  Search
+                </button>
               </div>
-              <div className="relative flex-1 min-w-0">
-                <input
-                  ref={desktopInputRef}
-                  value={query}
-                  onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); setActiveIndex(-1) }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search products..."
-                  className="w-full h-11 border border-gray-300 border-l-0 bg-white px-4 pl-10 shadow-sm focus:border-brand focus:ring-2 focus:ring-brand"
-                />
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Search size={20} />
-                </span>
-                {showSuggestions && suggestions.length > 0 && (
-                  <SearchSuggestions suggestions={suggestions} activeIndex={activeIndex} close={() => setShowSuggestions(false)} />
-                )}
-              </div>
-              <button type="submit" className="btn btn-primary rounded-l-none h-11 shrink-0">Search</button>
             </form>
           </div>
 
           {/* Right-side actions */}
-          <nav className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <nav className="flex items-center gap-1.5 sm:gap-3 shrink-0 pl-2">
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setMobileSearchOpen(true)}
@@ -340,7 +360,6 @@ export default function Header() {
             </button>
             <WishlistButton />
             <CartButton />
-            <ThemeToggle />
             <div className="relative" ref={userMenuRef}>
               <button
                 className="btn-icon"

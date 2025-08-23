@@ -22,7 +22,7 @@ export default function CategoryStrip() {
               <div className="relative w-12 h-12 rounded-lg overflow-hidden ring-1 ring-gray-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={c.image || fallbackFor(c.label)}
+                  src={fallbackFor(c.label)}
                   alt={c.label}
                   width={64}
                   height={64}
@@ -54,7 +54,7 @@ export default function CategoryStrip() {
             <div className="relative w-12 h-12 rounded-lg overflow-hidden ring-1 ring-gray-200">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={c.image || fallbackFor(c.label)}
+                src={fallbackFor(c.label)}
                 alt={c.label}
                 width={64}
                 height={64}

@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { products } from '@/lib/products'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = new URL('https://www.aamardokan.example')
+  const base = new URL('https://www.trendology.example')
   const now = new Date()
   const items: MetadataRoute.Sitemap = [
     { url: new URL('/', base).toString(), lastModified: now, changeFrequency: 'daily', priority: 1 },

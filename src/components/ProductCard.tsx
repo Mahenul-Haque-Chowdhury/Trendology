@@ -12,7 +12,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const wishlist = useWishlist()
   const { avg, count } = useProductRating(product.id)
   return (
-    <article className="card card-hover overflow-hidden">
+  <article className="card card-hover overflow-hidden h-full flex flex-col">
       <div className="relative aspect-[3/2] sm:aspect-[5/4] bg-gray-50">
         <Link href={`/products/${product.id}`} aria-label={`Open ${product.name}`} className="absolute inset-0">
           <Image
@@ -31,7 +31,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         </div>
       </div>
-      <div className="p-3 sm:p-4 space-y-2">
+  <div className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col">
         <h3 className="font-bold text-base sm:text-lg leading-snug line-clamp-2">
           <Link href={`/products/${product.id}`} className="hover:underline">
             {product.name}
@@ -49,7 +49,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="ml-1 text-xs text-gray-500">({count || Math.max(12, product.tags.length * 23)})</span>
         </div>
         {/* Price and actions */}
-        <div className="mt-2 flex flex-col gap-2">
+  <div className="mt-2 flex flex-col gap-2 mt-auto">
           <div className="text-lg sm:text-xl font-extrabold tracking-tight">
             {formatCurrencyBDT(product.price)}
           </div>
