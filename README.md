@@ -1,4 +1,4 @@
-A minimalist e-commerce UI built with Next.js (App Router), TypeScript, and Tailwind CSS—perfect for your portfolio.
+Trendology – a minimalist e-commerce UI built with Next.js (App Router), TypeScript, and Tailwind CSS.
 
 ## Features
 - Responsive layout with Header, Footer, and product grid
@@ -17,7 +17,8 @@ A minimalist e-commerce UI built with Next.js (App Router), TypeScript, and Tail
 2. Install dependencies:
 
 ```bash
-cd "./store"
+# (repo root)
+npm install
 npm install
 ```
 

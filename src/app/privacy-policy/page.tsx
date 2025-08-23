@@ -3,7 +3,7 @@ export default function PrivacyPolicyPage() {
     <div className="container mx-auto px-4 py-8 prose max-w-3xl">
       <h1>Privacy Policy</h1>
       <p>
-        We, at AamarDokan, value the trust you place in us. That’s why we insist upon the highest
+  We, at Trendology, value the trust you place in us. That’s why we insist upon the highest
         standards for secure transactions and customer information privacy. Please read the following
         statement to learn about our information gathering and dissemination practices.
       </p>
@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
       </p>
       <p>We may also collect information when you:</p>
       <ul>
-        <li>Register for an account on AamarDokan.</li>
+  <li>Register for an account on Trendology.</li>
         <li>Post messages, reviews, or feedback.</li>
         <li>Contact us via email, chat, or other correspondence.</li>
       </ul>
@@ -99,7 +99,7 @@ export default function PrivacyPolicyPage() {
         your account settings.
       </p>
       <hr />
-      <h2>Advertisements on AamarDokan</h2>
+  <h2>Advertisements on Trendology</h2>
       <p>
         We may use third-party advertising partners to display ads on our Website. These companies may use anonymized information (not including your name, email,
         or phone number) about your visits to provide ads relevant to your interests.
@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
       <h2>Questions?</h2>
       <p>If you have any questions regarding this Privacy Policy, please contact us at:</p>
       <ul>
-        <li>📧 support@aamardokan.com</li>
+  <li>📧 support@trendology.com</li>
         <li>📞 +880-XXXX-XXXXXX</li>
       </ul>
     </div>

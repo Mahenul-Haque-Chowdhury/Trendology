@@ -79,7 +79,7 @@ export default function TermsPage() {
       <hr />
       <h2>11. Indemnification</h2>
       <p>
-        You agree to indemnify and hold harmless AamarDokan, its affiliates, and employees from any claims, losses, damages, liabilities, or expenses arising from your use of our Website or violation of these Terms.
+  You agree to indemnify and hold harmless Trendology, its affiliates, and employees from any claims, losses, damages, liabilities, or expenses arising from your use of our Website or violation of these Terms.
       </p>
       <hr />
       <h2>12. Termination</h2>
@@ -94,7 +94,7 @@ export default function TermsPage() {
       <h2>15. Contact Us</h2>
       <p>If you have any questions regarding these Terms &amp; Conditions, please contact us at:</p>
       <ul>
-        <li>📧 support@aamardokan.com</li>
+  <li>📧 support@trendology.com</li>
         <li>📞 +880-XXXX-XXXXXX</li>
       </ul>
     </div>

@@ -137,6 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
           // Hard-clear any persisted auth in case of edge cases
           try {
+            localStorage.removeItem('trendology.auth')
+            // Legacy cleanup
             localStorage.removeItem('aamardokan.auth')
           } catch {}
         }
