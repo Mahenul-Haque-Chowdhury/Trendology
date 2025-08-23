@@ -1,5 +1,6 @@
 "use client"
 import { useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type ModalProps = {
   isOpen: boolean
@@ -24,15 +25,32 @@ export default function Modal({ isOpen, onClose, title, children, maxWidthClassN
     }
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className={`relative bg-white rounded-lg shadow-lg w-[95vw] ${maxWidthClassName} mx-auto p-4`}>
-        {title && <h3 className="text-lg font-semibold mb-3">{title}</h3>}
-        {children}
-      </div>
-    </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div className="fixed inset-0 z-50 flex items-center justify-center">
+          <motion.div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={onClose}
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.98 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className={`relative bg-white rounded-lg shadow-lg w-[95vw] ${maxWidthClassName} mx-auto p-4`}
+          >
+            {title && <h3 className="text-lg font-semibold mb-3">{title}</h3>}
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

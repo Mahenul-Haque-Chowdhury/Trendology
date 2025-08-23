@@ -1,6 +1,8 @@
 "use client";
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -22,8 +24,19 @@ const toneUi: Record<Tone, { bg: string; cta: string }> = {
 };
 
 export default function AdvertiseBannerDeals() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    // Force animation every hard refresh; can be toggled to sessionStorage flag if you want only once.
+    const t = requestAnimationFrame(() => setShow(true))
+    return () => cancelAnimationFrame(t)
+  }, [])
   return (
-  <div className="relative rounded-2xl overflow-hidden">
+	<motion.div
+      className="relative rounded-2xl overflow-hidden will-change-transform"
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={show ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ duration: 0.65, ease: 'easeOut', delay: 0.15 }}
+    >
       <Swiper
         modules={[Autoplay, Pagination]}
         slidesPerView={1}
@@ -36,7 +49,7 @@ export default function AdvertiseBannerDeals() {
           const t = toneUi[s.tone];
           return (
             <SwiperSlide key={i}>
-              <div className={`flex flex-col justify-center gap-4 min-h-[180px] px-7 py-6 text-white ${t.bg}`}>
+              <div className={`flex flex-col justify-center gap-4 min-h-[180px] px-6 sm:px-7 py-6 text-white ${t.bg}`}>
                 <div className="space-y-3 max-w-md">
                   <h3 className="text-xl font-semibold tracking-tight leading-snug">{s.title}</h3>
                   <p className="text-sm leading-snug opacity-95">{s.subtitle}</p>
@@ -58,8 +71,10 @@ export default function AdvertiseBannerDeals() {
   .deals-swiper .swiper-pagination {position:absolute; bottom:18px; left:0; width:100%; display:flex; justify-content:center; gap:10px;}
   .deals-swiper .swiper-pagination-bullet { background:rgba(255,255,255,.55); opacity:1; width:10px; height:10px; }
   .deals-swiper .swiper-pagination-bullet-active { background:#fff; }
+  .deals-swiper .swiper-slide {opacity:0; transition:opacity .65s var(--ease-soft, cubic-bezier(.4,0,.2,1));}
+  .deals-swiper .swiper-slide-active {opacity:1;}
         body {overflow-x:hidden;}
       `}</style>
-    </div>
+  </motion.div>
   );
 }

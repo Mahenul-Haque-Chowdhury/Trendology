@@ -5,6 +5,9 @@ import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Providers from '@/components/Providers'
+import MotionProvider from '@/components/MotionProvider'
+import PageTransition from '@/components/PageTransition'
+import ScrollRestoration from '@/components/ScrollRestoration'
 import CartDrawer from '@/components/CartDrawer'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -68,7 +71,10 @@ export default function RootLayout({
             <Header />
           </Suspense>
           <Suspense fallback={<main className="flex-1 mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 py-6 sm:py-8">Loading…</main>}>
-            <main className="flex-1 mx-auto w-full max-w-[1600px] px-2 sm:px-3 md:px-4 pt-[calc(var(--site-header-height,4rem)+1rem)] pb-6 sm:pb-8">{children}</main>
+            <MotionProvider>
+              <ScrollRestoration />
+              <PageTransition>{children}</PageTransition>
+            </MotionProvider>
           </Suspense>
           <Footer />
           <CartDrawer />

@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState, useRef } from 'react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
@@ -198,7 +199,12 @@ export default function ProfilePage() {
   if (!user) return <LoggedOutView />
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <motion.div
+      className="max-w-3xl mx-auto"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
       <div className="card p-6 sm:p-8 space-y-6">
         <form onSubmit={handleSubmit} ref={formRef}>
           {/* Card Header */}
@@ -264,6 +270,6 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
-    </div>
+  </motion.div>
   )
 }

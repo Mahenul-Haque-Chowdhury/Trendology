@@ -3,6 +3,7 @@
 "use client";
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 
@@ -50,7 +51,7 @@ const mainSlides: ThemedSlide[] = [
 function AdvertiseBanner({ slides, size, align }: { slides: ThemedSlide[]; size: 'lg' | 'sm'; align: 'left' | 'center' }) {
   const sizeClasses = {
     lg: {
-      container: 'min-h-[220px] sm:min-h-[280px] md:min-h-[320px] p-8 md:p-12 bg-white',
+      container: 'min-h-[220px] sm:min-h-[280px] md:min-h-[320px] p-6 sm:p-8 md:p-12 bg-white',
       title: 'text-2xl sm:text-3xl md:text-4xl text-gray-900',
       subtitle: 'text-sm sm:text-base text-gray-700',
       cta: 'px-6 py-3 text-md bg-blue-600 text-white hover:bg-blue-700',
@@ -64,21 +65,27 @@ function AdvertiseBanner({ slides, size, align }: { slides: ThemedSlide[]; size:
   };
 
   return (
-    <div className="relative w-full border border-gray-200 rounded-xl shadow-sm">
+    <motion.div
+      className="relative w-full border border-gray-200 rounded-xl shadow-sm overflow-hidden will-change-transform"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: 'easeOut' }}
+    >
       <Swiper
         modules={[Autoplay, Pagination, Navigation]}
-        spaceBetween={30}
+        spaceBetween={0}
         slidesPerView={1}
         loop={true}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         navigation={true}
+        breakpoints={{ 640: { spaceBetween: 30 } }}
         className="w-full home-main-slider"
       >
         {slides.map((slide, index) => (
           <SwiperSlide key={index}>
             <div
-              className={`flex items-center w-full h-full rounded-xl ${sizeClasses[size].container} ${align === 'left' ? 'text-left' : 'text-center'}`}
+              className={`flex items-center w-full h-full ${sizeClasses[size].container} ${align === 'left' ? 'text-left' : 'text-center'}`}
             >
               <div className="max-w-md space-y-4">
                 <h2 className={`font-bold tracking-tight ${sizeClasses[size].title}`}>{slide.title}</h2>
@@ -101,19 +108,32 @@ function AdvertiseBanner({ slides, size, align }: { slides: ThemedSlide[]; size:
           width: 32px;
           height: 32px;
           min-width: 32px;
-          min-height: 32px;
-          border-radius: 9999px;
-          background: rgba(255,255,255,0.85);
-          color: #222;
-          box-shadow: 0 1px 4px 0 rgba(0,0,0,0.07);
-          font-size: 16px;
+            min-height: 32px;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.88);
+            color: #222;
+            box-shadow: 0 1px 4px 0 rgba(0,0,0,0.08);
+            font-size: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .home-main-slider .swiper-button-prev { left: 0.75rem; }
+        .home-main-slider .swiper-button-next { right: 0.75rem; }
+        @media (min-width:640px) {
+          .home-main-slider .swiper-button-prev { left: 1.25rem; }
+          .home-main-slider .swiper-button-next { right: 1.25rem; }
         }
         .home-main-slider .swiper-button-next:after,
         .home-main-slider .swiper-button-prev:after {
           font-size: 16px !important;
         }
+  /* Cross-fade style */
+  .home-main-slider .swiper-slide { opacity:0; transition:opacity .6s var(--ease-soft, cubic-bezier(.4,0,.2,1)); }
+  .home-main-slider .swiper-slide-active { opacity:1; }
+  /* Prevent stray horizontal scroll on mobile */
+  .home-main-slider { overscroll-behavior-x: contain; }
       `}</style>
-    </div>
+  </motion.div>
   );
 }
 

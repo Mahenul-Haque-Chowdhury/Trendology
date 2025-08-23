@@ -2,23 +2,32 @@
 import { useCart } from '@/lib/cart'
 import { formatCurrencyBDT } from '@/lib/currency'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function CartDrawer() {
   const { items, total, open, setOpen, update, remove, clear } = useCart()
   const router = useRouter()
   return (
-    <div className={`fixed inset-0 z-50 ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
-      {/* Backdrop */}
-      <div
-        className={`absolute inset-0 bg-black/40 transition-opacity ${open ? 'opacity-100' : 'opacity-0'}`}
-        onClick={() => setOpen(false)}
-      />
-      {/* Panel */}
-      <aside
-        className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transition-transform duration-300 ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
+    <AnimatePresence>
+      {open && (
+        <motion.div className="fixed inset-0 z-50" aria-hidden={!open}>
+          {/* Backdrop */}
+          <motion.div
+            className="absolute inset-0 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => setOpen(false)}
+          />
+          {/* Panel */}
+          <motion.aside
+            className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 26, stiffness: 300, mass: 0.8 }}
+          >
         <header className="p-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-semibold">Your Cart</h2>
           <button className="text-gray-600 hover:text-black" onClick={() => setOpen(false)} aria-label="Close">
@@ -45,14 +54,16 @@ export default function CartDrawer() {
             ))
           )}
         </div>
-        <footer className="p-4 border-t flex items-center justify-between">
+        <footer className="p-4 border-t flex items-center justify-between mt-auto">
             <div className="font-semibold">Total: {formatCurrencyBDT(total)}</div>
           <div className="flex gap-2">
             <button className="btn btn-ghost" onClick={clear}>Clear</button>
             <button className="btn btn-primary" onClick={() => { setOpen(false); router.push('/checkout') }}>Checkout</button>
           </div>
         </footer>
-      </aside>
-    </div>
+          </motion.aside>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

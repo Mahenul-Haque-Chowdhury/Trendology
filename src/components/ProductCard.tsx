@@ -1,5 +1,6 @@
 "use client"
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { formatCurrencyBDT } from '@/lib/currency'
 import { Product } from '@/lib/products'
@@ -12,7 +13,12 @@ export default function ProductCard({ product }: { product: Product }) {
   const wishlist = useWishlist()
   const { avg, count } = useProductRating(product.id)
   return (
-  <article className="card card-hover overflow-hidden h-full flex flex-col">
+  <motion.article
+    layout
+    whileHover={{ y: -4 }}
+    whileTap={{ scale: 0.98 }}
+    className="card card-hover overflow-hidden h-full flex flex-col group"
+  >
       <div className="relative aspect-[3/2] sm:aspect-[5/4] bg-gray-50">
         <Link href={`/products/${product.id}`} aria-label={`Open ${product.name}`} className="absolute inset-0">
           <Image
@@ -20,7 +26,7 @@ export default function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
             priority
           />
         </Link>
@@ -53,16 +59,16 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="text-lg sm:text-xl font-extrabold tracking-tight">
             {formatCurrencyBDT(product.price)}
           </div>
-          <div className="flex items-center gap-2 w-full">
+      <div className="flex items-center gap-2 w-full">
             <button
-              className="btn btn-primary flex-1 h-9 sm:h-10"
+        className="btn btn-primary flex-1 h-9 sm:h-10 transition-transform active:scale-95"
               onClick={() => add(product)}
               aria-label={`Add ${product.name} to cart`}
             >
               Add to cart
             </button>
             <button
-              className={`shrink-0 rounded-full p-2 border transition ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500' : 'hover:bg-gray-100'}`}
+        className={`shrink-0 rounded-full p-2 border transition duration-200 ease-out hover:shadow-sm ${wishlist.has(product.id) ? 'bg-red-500 text-white border-red-500 scale-105' : 'hover:bg-gray-100'} `}
               aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               onClick={async () => {
                 try {
@@ -75,11 +81,11 @@ export default function ProductCard({ product }: { product: Product }) {
               }}
               title={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z" /></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" className="transition-transform duration-300" fill={wishlist.has(product.id) ? 'currentColor' : 'none'} stroke="currentColor"><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z" /></svg>
             </button>
           </div>
         </div>
       </div>
-    </article>
+  </motion.article>
   )
 }

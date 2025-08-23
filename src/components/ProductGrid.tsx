@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useMemo, useState } from 'react'
 import ProductCard from './ProductCard'
+import { StaggerGrid } from './Reveal'
 import type { Product } from '@/lib/products'
 import { useSearchParams } from 'next/navigation'
 
@@ -55,11 +56,9 @@ export default function ProductGrid({ products }: { products: Product[] }) {
   {filtered.length === 0 ? (
         <p className="text-gray-600">No products match your search.</p>
       ) : (
-  <div className="grid gap-4 sm:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <StaggerGrid className="grid gap-4 sm:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
+        </StaggerGrid>
       )}
     </div>
   )

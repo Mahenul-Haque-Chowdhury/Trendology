@@ -4,6 +4,8 @@
 // Similar sizing to deals banner; two-tone themes.
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -23,8 +25,18 @@ const toneUi: Record<Tone, { bg: string; cta: string }> = {
 };
 
 export default function AdvertiseBannerSeason() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setShow(true))
+    return () => cancelAnimationFrame(t)
+  }, [])
   return (
-  <div className="relative rounded-2xl overflow-hidden">
+	<motion.div
+      className="relative rounded-2xl overflow-hidden will-change-transform"
+      initial={{ opacity: 0, y: 24, scale: 0.965 }}
+      animate={show ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ duration: 0.7, ease: 'easeOut', delay: 0.25 }}
+    >
       <Swiper
         modules={[Autoplay, Pagination]}
         slidesPerView={1}
@@ -37,7 +49,7 @@ export default function AdvertiseBannerSeason() {
           const t = toneUi[s.tone];
           return (
             <SwiperSlide key={i}>
-              <div className={`flex flex-col justify-center gap-4 min-h-[180px] px-7 py-6 text-white ${t.bg}`}>
+              <div className={`flex flex-col justify-center gap-4 min-h-[180px] px-6 sm:px-7 py-6 text-white ${t.bg}`}>
                 <div className="space-y-3 max-w-md">
                   <h3 className="text-xl font-semibold tracking-tight leading-snug">{s.title}</h3>
                   <p className="text-sm leading-snug opacity-95">{s.subtitle}</p>
@@ -58,8 +70,10 @@ export default function AdvertiseBannerSeason() {
   .season-swiper .swiper-pagination {position:absolute; bottom:18px; left:0; width:100%; display:flex; justify-content:center; gap:10px;}
   .season-swiper .swiper-pagination-bullet { background:rgba(255,255,255,.55); opacity:1; width:10px; height:10px; }
   .season-swiper .swiper-pagination-bullet-active { background:#fff; }
+  .season-swiper .swiper-slide {opacity:0; transition:opacity .65s var(--ease-soft, cubic-bezier(.4,0,.2,1));}
+  .season-swiper .swiper-slide-active {opacity:1;}
         body {overflow-x:hidden;}
       `}</style>
-    </div>
+  </motion.div>
   );
 }

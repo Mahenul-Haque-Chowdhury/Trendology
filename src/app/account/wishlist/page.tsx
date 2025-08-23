@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useWishlist } from '@/lib/wishlist'
 import { useCart } from '@/lib/cart'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
 export default function WishlistPage() {
@@ -63,7 +64,12 @@ export default function WishlistPage() {
   }
   const items = wishlist.items
   return (
-    <div className="max-w-4xl mx-auto card p-6 space-y-6">
+    <motion.div
+      className="max-w-4xl mx-auto card p-6 space-y-6"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+    >
       <h1 className="text-2xl font-bold">My Wishlist</h1>
       {items.length === 0 ? (
         <div className="text-gray-600 text-sm">Your wishlist is empty. Browse products and tap the heart to save them.</div>
@@ -124,6 +130,6 @@ export default function WishlistPage() {
           </ul>
         </div>
       )}
-    </div>
+  </motion.div>
   )
 }
