@@ -1,11 +1,11 @@
-<<<<<<< HEAD
+# --- Consolidated .gitignore ---
 # Dependencies
-/node_modules
+node_modules/
 
-# Next.js
-/.next
-/out
-/coverage
+# Next.js build & output
+.next/
+out/
+.next/cache/
 
 # Logs
 npm-debug.log*
@@ -13,54 +13,30 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Env
+# Environment files
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Editor
-.vscode
-.DS_Store
-=======
-# macOS
-.DS_Store
-
-# Node/Next.js (root or subfolders)
-node_modules/
-.next/
-out/
-*.log
-
-# Environment files
-.env
-.env.*
-!.env.example
-
-# VS Code
-.vscode/
-
-# Yarn/NPM/PNPM
-pnpm-lock.yaml
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build artifacts
-**/node_modules/
-**/.next/
-**/out/
+.env.*.local
+!.env.local.example
 
 # TypeScript build info
-**/*.tsbuildinfo
+*.tsbuildinfo
 
-# Local data caches
-.next/cache/
+# IDE / OS
+.vscode/
+.DS_Store
+
+# Package managers
+pnpm-lock.yaml
 
 # Supabase local config
 .supabase/
 
-# Ignore local images if any temp dirs
-/tmp/
+# Temporary / backup
+__backup_store_*/
 
->>>>>>> 16e4c39 (Update: push latest changes to GitHub)
+# Misc tmp
+/tmp/
