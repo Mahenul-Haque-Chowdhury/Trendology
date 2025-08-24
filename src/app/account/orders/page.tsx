@@ -9,7 +9,7 @@ import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { useCatalog } from '@/lib/catalog'
 
 export default function OrdersPage() {
-  const { user } = useAuth()
+  const { user, authReady } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const { products } = useCatalog()
 
@@ -125,6 +125,10 @@ export default function OrdersPage() {
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [user])
+
+  if (!authReady) {
+    return <div className="max-w-md mx-auto card p-6 space-y-4 animate-pulse"><div className="h-7 w-32 bg-gray-200 rounded"/><div className="h-4 w-full bg-gray-200 rounded"/><div className="h-4 w-2/3 bg-gray-200 rounded"/></div>
+  }
 
   if (!user) {
     return (
