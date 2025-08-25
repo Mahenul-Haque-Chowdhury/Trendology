@@ -94,11 +94,17 @@ export default function Footer() {
 
         <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-4 justify-between text-xs text-gray-500 dark:text-gray-500">
           <p className="order-2 sm:order-1">&copy; {year} Trendology. All rights reserved.</p>
-          <div className="flex items-center gap-4 order-1 sm:order-2 opacity-80">
-            <Image src="/logos/bkash.webp" alt="bKash" width={40} height={24} className="object-contain" />
-            <Image src="/logos/nagad.webp" alt="Nagad" width={40} height={24} className="object-contain" />
-            <Image src="/logos/rocket.png" alt="Rocket" width={40} height={24} className="object-contain" />
-            <Image src="/logos/upay.webp" alt="Upay" width={40} height={24} className="object-contain" />
+          <div className="flex items-center gap-5 order-1 sm:order-2 opacity-90">
+            {[
+              { src: '/logos/bkash.webp', alt: 'bKash' },
+              { src: '/logos/nagad.webp', alt: 'Nagad' },
+              { src: '/logos/rocket.png', alt: 'Rocket' },
+              { src: '/logos/upay.webp', alt: 'Upay' },
+            ].map(l => (
+              <span key={l.alt} className="relative h-8 w-16 flex items-center justify-center overflow-hidden rounded-md ring-1 ring-gray-200/60 dark:ring-gray-700/50 bg-white dark:bg-gray-900 shadow-sm">
+                <Image src={l.src} alt={l.alt} fill sizes="64px" className="object-contain object-center p-1" />
+              </span>
+            ))}
           </div>
         </div>
       </div>
