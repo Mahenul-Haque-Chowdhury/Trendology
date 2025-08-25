@@ -18,10 +18,12 @@
   --skeleton-base: #f1f5f9;
   --skeleton-highlight: #e2e8f0;
     /* Brand vibrant palette (Electric Violet -> Fuchsia) */
-    --brand-base: #0891B2; /* Crystal Teal core */
-    --brand-accent: #06B6D4; /* Lighter teal */
-    --brand-accent-alt: #0E7490; /* Darker midpoint */
-    --brand-gradient: linear-gradient(90deg, var(--brand-base), var(--brand-accent));
+    --brand-base: #0FA099; /* Deep Aqua */
+    --brand-accent: #5CF5E0; /* Neon Mint */
+    --brand-accent-alt: #074E4C; /* Deep background teal */
+    --brand-gradient: radial-gradient(circle at 30% 20%, rgba(18,196,180,0.35), transparent 60%),
+                       radial-gradient(circle at 80% 70%, rgba(92,245,224,0.22), transparent 65%),
+                       linear-gradient(135deg, #042F30, #0B6F6B 55%, #042F30 100%);
 }
 
 html, body {
@@ -52,9 +54,9 @@ html, body {
 
   @media (prefers-color-scheme: dark) {
     :root {
-    --brand-base: #0E7490;
-    --brand-accent: #06B6D4;
-    --brand-accent-alt: #155E75;
+  --brand-base: #0B6F6B;
+  --brand-accent: #5CF5E0;
+  --brand-accent-alt: #042F30;
     }
   }
 
