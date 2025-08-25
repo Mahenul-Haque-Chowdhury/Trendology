@@ -93,7 +93,10 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-4 justify-between text-xs text-gray-500 dark:text-gray-500">
-          <p className="order-2 sm:order-1">&copy; {year} Trendology. All rights reserved.</p>
+          <div className="order-2 sm:order-1 text-center sm:text-left leading-tight">
+            <p>&copy; {year} Trendology. All rights reserved.</p>
+            <p className="mt-1">Full development &amp; design by <Link href="https://arnob.life" target="_blank" rel="noopener" className="text-brand hover:text-brand-700 font-medium">Arnob</Link>.</p>
+          </div>
           <div className="flex items-center gap-5 order-1 sm:order-2 opacity-90">
             {[
               { src: '/logos/bkash.webp', alt: 'bKash' },
