@@ -30,7 +30,7 @@ export default function Footer() {
             <Image src="/brand-icon.png" alt="Trendology logo" width={50} height={50} className="object-contain" />
           </span>
           <div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-[#C6AF5E] drop-shadow-sm">Trendology</h2>
+            <h2 className="text-3xl font-extrabold tracking-tight text-brand drop-shadow-sm">Trendology</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md">Carefully Chosen Products for customer satisfaction.</p>
           </div>
         </div>

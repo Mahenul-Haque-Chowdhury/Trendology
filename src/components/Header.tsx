@@ -263,7 +263,7 @@ export default function Header() {
             </button>
             <Link href="/" className="flex items-center gap-0 min-w-0 focus-visible:ring-2 focus-visible:ring-brand rounded-sm group" aria-label="Trendology home">
               <span className="relative w-8 h-8 sm:w-11 sm:h-11 inline-flex items-center justify-center shrink-0">
-                <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#D9C57F]/25 to-[#B79543]/10 scale-110 blur-sm opacity-0 group-hover:opacity-100 transition" />
+                <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand/30 to-[var(--brand-accent)]/20 scale-110 blur-sm opacity-0 group-hover:opacity-100 transition" />
                 <Image
                   src="/brand-icon.png"
                   alt="Trendology logo"
@@ -273,7 +273,7 @@ export default function Header() {
                   className="object-contain"
                 />
               </span>
-              <span className="-ml-1 font-extrabold text-xl sm:text-3xl tracking-tight text-[#C6AF5E] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-[#D9C57F] transition-colors dark:text-[#D9C57F] whitespace-nowrap">
+              <span className="-ml-1 font-extrabold text-xl sm:text-3xl tracking-tight text-brand drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-[var(--brand-accent)] transition-colors dark:text-[var(--brand-accent)] whitespace-nowrap">
                 Trendology
               </span>
             </Link>

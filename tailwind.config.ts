@@ -24,20 +24,20 @@ export default {
       colors: {
         // Brand palette with shades for better states and backgrounds
         brand: {
-          50: '#eef5ff',
-          100: '#e2edff',
-          200: '#c5dbfe',
-          300: '#9fbffe',
-          400: '#6f9bfa',
-          500: '#3f77f0',
-          600: '#1E6BD6', // DEFAULT tone
-          700: '#1554A8',
-          800: '#0e3c79',
-          900: '#092956',
-          DEFAULT: '#1E6BD6',
-          dark: '#1554A8',
+          50: '#ECFEFF',
+          100: '#CFFAFE',
+          200: '#A5F3FC',
+          300: '#67E8F9',
+          400: '#22D3EE',
+          500: '#06B6D4',
+          600: '#0891B2', // DEFAULT tone (Crystal Teal core)
+          700: '#0E7490',
+          800: '#155E75',
+          900: '#164E63',
+          DEFAULT: '#0891B2',
+          dark: '#0E7490',
         },
-        ring: '#1E6BD6',
+        ring: '#0891B2',
         // Accent palette for highlights and secondary CTAs
         accent: {
           50: '#FFF8E1',

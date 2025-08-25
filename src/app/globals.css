@@ -17,6 +17,11 @@
   /* Skeleton shimmer colors */
   --skeleton-base: #f1f5f9;
   --skeleton-highlight: #e2e8f0;
+    /* Brand vibrant palette (Electric Violet -> Fuchsia) */
+    --brand-base: #0891B2; /* Crystal Teal core */
+    --brand-accent: #06B6D4; /* Lighter teal */
+    --brand-accent-alt: #0E7490; /* Darker midpoint */
+    --brand-gradient: linear-gradient(90deg, var(--brand-base), var(--brand-accent));
 }
 
 html, body {
@@ -36,6 +41,22 @@ html, body {
   h4, .h4 { @apply text-lg font-semibold; }
   .subtitle { @apply text-sm md:text-base text-gray-500 font-medium; }
 }
+
+  /* Utility classes */
+  .text-brand { color: var(--brand-base) !important; }
+  .bg-brand { background-color: var(--brand-base) !important; }
+  .bg-brand-gradient { background-image: var(--brand-gradient); }
+  .border-brand { border-color: var(--brand-base) !important; }
+  .from-brand { --tw-gradient-from: var(--brand-base) var(--tw-gradient-from-position); --tw-gradient-to: rgb(127 61 255 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+  .to-brand-accent { --tw-gradient-to: var(--brand-accent) var(--tw-gradient-to-position); }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+    --brand-base: #0E7490;
+    --brand-accent: #06B6D4;
+    --brand-accent-alt: #155E75;
+    }
+  }
 
 @layer components {
   .container { @apply max-w-[1600px]; }
