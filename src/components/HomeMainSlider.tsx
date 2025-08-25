@@ -54,13 +54,13 @@ function AdvertiseBanner({ slides, size, align }: { slides: ThemedSlide[]; size:
       container: 'min-h-[220px] sm:min-h-[280px] md:min-h-[320px] p-6 sm:p-8 md:p-12 bg-white',
       title: 'text-2xl sm:text-3xl md:text-4xl text-gray-900',
       subtitle: 'text-sm sm:text-base text-gray-700',
-      cta: 'px-6 py-3 text-md bg-blue-600 text-white hover:bg-blue-700',
+  cta: 'px-6 py-3 text-md text-white bg-[linear-gradient(90deg,var(--brand-base),var(--brand-accent))] shadow-sm hover:brightness-95 active:scale-[.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60',
     },
     sm: {
       container: 'min-h-[140px] sm:min-h-[180px] p-6 bg-white',
       title: 'text-lg sm:text-xl md:text-2xl text-gray-900',
       subtitle: 'text-sm text-gray-700',
-      cta: 'px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700',
+  cta: 'px-4 py-2 text-sm text-white bg-[linear-gradient(90deg,var(--brand-base),var(--brand-accent))] shadow-sm hover:brightness-95 active:scale-[.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60',
     },
   };
 
