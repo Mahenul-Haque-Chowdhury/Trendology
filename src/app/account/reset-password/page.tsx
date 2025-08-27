@@ -15,8 +15,9 @@ import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 export default function ResetPasswordPage() {
   const search = useSearchParams()
   const router = useRouter()
-  const code = search.get('code') || ''
-  const type = search.get('type') || ''
+  // Supabase sends `code` for recovery links. Older style / edge cases may provide `token_hash`.
+  const code = search.get('code') || search.get('token_hash') || ''
+  const type = search.get('type') || search.get('next') || ''
   const enabled = isSupabaseConfigured()
   const supabase = enabled ? getSupabaseClient() : null
 
@@ -28,12 +29,16 @@ export default function ResetPasswordPage() {
   // Exchange recovery code for a session
   useEffect(() => {
     if (!enabled) return
-    if (!code || type !== 'recovery') { setStatus('error'); setError('Invalid or missing recovery code.'); return }
+    if (!code) { setStatus('error'); setError('Missing recovery code (code or token_hash param not found).'); return }
+    if (type && type !== 'recovery') {
+      // Allow proceeding even if type absent (some links omit it), but if present and different show warning.
+      console.warn('[reset-password] unexpected type param', type)
+    }
     let cancelled = false
     ;(async () => {
       try {
         setStatus('exchanging')
-        const { error: exErr } = await supabase!.auth.exchangeCodeForSession(code)
+  const { error: exErr } = await supabase!.auth.exchangeCodeForSession(code)
         if (cancelled) return
         if (exErr) { setStatus('error'); setError(exErr.message); return }
         setStatus('ready')
