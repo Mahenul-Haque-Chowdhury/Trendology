@@ -8,6 +8,9 @@ import { useProductQnA } from '@/lib/qna'
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { formatCurrencyBDT } from '@/lib/currency'
+import { useWishlist } from '@/lib/wishlist'
+import { useFavorites } from '@/lib/favorites'
+import { useToast } from '@/components/ToastStack'
 import LocationSelector from '@/components/LocationSelector'
 import { useUserLocation } from '@/lib/userLocation'
 
@@ -23,6 +26,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   const product = products.find((p) => p.id === params.id)
   const { location, isDhaka, shipping } = useUserLocation()
+  const wishlist = useWishlist()
+  const favorites = useFavorites()
+  const { push } = useToast()
+  const [wishPending, setWishPending] = useState(false)
+  const [favPending, setFavPending] = useState(false)
   if (!product) return <div className="container py-10">Product not found.</div>
 
   const gallery = product.images && product.images.length > 0 ? product.images : [product.image]
@@ -44,7 +52,64 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           </div>
           <div className="flex items-end gap-6 flex-wrap">
             <span className="text-3xl font-extrabold tracking-tight text-gray-900">{formatCurrencyBDT(product.price)}</span>
-            <AddToCartButton product={product} />
+            {product.active === false ? (
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-3 py-1 rounded-md bg-rose-600 text-white text-xs font-semibold">Out of Stock</span>
+                <button
+                  disabled={wishPending}
+                  onClick={async () => {
+                    if (wishPending) return
+                    const already = wishlist.has(product.id)
+                    setWishPending(true)
+                    try {
+                      await wishlist.toggle(product)
+                      push({
+                        title: already ? 'Removed from Wishlist' : 'Added to Wishlist',
+                        message: `"${product.name}" ${already ? 'removed' : 'saved (out of stock)'}`,
+                        variant: 'success',
+                        duration: 4000
+                      })
+                    } catch (e:any) {
+                      if (String(e.message) === 'LOGIN_REQUIRED') alert('Please sign in to save wishlist.')
+                      else push({ title: 'Action Failed', message: 'Could not update wishlist', variant: 'error', duration: 4000 })
+                    } finally { setWishPending(false) }
+                  }}
+                  className={`inline-flex items-center justify-center rounded-full px-5 h-11 whitespace-nowrap text-sm font-semibold shadow focus:outline-none focus:ring-2 focus:ring-offset-2 transition disabled:opacity-60 disabled:cursor-not-allowed ${wishlist.has(product.id) ? 'bg-gray-200 text-gray-700 focus:ring-gray-400' : 'bg-rose-600 text-white hover:bg-rose-500 focus:ring-rose-500/60'}`}
+                  aria-label={wishlist.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                  aria-busy={wishPending || undefined}
+                >{wishlist.has(product.id) ? 'Wishlisted' : 'Add to Wishlist'}</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <AddToCartButton product={product} />
+                <button
+                  disabled={favPending}
+                  onClick={async () => {
+                    if (favPending) return
+                    const already = favorites.has(product.id)
+                    setFavPending(true)
+                    try {
+                      await favorites.toggle(product)
+                      push({
+                        title: already ? 'Removed from Favorites' : 'Saved to Favorites',
+                        message: `"${product.name}" ${already ? 'removed' : 'saved for later checkout'}`,
+                        variant: 'success',
+                        duration: 4000
+                      })
+                    } catch (e:any) {
+                      if (String(e.message) === 'LOGIN_REQUIRED') alert('Please sign in to save favorites.')
+                      else push({ title: 'Action Failed', message: 'Could not update favorites', variant: 'error', duration: 4000 })
+                    } finally { setFavPending(false) }
+                  }}
+                  aria-label={favorites.has(product.id)?'Remove from favorites':'Add to favorites'}
+                  aria-busy={favPending || undefined}
+                  className={`inline-flex items-center gap-2 rounded-full px-5 h-11 whitespace-nowrap text-sm font-semibold shadow focus:outline-none focus:ring-2 focus:ring-offset-2 transition disabled:opacity-60 disabled:cursor-not-allowed ${favorites.has(product.id) ? 'bg-gray-200 text-gray-700 focus:ring-gray-400' : 'bg-brand/10 text-brand hover:bg-brand/20 focus:ring-brand/50'}`}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={favorites.has(product.id)?'currentColor':'none'} stroke="currentColor" strokeWidth="2" className={favPending?'animate-pulse':''}><path d="M12 21s-6.716-4.35-9.428-7.062C.86 12.226.5 10.88.5 9.5.5 6.462 2.962 4 6 4c1.657 0 3.156.81 4.1 2.053C11.844 4.81 13.343 4 15 4c3.038 0 5.5 2.462 5.5 5.5 0 1.38-.36 2.726-2.072 4.438C18.716 16.65 12 21 12 21z" /></svg>
+                  {favorites.has(product.id) ? 'Favorited' : 'Add to Favorites'}
+                </button>
+              </div>
+            )}
           </div>
           <p className="text-gray-600 leading-relaxed text-base">{product.description}</p>
           {/* Feature tags */}
