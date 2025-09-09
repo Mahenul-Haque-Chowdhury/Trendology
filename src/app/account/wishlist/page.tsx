@@ -171,7 +171,7 @@ export default function WishlistPage() {
             <h2 className="text-lg font-semibold">Restock Notification</h2>
             {sentCount === null ? (
               <>
-                <p className="text-sm text-gray-600 dark:text-gray-400">We'll email you when these product{selected.size > 1 ? 's' : ''} come back in stock.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">We&apos;ll email you when these product{selected.size > 1 ? 's' : ''} come back in stock.</p>
                 <ul className="max-h-40 overflow-auto text-sm list-disc ml-5 pr-1 space-y-1">
                   {wishlist.items.filter(({ product }) => selected.has(product.id)).map(({ product }) => (
                     <li key={product.id}>{product.name}</li>
@@ -189,7 +189,7 @@ export default function WishlistPage() {
                 <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6 9 17l-5-5"/></svg>
                 </div>
-                <p className="text-sm font-medium">You'll be notified for {sentCount} product{sentCount > 1 ? 's' : ''}.</p>
+                <p className="text-sm font-medium">You&apos;ll be notified for {sentCount} product{sentCount > 1 ? 's' : ''}.</p>
                 <p className="text-xs text-gray-500 text-center">We will send a single email when any selected item is restocked.</p>
               </div>
             )}
@@ -204,6 +204,7 @@ export default function WishlistPage() {
 function RestockInterestSummary({ productIds }: { productIds: string[] }) {
   const supabase = getSupabaseClient()
   const [counts, setCounts] = useState<Record<string, number>>({})
+  const idsKey = productIds.join(',')
   useEffect(() => {
     let ignore = false
     async function load() {
@@ -216,7 +217,8 @@ function RestockInterestSummary({ productIds }: { productIds: string[] }) {
       }
     }
     load()
-  }, [supabase, JSON.stringify(productIds)])
+    return () => { ignore = true }
+  }, [supabase, idsKey])
   if (Object.keys(counts).length === 0) return null
   return (
     <div className="mt-6 rounded-lg border border-dashed border-gray-300 p-4 bg-gray-50">

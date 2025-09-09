@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setUser((prev) => (prev ? { ...prev, name } : prev))
     },
-  }), [user, useSupabase, authReady])
+  }), [user, useSupabase, authReady, demoAuthEnabled])
 
   return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>
 }
