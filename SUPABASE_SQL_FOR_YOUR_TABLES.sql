@@ -300,3 +300,23 @@ create policy "User ask questions" on public.product_qna for insert with check (
 -- Optionally restrict updates to admins; for now allow anyone to answer (demo)
 drop policy if exists "Anyone answer qna (demo)" on public.product_qna;
 create policy "Anyone answer qna (demo)" on public.product_qna for update using (true) with check (true);
+
+-- Restock request tracking (users requesting notification for out-of-stock items)
+create table if not exists public.restock_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id text not null,
+  created_at timestamptz default now(),
+  unique(user_id, product_id)
+);
+
+alter table public.restock_requests enable row level security;
+drop policy if exists "Own restock requests" on public.restock_requests;
+create policy "Own restock requests" on public.restock_requests
+for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Aggregate view for admin dashboard counts
+create or replace view public.restock_request_counts as
+  select product_id, count(*)::int as request_count
+  from public.restock_requests
+  group by product_id;

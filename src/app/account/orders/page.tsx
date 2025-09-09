@@ -143,6 +143,17 @@ export default function OrdersPage() {
     )
   }
 
+  function handleReorder(order: Order) {
+    if (!order.items.length) return
+    for (const it of order.items) {
+      // Re-add each product with original quantity (could open cart or not)
+      try {
+        // Lazy import to avoid circular if cart not used earlier
+        // using dynamic require pattern not needed since useCart is not accessible here; will refactor if needed
+      } catch {}
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto card p-6 space-y-4">
       <h1 className="text-2xl font-bold">My Orders ({orders.length})</h1>
@@ -173,10 +184,13 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2 text-sm">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Link href={`/account/orders/${encodeURIComponent(o.code || o.backendId || o.id)}`} className="btn btn-primary btn-xs">Track</Link>
                     {o.status !== 'shipped' && o.status !== 'delivered' && o.status !== 'cancelled' && (
                       <CancelButton order={o} onCancelled={(id) => setOrders((prev) => prev.map((it) => it.id === id ? { ...it, status: 'cancelled' } : it))} />
+                    )}
+                    {o.status !== 'cancelled' && (
+                      <ReorderButton order={o} />
                     )}
                   </div>
                   {o.trackingNumber && <div className="text-gray-600">Tracking: {o.trackingNumber}</div>}
@@ -242,4 +256,19 @@ function CancelButton({ order, onCancelled }: { order: Order; onCancelled: (id: 
       />
     </>
   )
+}
+
+function ReorderButton({ order }: { order: Order }) {
+  const [busy, setBusy] = useState(false)
+  const { add, setOpen } = require('@/lib/cart').useCart()
+  const { push } = require('@/components/ToastStack').useToast()
+  async function reorder() {
+    if (busy) return
+    setBusy(true)
+    try {
+      for (const it of order.items) add(it.product, it.qty || 1, { openDrawer: false })
+      push({ title: 'Items Added', message: 'Previous order items added to cart.', variant: 'success', actionLabel: 'Open Cart', onAction: () => setOpen(true), duration: 5000 })
+    } finally { setBusy(false) }
+  }
+  return <button className="btn btn-xs border border-emerald-200 text-emerald-700 hover:bg-emerald-50" disabled={busy} onClick={reorder}>{busy ? 'Adding…' : 'Reorder'}</button>
 }

@@ -108,7 +108,7 @@ export default function AccountPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Hi, {user.name || 'there'} 👋</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your orders, wishlist and profile details.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your orders, favorites and profile details.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/account/profile" className="btn">Profile</Link>
@@ -170,6 +170,10 @@ export default function AccountPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Link href="/account/wishlist" className="group rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
           <div className="text-sm font-semibold mb-1">Wishlist</div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">Out-of-stock saved items</p>
+        </Link>
+  <Link href="/account/favorites" className="group rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+          <div className="text-sm font-semibold mb-1">Favorites</div>
           <p className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">View saved items</p>
         </Link>
         <Link href="/account/profile" className="group rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900/60 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">

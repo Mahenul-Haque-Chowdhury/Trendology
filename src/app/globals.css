@@ -43,6 +43,10 @@ html, body {
   h4, .h4 { @apply text-lg font-semibold; }
   .subtitle { @apply text-sm md:text-base text-gray-500 font-medium; }
 }
+@keyframes scaleIn { 0% { transform: scale(.4); opacity: 0; } 60% { opacity:1; } 100% { transform: scale(1); opacity:1; } }
+@keyframes pingSlow { 0% { transform: scale(.6); opacity:.7 } 70% { transform: scale(1.4); opacity:0 } 100% { transform: scale(1.4); opacity:0 } }
+.anim-scale-in { animation: scaleIn .3s ease-out both; }
+.anim-ping-slow { animation: pingSlow 1.6s cubic-bezier(.4,0,.2,1) infinite; }
 
   /* Utility classes */
   .text-brand { color: var(--brand-base) !important; }

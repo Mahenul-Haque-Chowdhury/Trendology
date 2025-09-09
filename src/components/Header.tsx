@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth'
 import { useCatalog } from '@/lib/catalog'
 import { formatCurrencyBDT } from '@/lib/currency'
 import CartButton from './CartButton'
+import FavoritesButton from './FavoritesButton'
 import WishlistButton from './WishlistButton'
 
 // Reusable Search Suggestions Component to avoid duplication
@@ -359,6 +360,7 @@ export default function Header() {
               <Search size={22} />
             </button>
             <WishlistButton />
+            <FavoritesButton />
             <CartButton />
             <div className="relative" ref={userMenuRef}>
               <button

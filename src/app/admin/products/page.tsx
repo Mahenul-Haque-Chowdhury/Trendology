@@ -83,6 +83,7 @@ export default function AdminProductsPage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<string | 'all'>('all')
   const [onlyActive, setOnlyActive] = useState(false)
+  const [onlyOOS, setOnlyOOS] = useState(false)
   const [count, setCount] = useState<number | null>(null)
   const [apiError, setApiError] = useState<{ code?: number; message?: string } | null>(null)
 
@@ -112,14 +113,18 @@ export default function AdminProductsPage() {
     return () => { ignore = true }
   }, [supabase])
 
+  const inStockCount = useMemo(() => products.filter(p => p.active !== false).length, [products])
+  const oosCount = useMemo(() => products.filter(p => p.active === false).length, [products])
+
   const filtered = useMemo(() => {
     let list = products
     const q = query.trim().toLowerCase()
     if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
     if (category !== 'all') list = list.filter((p) => p.category === category)
     if (onlyActive) list = list.filter((p) => p.active !== false)
+    if (onlyOOS) list = list.filter((p) => p.active === false)
     return list
-  }, [products, query, category, onlyActive])
+  }, [products, query, category, onlyActive, onlyOOS])
 
   function openCreate() {
     setEditing(null)
@@ -164,10 +169,58 @@ export default function AdminProductsPage() {
               {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
             </select>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} />
-              Only active
+              <input type="checkbox" checked={onlyActive} onChange={(e) => { setOnlyActive(e.target.checked); if (e.target.checked) setOnlyOOS(false) }} />
+              In Stock ({inStockCount})
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={onlyOOS} onChange={(e) => { setOnlyOOS(e.target.checked); if (e.target.checked) setOnlyActive(false) }} />
+              Out of Stock ({oosCount})
             </label>
           </div>
+        </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="relative">
+            <details className="group">
+              <summary className="list-none inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 cursor-pointer select-none">
+                Inventory Actions
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8l4 4 4-4"/></svg>
+              </summary>
+              <div className="absolute z-20 mt-2 w-56 rounded-md border border-gray-200 bg-white shadow-lg p-1 text-sm">
+                <button
+                  type="button"
+                  onClick={() => filtered.filter(p => p.active === false).forEach(p => update({ ...p, active: true }))}
+                  disabled={!filtered.some(p => p.active === false)}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Mark Out of Stock as In Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => filtered.filter(p => p.active !== false).forEach(p => update({ ...p, active: false }))}
+                  disabled={!filtered.some(p => p.active !== false)}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-rose-500" /> Mark In Stock as Out of Stock
+                </button>
+                <div className="my-1 h-px bg-gray-100" />
+                <button
+                  type="button"
+                  onClick={() => { filtered.forEach(p => update({ ...p, active: true })) }}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" /> Force All Filtered In Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { filtered.forEach(p => update({ ...p, active: false })) }}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-rose-400" /> Force All Filtered Out of Stock
+                </button>
+              </div>
+            </details>
+          </div>
+          <p className="text-xs text-gray-500">Quick bulk updates apply only to rows in the current filtered list.</p>
         </div>
         <ProductTable
           products={filtered}

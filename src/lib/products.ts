@@ -5,6 +5,7 @@ export type Product = {
   name: string
   description: string
   price: number
+  compare_at_price?: number // Optional original price for discount display
   image: string
   images?: string[]
   category: string

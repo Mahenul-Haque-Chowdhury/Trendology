@@ -45,7 +45,8 @@ export function useHomeGrids() {
     async function fetchGridsData() {
       setLoading(true)
       try {
-  const { data: products, error: pError } = await client.from('inventory').select('*').eq('active', true)
+  // Fetch all products (both active/inactive) so out-of-stock still display
+  const { data: products, error: pError } = await client.from('inventory').select('*')
 
         if (pError) {
           console.error("Error fetching products:", pError)

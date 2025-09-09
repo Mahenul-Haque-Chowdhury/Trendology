@@ -18,6 +18,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     ]},
     { group: 'Lists', items: [
       { href: '/account/wishlist', label: 'My Wishlist' },
+      { href: '/account/favorites', label: 'My Favorites' },
     ]},
     { group: 'Wallet', items: [
       { href: '/account/wallet', label: 'AamarWallet' },
@@ -66,6 +67,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           <h2 className="text-lg font-semibold my-3">Lists</h2>
           <nav className="space-y-1">
             {link('/account/wishlist', 'My Wishlist')}
+            {link('/account/favorites', 'My Favorites')}
           </nav>
           <h2 className="text-lg font-semibold my-3">Wallet</h2>
           <nav className="space-y-1">
@@ -83,6 +85,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 {pill('/account/address', 'Address')}
                 {pill('/account/orders', 'Orders')}
                 {pill('/account/wishlist', 'Wishlist')}
+                {pill('/account/favorites', 'Favorites')}
                 {pill('/account/returns', 'Returns')}
                 {pill('/account/cancellations', 'Cancellations')}
                 {pill('/account/wallet', 'Wallet')}

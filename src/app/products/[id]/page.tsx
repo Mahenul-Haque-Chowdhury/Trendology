@@ -6,7 +6,10 @@ import { useCatalog } from '@/lib/catalog'
 import { useProductReviews } from '@/lib/reviews'
 import { useProductQnA } from '@/lib/qna'
 import { useMemo, useState } from 'react'
+import Image from 'next/image'
 import { formatCurrencyBDT } from '@/lib/currency'
+import LocationSelector from '@/components/LocationSelector'
+import { useUserLocation } from '@/lib/userLocation'
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const { products } = useCatalog()
@@ -19,63 +22,97 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const filteredReviews = useMemo(() => (starFilter === 'all' ? reviews : reviews.filter(r => r.rating === starFilter)), [reviews, starFilter])
 
   const product = products.find((p) => p.id === params.id)
+  const { location, isDhaka, shipping } = useUserLocation()
   if (!product) return <div className="container py-10">Product not found.</div>
 
   const gallery = product.images && product.images.length > 0 ? product.images : [product.image]
   const related = products.filter((p) => p.category === product.category && p.id !== product.id)
 
   return (
-    <div className="space-y-10">
-      <div className="grid gap-8 grid-cols-1 md:grid-cols-2 items-start">
-        <ImageGallery images={gallery} alt={product.name} />
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-          <p className="text-gray-600 leading-relaxed">{product.description}</p>
-          <div className="flex items-center gap-6">
-                  <span className="text-2xl font-semibold">{formatCurrencyBDT(product.price)}</span>
+    <div className="space-y-12">
+      <div className="grid gap-10 grid-cols-1 lg:grid-cols-12 items-start">
+        <div className="lg:col-span-6 xl:col-span-7 space-y-6">
+          <ImageGallery images={gallery} alt={product.name} />
+        </div>
+        <div className="lg:col-span-6 xl:col-span-5 space-y-6 lg:sticky lg:top-[calc(var(--site-header-height,4rem)+1rem)]">
+          <div className="space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">{product.name}</h1>
+            <div className="flex items-center gap-3 text-sm text-gray-500">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-medium">{product.category}</span>
+              <span>{stats.count} review{stats.count===1?'':'s'}</span>
+            </div>
+          </div>
+          <div className="flex items-end gap-6 flex-wrap">
+            <span className="text-3xl font-extrabold tracking-tight text-gray-900">{formatCurrencyBDT(product.price)}</span>
             <AddToCartButton product={product} />
           </div>
-
-          {/* Delivery Options and Payments */}
-          <section className="pt-2">
-            <h3 className="text-lg font-semibold">Delivery Options</h3>
-            <hr className="my-2" />
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-2"><span>📍</span><span><span className="font-medium">Available Delivery Area:</span> All over Bangladesh.</span></li>
-              <li className="flex items-start gap-2"><span>📍</span><span><span className="font-medium">Dhaka</span> <span className="text-gray-700">• Dhaka City North</span> <button className="text-brand font-medium ml-2 hover:underline" type="button">Change</button></span></li>
-              <li>
-                <div className="font-medium">Delivery Info</div>
-                <div className="text-gray-600">
-                  <div>Delivery Time: Inside Dhaka: 2–3 working days · Outside Dhaka: 3–7 working days</div>
-                  <div>Shipping Charge: Inside Dhaka {formatCurrencyBDT(70)} · Outside Dhaka {formatCurrencyBDT(130)}</div>
-                </div>
-              </li>
-              <li className="space-y-2">
-                <div className="font-medium">Cash on Delivery Available</div>
-                <div className="flex items-center gap-4 flex-wrap">
-                  {/* Payment service icons (no card logos) */}
-                  <span className="inline-flex items-center gap-2 px-2 py-1 rounded border">
-                    <span className="text-pink-600 font-semibold">bKash</span>
-                  </span>
-                  <span className="inline-flex items-center gap-2 px-2 py-1 rounded border">
-                    <span className="text-orange-600 font-semibold">Nagad</span>
-                  </span>
-                  <span className="inline-flex items-center gap-2 px-2 py-1 rounded border">
-                    <span className="text-amber-600 font-semibold">Rocket</span>
-                  </span>
-                  <span className="inline-flex items-center gap-2 px-2 py-1 rounded border">
-                    <span className="text-emerald-600 font-semibold">Upay</span>
-                  </span>
-                </div>
-              </li>
+          <p className="text-gray-600 leading-relaxed text-base">{product.description}</p>
+          {/* Feature tags */}
+          {product.tags?.length > 0 && (
+            <ul className="flex flex-wrap gap-2">
+              {product.tags.map(t => (
+                <li key={t} className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">{t}</li>
+              ))}
             </ul>
+          )}
+          {/* Delivery Options and Payments */}
+          <section className="pt-2 space-y-6">
+            {/* Delivery Options */}
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold flex items-center gap-2">Delivery Options</h3>
+              <div className="rounded-xl border bg-white dark:bg-gray-900 p-4 space-y-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-lg" role="img" aria-label="location">📍</span>
+                    <span className="font-medium">Available Delivery Area: <span className="font-semibold text-gray-900 dark:text-gray-100">All over Bangladesh</span>.</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-lg" role="img" aria-hidden="true">📍</span>
+                    <span>Current Location: <strong>{location || 'Not set'}</strong>{location ? '' : ' (default shipping applied)'}</span>
+                    <LocationSelector />
+                  </div>
+                  <div className="text-xs text-gray-500">(Setting your district tailors delivery time & charge.)</div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                  <div className="space-y-1">
+                    <div className="font-medium text-gray-800 dark:text-gray-100">Delivery Info</div>
+                    <div className="text-gray-600 dark:text-gray-300 leading-snug">Delivery Time: <strong>{isDhaka ? 'Inside Dhaka: 2–3 working days' : 'Outside Dhaka: 3–7 working days'}</strong>{!isDhaka && ' (if Dhaka, 2–3 working days)'}</div>
+                    <div className="text-gray-600 dark:text-gray-300">Shipping Charge: {isDhaka ? 'Inside Dhaka' : 'Outside Dhaka'} <strong>{formatCurrencyBDT(shipping.charge)}</strong> <span className="text-xs text-gray-500">(Inside {formatCurrencyBDT(70)} · Outside {formatCurrencyBDT(130)})</span></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="font-medium text-gray-800 dark:text-gray-100">Return & Warranty</div>
+                    <div className="text-gray-600 dark:text-gray-300 leading-snug">Cancellation, Return & Refund: <strong>Change of mind is not applicable</strong></div>
+                    <div className="text-gray-600 dark:text-gray-300 leading-snug">Warranty: <strong>Not Available</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Payments */}
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold">Payments</h3>
+              <div className="flex items-center flex-wrap gap-2">
+                {[
+                  { name: 'bKash', src: '/logos/bkash.webp' },
+                  { name: 'Nagad', src: '/logos/nagad.webp' },
+                  { name: 'Rocket', src: '/logos/rocket.png' },
+                  { name: 'Upay', src: '/logos/upay.webp' },
+                ].map(pm => (
+                  <span key={pm.name} className="relative h-8 w-14 flex items-center justify-center rounded-md bg-white dark:bg-gray-900 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden shadow-sm">
+                    <Image src={pm.src} alt={pm.name} fill sizes="56px" className="object-contain p-1" />
+                  </span>
+                ))}
+                <span className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md bg-emerald-600 text-white shadow-sm">COD</span>
+              </div>
+            </div>
           </section>
         </div>
       </div>
 
   {/* Tabs: Description, Reviews, Q&A */}
       <section className="space-y-4">
-        <div className="flex items-center gap-8 border-b">
+  <div className="flex items-center gap-6 border-b overflow-x-auto">
           {[
             { key: 'desc', label: 'Description' },
             { key: 'reviews', label: `Customer Reviews (${stats.count})` },
@@ -83,7 +120,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           ].map((t) => (
             <button
               key={t.key}
-              className={`py-3 -mb-px border-b-2 ${activeTab === t.key ? 'border-brand text-black font-semibold' : 'border-transparent text-gray-500 hover:text-black'}`}
+              className={`py-3 -mb-px border-b-2 text-sm sm:text-base whitespace-nowrap ${activeTab === t.key ? 'border-brand text-brand font-semibold' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
               onClick={() => setActiveTab(t.key as any)}
             >
               {t.label}
@@ -236,10 +273,13 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
       {related.length > 0 && (
         <section>
-          <h2 className="text-xl font-semibold mb-4">Related Products</h2>
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-semibold tracking-tight">Related Products</h2>
+            <span className="text-xs text-gray-500">You may also like</span>
+          </div>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {related.slice(0,10).map((p) => (
+              <ProductCard key={p.id} product={p} variant="compact" />
             ))}
           </div>
         </section>

@@ -30,8 +30,9 @@ export default function ProductTable({ products, onEdit, onDelete, onToggleActiv
             <th scope="col" className="px-6 py-3">Product</th>
             <th scope="col" className="px-6 py-3">Category</th>
             <th scope="col" className="px-6 py-3">Price</th>
-            <th scope="col" className="px-6 py-3">Status</th>
+            <th scope="col" className="px-6 py-3">Stock</th>
             <th scope="col" className="px-6 py-3">Homepage Grids</th>
+            <th scope="col" className="px-6 py-3">Interest</th>
             <th scope="col" className="px-6 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -60,18 +61,18 @@ export default function ProductTable({ products, onEdit, onDelete, onToggleActiv
               <td className="px-6 py-4">{p.category}</td>
               <td className="px-6 py-4">{formatCurrencyBDT(p.price)}</td>
               <td className="px-6 py-4">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={p.active !== false}
-                    onChange={(e) => onToggleActive(p, e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  <span className="ml-3 text-sm font-medium text-gray-900">
-                    {p.active !== false ? 'Active' : 'Hidden'}
-                  </span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => onToggleActive(p, p.active === false)}
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition shadow-sm border w-32
+                    ${p.active !== false
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'}`}
+                  title={p.active !== false ? 'Click to mark Out of Stock' : 'Click to mark In Stock'}
+                >
+                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${p.active !== false ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                  {p.active !== false ? 'In Stock' : 'Out of Stock'}
+                </button>
               </td>
               <td className="px-6 py-4">
                 <div className="flex flex-wrap gap-2">
@@ -102,6 +103,9 @@ export default function ProductTable({ products, onEdit, onDelete, onToggleActiv
                   )}
                 </div>
               </td>
+              <td className="px-6 py-4 text-sm">
+                <RestockInterest productId={p.id} />
+              </td>
               <td className="px-6 py-4">
                 <div className="flex items-center justify-end gap-2">
                   <button className="btn btn-sm btn-ghost" title="Edit" onClick={() => onEdit(p)}>
@@ -117,5 +121,74 @@ export default function ProductTable({ products, onEdit, onDelete, onToggleActiv
         </tbody>
       </table>
     </div>
+  )
+}
+
+// Inline component to display restock interest count & details modal
+import { useState, useEffect } from 'react'
+function RestockInterest({ productId }: { productId: string }) {
+  const [count, setCount] = useState<number | null>(null)
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [rows, setRows] = useState<any[]>([])
+
+  useEffect(() => {
+    let ignore = false
+    async function loadCount() {
+      try {
+        const res = await fetch(`/api/admin/restock-requests?product_id=${encodeURIComponent(productId)}`)
+        const json = await res.json()
+        if (!ignore && json.ok) {
+          setCount(Array.isArray(json.items) ? json.items.length : 0)
+        }
+      } catch {}
+    }
+    loadCount()
+  }, [productId])
+
+  const openModal = async () => {
+    setOpen(true)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/admin/restock-requests?product_id=${encodeURIComponent(productId)}`)
+      const json = await res.json()
+      if (json.ok) setRows(json.items)
+    } catch {}
+    setLoading(false)
+  }
+
+  if (count === null) return <span className="text-xs text-gray-400">…</span>
+  if (count === 0) return <span className="text-xs text-gray-400">None</span>
+  return (
+    <>
+      <button onClick={openModal} className="text-xs font-medium text-emerald-700 hover:underline">
+        {count} request{count > 1 ? 's' : ''}
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md p-5 space-y-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm">Restock Requests</h3>
+              <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            {loading ? (
+              <div className="text-xs text-gray-500">Loading…</div>
+            ) : rows.length === 0 ? (
+              <div className="text-xs text-gray-500">No requests.</div>
+            ) : (
+              <ul className="max-h-60 overflow-auto divide-y border rounded-md">
+                {rows.map(r => (
+                  <li key={r.id} className="text-xs px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <span className="font-medium truncate" title={r.email || r.user_id}>{r.email || r.user_id}</span>
+                    <span className="text-[10px] text-gray-500">{new Date(r.created_at).toLocaleDateString()}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   )
 }

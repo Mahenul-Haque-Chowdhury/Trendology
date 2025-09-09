@@ -6,7 +6,7 @@ export type CartItem = { product: Product; qty: number }
 
 export type CartState = {
   items: CartItem[]
-  add: (product: Product, qty?: number) => void
+  add: (product: Product, qty?: number, opts?: { openDrawer?: boolean }) => void
   remove: (productId: string) => void
   update: (productId: string, qty: number) => void
   clear: () => void
@@ -67,7 +67,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     open,
     setOpen,
     hydrated,
-    add: (product, qty = 1) => {
+    add: (product, qty = 1, opts) => {
       setItems((prev) => {
         const idx = prev.findIndex((i) => i.product.id === product.id)
         if (idx >= 0) {
@@ -77,7 +77,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
         return [...prev, { product, qty }]
       })
-      setOpen(true)
+      if (opts?.openDrawer !== false) setOpen(true)
     },
     remove: (productId) => setItems((prev) => prev.filter((i) => i.product.id !== productId)),
     update: (productId, qty) =>

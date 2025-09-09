@@ -16,6 +16,5 @@ export function mapProduct(row: any): Product {
 	}
 }
 
-export function filterActive(products: Product[]) {
-	return products.filter((p) => p.active !== false)
-}
+// Note: We intentionally do NOT filter out inactive products globally so they can
+// still appear in listings (with an "Out of Stock" state handled at card level).

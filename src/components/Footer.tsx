@@ -67,7 +67,7 @@ export default function Footer() {
                 <li><Link className="hover:text-gray-900 dark:hover:text-gray-100 text-gray-600 dark:text-gray-400 transition" href="/account/orders">Orders</Link></li>
                 <li><Link className="hover:text-gray-900 dark:hover:text-gray-100 text-gray-600 dark:text-gray-400 transition" href="/terms">Terms &amp; Conditions</Link></li>
                 <li><Link className="hover:text-gray-900 dark:hover:text-gray-100 text-gray-600 dark:text-gray-400 transition" href="/account">My Account</Link></li>
-                <li><Link className="hover:text-gray-900 dark:hover:text-gray-100 text-gray-600 dark:text-gray-400 transition" href="/account/wishlist">Wishlist</Link></li>
+                <li><Link className="hover:text-gray-900 dark:hover:text-gray-100 text-gray-600 dark:text-gray-400 transition" href="/account/favorites">Favorites</Link></li>
               </ul>
             </div>
           </div>
